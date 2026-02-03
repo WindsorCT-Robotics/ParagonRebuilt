@@ -22,13 +22,13 @@ The `move` command will take in a supplier of `LinearVelocity` x and y, supplier
 
 Depending on the `RelativeReference` will decide if `move` will return a run of `RobotCentric` or `FieldCentric` swerve request.
 
-#### moveWithLockedAngle
+##### moveWithLockedAngle
 
 The `moveWithLockedAngle` command will take in a supplier of `LinearVelocity` x and y and a supplier `Angle` for the desired angle to lock on to.
 
 `moveWithLockedAngle` will execute a `SwerveRequest` of `FieldCentricFacingAngle` with proper PID constants and with `withTargetDirection` for the desired angle
 
-#### driveTorqueBased
+##### driveTorqueBased
 
 Reference: https://pathplanner.dev/pplib-swerve-setpoint-generator.html
 

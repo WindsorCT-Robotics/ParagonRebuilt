@@ -20,7 +20,9 @@ WPILib comes with all necessary dependencies. The following VSCode extensions ar
 * Extension Pack for Java
 * GitHub Pull Requests
 
-## Basic Program Structure
+## Basic Architecture Overview
+
+### Basic Program Structure
 
 All robot code will be in the package `frc.robot`. Subsystems will be located in the `frc.robot.subsystems` package. Stand-alone commands will be located in the `frc.robot.commands` package.
 
@@ -31,6 +33,34 @@ Subsystems will take dependencies on interfaces that describe the behaviors they
 Auto-generated code must be stored under the `frc.robot.generated` package. This not only keeps auto-generated code out of our way, but also ensures that the static analysis tool we use -- SonarQube -- does not attempt to analyze the code.
 
 Finally, Sim code should be in a package underneath `frc.robot.sim`. The sim package will likely have many sub-packages that mirrors the above package structure (e.g., `frc.robot.sim.subsytems`).
+
+### Auto-Generated Code
+
+Auto-Generated Code is considered SOUP: Software of Unknown Provenance. It should not be modified, and should live in a `generated` package. Our code should extend it or otherwise use it without changing it.
+
+### Units
+
+Primitives should not be used where Units can be used instead. For example, every distance is a double, but not every double is a distance. Distance should be used instead.
+
+Creating new types is preferable to using primitives in most cases, if for no other reason than to ensure values don't get accidentally swapped around.
+
+Values in percentages will be represented by variables of the `Dimensionless` type.
+
+### `null` and the Absence of Value
+
+In Java, any object is allowed to be assigned a `null` value. This presents problems, as accessing an object with a `null` value will cause an application to immediately throw an `exception`.
+
+To prevent this, `null` should be avoided at all costs. If a public API's documentation doesn't explicitly state that it requires or returns `null` values, it should not be used.
+
+In our code, we shall *always* use the `Optional` type to express values that might not return a value.
+
+### Errors
+
+In Java, methods may throw exceptions for error handling. Errors that are "exceptional" -- things that should *never* happen during the normal execution of a program -- or programming errors are to be handled by throwing exceptions. Exceptions should be used sparingly, as they will essentially crash the program if not handled correctly.
+
+Exceptions should *never* be used for control flow. If a failure is a known possibility and/or an expected outcome of a function, the `Result` type must be used instead. The `error` type parameter of the `Result` type should explain why the operation failed.
+
+When possible, errors should be left to deal with by the calling function. Subsystems should not concern themselves with failures not caused by private methods. The most effective way to deal with this is the `Result` type. `exceptions` can do the same thing, but throwing an exception means that something has gone terribly wrong.
 
 ## Naming Conventions
 
@@ -71,31 +101,3 @@ Stand-alone commands will exist when the command cannot logically exist in a sin
 Interfaces names should always start with a capital `I` and describe the capability the interface requires. Interfaces are conceptually contracts and names should reflect that (e.g., IDistanceMotor for a motor with an encoder configured to convert distances to rotations).
 
 Interfaces can build on each other; functions should not be repeated among interfaces and shared interface functions should be extracted into their own interfaces (e.g., all motor interfaces extending `IMotor`, which has functions that are common among all motors)
-
-### Auto-Generated Code
-
-Auto-Generated Code is considered SOUP: Software of Unknown Provenance. It should not be modified, and should live in a `generated` package. Our code should extend it or otherwise use it without changing it.
-
-### Units
-
-Primitives should not be used where Units can be used instead. For example, every distance is a double, but not every double is a distance. Distance should be used instead.
-
-Creating new types is preferable to using primitives in most cases, if for no other reason than to ensure values don't get accidentally swapped around.
-
-Values in percentages will be represented by variables of the `Dimensionless` type.
-
-### `null` and the Absence of Value
-
-In Java, any object is allowed to be assigned a `null` value. This presents problems, as accessing an object with a `null` value will cause an application to immediately throw an `exception`.
-
-To prevent this, `null` should be avoided at all costs. If a public API's documentation doesn't explicitly state that it requires or returns `null` values, it should not be used.
-
-In our code, we shall *always* use the `Optional` type to express values that might not return a value.
-
-### Errors
-
-In Java, methods may throw exceptions for error handling. Errors that are "exceptional" -- things that should *never* happen during the normal execution of a program -- or programming errors are to be handled by throwing exceptions. Exceptions should be used sparingly, as they will essentially crash the program if not handled correctly.
-
-Exceptions should *never* be used for control flow. If a failure is a known possibility and/or an expected outcome of a function, the `Result` type must be used instead. The `error` type parameter of the `Result` type should explain why the operation failed.
-
-When possible, errors should be left to deal with by the calling function. Subsystems should not concern themselves with failures not caused by private methods. The most effective way to deal with this is the `Result` type. `exceptions` can do the same thing, but throwing an exception means that something has gone terribly wrong.

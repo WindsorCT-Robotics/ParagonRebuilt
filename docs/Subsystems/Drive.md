@@ -50,7 +50,3 @@ The `pathToPose` command will create a path that will path from robot position t
 ###### pathToHubTrajectory
 
 The `pathToHubTrajectory` command will find the fastest position to score and then use `pathToPose` to path.
-
-### Triggers
-
-

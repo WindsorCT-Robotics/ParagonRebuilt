@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-Requires a motor.
+Requires a motor that can control its duty cycle and the ability to stop.
 
 ## Public APIs
 

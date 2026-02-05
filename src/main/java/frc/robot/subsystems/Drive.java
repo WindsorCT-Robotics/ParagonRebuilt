@@ -1,27 +1,50 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import java.util.function.Supplier;
 
-import edu.wpi.first.units.measure.Angle;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
+import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
+
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.generated.GeneratedDrive;
 
-public class Drive { // TODO: Extend generated swervedrive after generated swervedrive code is
-                     // created.
+public class Drive extends GeneratedDrive {
+    // TODO: Max velocities should be properly tested.
+    private static final LinearVelocity MAX_LINEAR_VELOCITY = MetersPerSecond.of(1);
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(1);
 
-    private static final LinearVelocity MAX_LINEAR_VELOCITY = MetersPerSecond.of(1); // TODO: Edit value to actual max
-                                                                                     // speed.
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(1); // TODO: Edit value to actual
-                                                                                        // max
+    public Drive(
+            SwerveDrivetrainConstants drivetrainConstants,
+            double odometryUpdateFrequency,
+            Matrix<N3, N1> odometryStandardDeviation,
+            Matrix<N3, N1> visionStandardDeviation,
+            SwerveModuleConstants<?, ?, ?>... modules) {
+        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
+                modules);
+    }
 
-    public Drive() {
+    public Drive(
+            SwerveDrivetrainConstants drivetrainConstants,
+            double odometryUpdateFrequency,
+            SwerveModuleConstants<?, ?, ?>... modules) {
+        super(drivetrainConstants, odometryUpdateFrequency, modules);
+    }
 
+    public Drive(
+            SwerveDrivetrainConstants drivetrainConstants,
+            SwerveModuleConstants<?, ?, ?>... modules) {
+        super(drivetrainConstants, modules);
     }
 
     private enum RelativeReference {
@@ -85,13 +108,5 @@ public class Drive { // TODO: Extend generated swervedrive after generated swerv
                 () -> percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                 () -> percentToAngularVelocity(MAX_ANGULAR_VELOCITY, rotateRate),
                 reference);
-    }
-
-    private Command turnToTargetAngle(
-            Supplier<Angle> targetAngle,
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y,
-            Supplier<AngularVelocity> rotateRate) {
-
     }
 }

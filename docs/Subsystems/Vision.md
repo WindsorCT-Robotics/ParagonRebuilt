@@ -4,6 +4,8 @@
 
 Requires a camera that can accurately read april tags.
 
+Calculating LinearVelocity
+
 An algorithim to calculate the pose estimation.
 
 ## Public APIs
@@ -12,6 +14,8 @@ An algorithim to calculate the pose estimation.
 
 #### getPoseEstimate
 
+If robot is within area function handled outside of subsystems
 
+#### getSupplierPoseEstimate
 
-### Triggers
+Supplying the position estimate 

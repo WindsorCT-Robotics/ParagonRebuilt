@@ -11,7 +11,6 @@ import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import com.ctre.phoenix6.swerve.SwerveModule.ModuleRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
@@ -21,18 +20,14 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.GeneratedDrive;
@@ -49,10 +44,6 @@ public class Drive extends GeneratedDrive {
     private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
 
     private final RobotConfig robotConfiguration;
-    private final ChassisSpeeds currentSpeeds;
-    private final SwerveModuleState[] currentStates;
-    private final SwerveSetpointGenerator setpointGenerator;
-    private SwerveSetpoint previousSetpoint;
 
     public sealed interface CommandError permits AllianceUnknown {
     }
@@ -67,12 +58,6 @@ public class Drive extends GeneratedDrive {
         super(drivetrainConstants, modules);
 
         robotConfiguration = RobotConfig.fromGUISettings();
-
-        currentSpeeds = getState().Speeds;
-        currentStates = getState().ModuleStates;
-        setpointGenerator = new SwerveSetpointGenerator(robotConfiguration, MAX_ANGULAR_VELOCITY);
-        previousSetpoint = new SwerveSetpoint(currentSpeeds, currentStates,
-                DriveFeedforwards.zeros(getModules().length));
     }
 
     private enum RelativeReference {
@@ -178,24 +163,5 @@ public class Drive extends GeneratedDrive {
 
                     moveWithLockedAngle(x.get(), y.get(), targetAngle);
                 }));
-    }
-
-    private void setModuleStates(SwerveModuleState[] moduleStates) {
-        for (int i = 0; i < moduleStates.length; i++) {
-            ModuleRequest moduleRequest = new ModuleRequest().withState(moduleStates[i]);
-            getModule(i).apply(moduleRequest);
-        }
-    }
-
-    private void driveTorqueBased(ChassisSpeeds speeds) {
-        previousSetpoint = setpointGenerator.generateSetpoint(
-                previousSetpoint,
-                speeds,
-                TimedRobot.kDefaultPeriod);
-        setModuleStates(previousSetpoint.moduleStates());
-    }
-
-    public Command moveTorqueBased() {
-
     }
 }

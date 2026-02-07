@@ -8,14 +8,14 @@ Requires a motor that can control its duty cycle and the ability to stop.
 
 ### Commands
 
-#### moveBall
+#### indexBallIntoShooter
 
-`moveBall` will turn in the correct orientation by setting the duty cycle of the motor.
+`indexBallIntoShooter` will index fuel into the shooter so that the shooter can shoot the ball.
 
-`moveBall` doesn't require any parameters.
+`indexBallIntoShooter` doesn't require any parameters.
 
 ### Triggers
 
 #### isMotorTurning
 
-`isMotorTurning` will return a boolean that checks if the motor's angular velocity is greater than 0.
+`isMotorTurning` will check if the motor is spinning/moving.

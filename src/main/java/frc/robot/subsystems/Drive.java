@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -211,10 +212,14 @@ public class Drive extends GeneratedDrive {
             GoalEndState goalEndState,
             Distance robotNextControlDistance,
             Distance endAnchorPreviousControlDistance) {
+        Pigeon2 gyro = getPigeon2();
         SwerveDriveState robotState = getState();
-        ChassisSpeeds fieldRelativeChassisSpeeds = robotState.Speeds;
+        ChassisSpeeds robotCentricChassisSpeeds = robotState.Speeds;
+        ChassisSpeeds fieldCentricChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(robotCentricChassisSpeeds,
+                gyro.getRotation2d());
+
         Angle directionOfVelocity = Radians.of(
-                Math.atan2(fieldRelativeChassisSpeeds.vyMetersPerSecond, fieldRelativeChassisSpeeds.vxMetersPerSecond));
+                Math.atan2(fieldCentricChassisSpeeds.vyMetersPerSecond, fieldCentricChassisSpeeds.vxMetersPerSecond));
 
         Translation2d robotAnchor = new Translation2d(robotState.Pose.getMeasureX(), robotState.Pose.getMeasureY());
         Translation2d robotNextControl = new Translation2d(robotNextControlDistance.in(Meters),

@@ -208,7 +208,6 @@ public class Drive extends GeneratedDrive {
     private PathPlannerPath createPathToPosition(
             Pose3d endPosition3d,
             PathConstraints constraints,
-            IdealStartingState idealStartingState,
             GoalEndState goalEndState,
             Distance robotNextControlDistance,
             Distance endAnchorPreviousControlDistance) {
@@ -218,6 +217,10 @@ public class Drive extends GeneratedDrive {
         ChassisSpeeds fieldCentricChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(robotCentricChassisSpeeds,
                 gyro.getRotation2d());
 
+        LinearVelocity robotVelocity = MetersPerSecond.of(
+                Math.sqrt(
+                        Math.pow(robotCentricChassisSpeeds.vxMetersPerSecond, 2)
+                                + Math.pow(robotCentricChassisSpeeds.vyMetersPerSecond, 2)));
         Angle directionOfVelocity = Radians.of(
                 Math.atan2(fieldCentricChassisSpeeds.vyMetersPerSecond, fieldCentricChassisSpeeds.vxMetersPerSecond));
 
@@ -232,6 +235,8 @@ public class Drive extends GeneratedDrive {
                 goalEndState.rotation());
         Waypoint endPositionWaypoint = new Waypoint(endPreviousControl, endAnchor, new Translation2d());
 
+        IdealStartingState idealStartingState = new IdealStartingState(robotVelocity,
+                new Rotation2d(directionOfVelocity));
         List<Waypoint> waypoints = List.of(robotPositionWaypoint, endPositionWaypoint);
         return new PathPlannerPath(waypoints, constraints, idealStartingState, goalEndState);
     }
@@ -239,7 +244,6 @@ public class Drive extends GeneratedDrive {
     public Command pathToPosition(
             Pose3d endPosition3d,
             PathConstraints constraints,
-            IdealStartingState idealStartingState,
             GoalEndState goalEndState,
             Distance robotNextControlDistance,
             Distance endAnchorPreviousControlDistance) {
@@ -247,7 +251,6 @@ public class Drive extends GeneratedDrive {
                 createPathToPosition(
                         endPosition3d,
                         constraints,
-                        idealStartingState,
                         goalEndState,
                         robotNextControlDistance,
                         endAnchorPreviousControlDistance));

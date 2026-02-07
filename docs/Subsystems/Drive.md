@@ -18,15 +18,27 @@ Nothing currently unique to the code structure.
 
 ##### move
 
-The `move` command will take in a supplier of `LinearVelocity` x and y, supplier of `AngularVelocity`, and a `RelativeReference`.
+`move` will be able to turn and move the robot with based on a reference of either `robotCentric` or `fieldCentric`.
 
-Depending on the `RelativeReference` will decide if `move` will return a run of `RobotCentric` or `FieldCentric` swerve request.
+###### robotCentricMove
+
+`robotCentricMove` will be able to turn and move the robot with a `robotCentric` swerve request.
+
+###### fieldCentricMove
+
+`fieldCentricMove` will be able to turn and move the robot with a `fieldCentric` swerve request.
+
+##### moveWithPercentages
+
+`moveWithPercentages` will be able to turn and move the robot with `move` with the reference of either `robotCentric` or `fieldCentric` with percentages.
 
 ##### moveWithLockedAngle
 
-The `moveWithLockedAngle` command will take in a supplier of `LinearVelocity` x and y and a supplier `Angle` for the desired angle to lock on to.
+`moveWithLockedAngle` will be able to move the robot with a targeted angle that the robot will try to face.
 
-`moveWithLockedAngle` will execute a `SwerveRequest` of `FieldCentricFacingAngle` with proper PID constants and with `withTargetDirection` for the desired angle
+##### angleToOutpost
+
+`angleToOutpost` will be able to move the robot with a fixed angle based on alliance with the robot's back facing the outpost.
 
 ##### driveTorqueBased
 
@@ -43,10 +55,10 @@ Then `generateSetpoint` method will take in the previous setpoint before the one
 
 #### Pathing
 
-##### pathToPose
+##### pathToPosition
 
-The `pathToPose` command will create a path that will path from robot position to the position designated.
+`pathToPosition` will be able to move towards a position.
 
-###### pathToHubTrajectory
+###### createPathToPosition
 
-The `pathToHubTrajectory` command will find the fastest position to score and then use `pathToPose` to path.
+`createPathToPosition` will create a `PathPlannerPath` to pass into pathToPosition.

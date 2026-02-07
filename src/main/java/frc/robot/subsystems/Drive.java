@@ -119,11 +119,10 @@ public class Drive extends GeneratedDrive {
             Supplier<LinearVelocity> x,
             Supplier<LinearVelocity> y,
             Supplier<AngularVelocity> rotateRate) {
-        return run(() -> setControl(
-                new FieldCentric()
-                        .withVelocityX(x.get())
-                        .withVelocityY(y.get())
-                        .withRotationalRate(rotateRate.get())));
+        return applyRequest(() -> new FieldCentric()
+                .withVelocityX(x.get())
+                .withVelocityY(y.get())
+                .withRotationalRate(rotateRate.get()));
     }
 
     public Command move(

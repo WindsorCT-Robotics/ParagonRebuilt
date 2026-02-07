@@ -11,13 +11,19 @@ import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
+import com.ctre.phoenix6.swerve.utility.WheelForceCalculator.Feedforwards;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -35,10 +41,13 @@ public class Drive extends GeneratedDrive {
     private static final LinearVelocity MAX_LINEAR_VELOCITY = MetersPerSecond.of(1);
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(1);
     private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(7, 0, 0);
+    private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
+    private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
     private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
     private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
 
     private final RobotConfig robotConfiguration;
+    private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
 
     public sealed interface CommandError permits AllianceUnknown {
     }
@@ -53,6 +62,31 @@ public class Drive extends GeneratedDrive {
         super(drivetrainConstants, modules);
 
         robotConfiguration = RobotConfig.fromGUISettings();
+
+        AutoBuilder.configure(
+                () -> getState().Pose,
+                this::resetPose,
+                () -> getState().Speeds,
+                (speeds, feedforwards) -> robotCentricChassisSpeedsMove(speeds, feedforwards),
+                new PPHolonomicDriveController(
+                        DEFAULT_TRANSLATION_PID,
+                        DEFAULT_ROTATION_PID),
+                robotConfiguration,
+                () -> {
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this);
+    }
+
+    private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
+        setControl(pathPlannerSwerveRequest
+                .withSpeeds(speeds)
+                .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
     }
 
     private enum RelativeReference {
@@ -159,4 +193,5 @@ public class Drive extends GeneratedDrive {
                     moveWithLockedAngle(x.get(), y.get(), targetAngle);
                 }));
     }
+
 }

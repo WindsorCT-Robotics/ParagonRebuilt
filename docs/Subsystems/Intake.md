@@ -1,6 +1,6 @@
 # Intake Subsystem
 
-The Intake subsystem will have two motors. Motor1 will open the intake door and Motor2 will spin the motor to actually pick up Fuel.
+The Intake subsystem will have two motors. DoorMotor will open the intake door and IntakeMotor will spin the motor to actually pick up Fuel.
 
 ## Dependencies
 
@@ -14,25 +14,25 @@ Requires two motors that can both control their duty cycle.
 
 #### openDoor
 
-`openDoor` Uses Motor1 to open intake door.
+`openDoor` Uses DoorMotor to open intake door.
 
 #### closeDoor
 
-`closeDoor` Uses Motor1 to close intake door.
+`closeDoor` Uses DoorMotor to close intake door.
 
 #### moveRollers
 
-`moveRollers` Motor2 spins clockwise to spin top rollers counterclockwise and bottom roller 
+`moveRollers` IntakeMotor spins clockwise to spin top rollers clockwise and bottom roller 
 counterclockwise.
 
 #### reverseRollers
 
-`reverseRollers` Motor2 spins counterclockwise to spin top rollers counterclockwise and bottom roller clockwise.
+`reverseRollers` IntakeMotor spins counterclockwise to spin top rollers counterclockwise and bottom roller clockwise.
 
 #### loadFuel
 
-`loadFuel` Uses Motor1 to open the intake door and then uses Motor2 to spin the spindexer to load fuel balls.
+`loadFuel` Uses DoorMotor to open the intake door and then uses IntakeMotor to spin the spindexer to load fuel.
 
 #### shuttleFuel
 
-`shuttleFuel` Uses Motor1 to open the intake door and then uses Motor2 to spin the spindexer in reverse to shuttle fuel balls.
+`shuttleFuel` Uses DoorMotor to open the intake door and then uses IntakeMotor to spin the spindexer in reverse to shuttle fuel.

@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
@@ -186,16 +187,17 @@ public class Drive extends GeneratedDrive {
             Supplier<LinearVelocity> x,
             Supplier<LinearVelocity> y) {
 
-        if (DriverStation.getAlliance().isEmpty()) {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        if (alliance.isEmpty()) {
             return new Failure<>(new AllianceUnknown());
         }
 
         return new Success<>(
                 run(() -> {
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
                     Angle targetAngle;
 
-                    if (alliance.equals(Alliance.Blue)) {
+                    if (alliance.get().equals(Alliance.Blue)) {
                         targetAngle = ALLIANCE_BLUE_SIDE;
                     } else {
                         targetAngle = ALLIANCE_RED_SIDE;

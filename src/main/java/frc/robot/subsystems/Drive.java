@@ -80,7 +80,7 @@ public class Drive extends GeneratedDrive {
                 () -> getState().Pose,
                 this::resetPose,
                 () -> getState().Speeds,
-                (speeds, feedforwards) -> robotCentricChassisSpeedsMove(speeds, feedforwards),
+                this::robotCentricChassisSpeedsMove,
                 new PPHolonomicDriveController(
                         DEFAULT_TRANSLATION_PID,
                         DEFAULT_ROTATION_PID),

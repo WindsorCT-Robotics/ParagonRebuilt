@@ -84,9 +84,11 @@ public class RobotContainer implements Sendable {
         () -> rootPercent(() -> Percent.of(controller.getLeftY()), moveRootCurve),
         () -> rootPercent(() -> Percent.of(controller.getRightX()), turnRootCurve),
         relativeReference));
-
-    // Switches RelativeReference
-    // TODO: Allow Drive Subsystem to dynamically switch between relativeReferences.
+    /*
+     * Switches RelativeReference
+     * TODO: Allow Drive Subsystem to dynamically switch between
+     * relativeReferences.
+     */
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
       if (relativeReference.get() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = () -> RelativeReference.FIELD_CENTRIC;
@@ -105,14 +107,20 @@ public class RobotContainer implements Sendable {
             () -> rootPercent(() -> Percent.of(controller.getRightX()), turnRootCurve),
             relativeReference));
 
-    // TODO: Angle To Outpost should either schedule the command or does nothing and
-    // let the default command of drive take over.
+    /*
+     * TODO: Angle To Outpost should either schedule the command or does nothing and
+     * let the default command of drive take over.
+     */
     controller.a().toggleOnTrue(angleToOutpost(
         drive.angleToOutpost(
             () -> rootPercent(() -> Percent.of(controller.getLeftX()), moveRootCurve),
             () -> rootPercent(() -> Percent.of(controller.getLeftY()), moveRootCurve))));
 
-    // Note that each routine should be run exactly once in a single log.
+    /*
+     * Note that each routine should be run exactly once in a single log.
+     * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
+     * tuning PID again.
+     */
     controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
     controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
     controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));

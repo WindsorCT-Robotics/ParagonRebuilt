@@ -74,6 +74,7 @@ public class Drive extends GeneratedDrive {
 
         super(drivetrainConstants, modules);
 
+        // TODO: Properly set GUI Settings in PathPlanner
         robotConfiguration = RobotConfig.fromGUISettings();
 
         AutoBuilder.configure(
@@ -102,52 +103,57 @@ public class Drive extends GeneratedDrive {
                 .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
     }
 
-    private enum RelativeReference {
-        ROBOT_RELATIVE,
-        FIELD_RELATIVE
+    public enum RelativeReference {
+        ROBOT_CENTRIC,
+        FIELD_CENTRIC
     }
 
-    private Command robotCentricMove(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y,
-            Supplier<AngularVelocity> rotateRate) {
-        return applyRequest(() -> new RobotCentric()
-                .withVelocityX(x.get())
-                .withVelocityY(y.get())
-                .withRotationalRate(rotateRate.get()));
+    private SwerveRequest robotCentricSwerveRequest(
+            LinearVelocity x,
+            LinearVelocity y,
+            AngularVelocity rotateRate) {
+        return new RobotCentric()
+                .withVelocityX(x)
+                .withVelocityY(y)
+                .withRotationalRate(rotateRate);
     }
 
-    private Command fieldCentricMove(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y,
-            Supplier<AngularVelocity> rotateRate) {
-        return applyRequest(() -> new FieldCentric()
-                .withVelocityX(x.get())
-                .withVelocityY(y.get())
-                .withRotationalRate(rotateRate.get()));
+    private SwerveRequest fieldCentricSwerveRequest(
+            LinearVelocity x,
+            LinearVelocity y,
+            AngularVelocity rotateRate) {
+        return new FieldCentric()
+                .withVelocityX(x)
+                .withVelocityY(y)
+                .withRotationalRate(rotateRate);
     }
 
     public Command move(
             Supplier<LinearVelocity> x,
             Supplier<LinearVelocity> y,
             Supplier<AngularVelocity> rotateRate,
-            RelativeReference reference) {
-        switch (reference) {
-            case ROBOT_RELATIVE:
-                return robotCentricMove(x, y, rotateRate);
-            case FIELD_RELATIVE:
-                return fieldCentricMove(x, y, rotateRate);
-            default:
-                throw new IllegalArgumentException(
-                        "Unable to determine the SwerveRequest return. Illegal RelativeReference: " + reference);
-        }
+            Supplier<RelativeReference> reference) {
+        return run(() -> {
+            switch (reference.get()) {
+                case ROBOT_CENTRIC:
+                    robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    break;
+                case FIELD_CENTRIC:
+                    fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Unable to determine the SwerveRequest return. Illegal RelativeReference: "
+                                    + reference.get().toString());
+            }
+        });
     }
 
     private LinearVelocity percentageToLinearVelocity(LinearVelocity velocity, Supplier<Dimensionless> percent) {
         return velocity.times(percent.get());
     }
 
-    private AngularVelocity percentToAngularVelocity(AngularVelocity velocity, Supplier<Dimensionless> percent) {
+    private AngularVelocity percentageToAngularVelocity(AngularVelocity velocity, Supplier<Dimensionless> percent) {
         return velocity.times(percent.get());
     }
 
@@ -155,20 +161,17 @@ public class Drive extends GeneratedDrive {
             Supplier<Dimensionless> x,
             Supplier<Dimensionless> y,
             Supplier<Dimensionless> rotateRate,
-            RelativeReference reference) {
+            Supplier<RelativeReference> reference) {
         return move(
                 () -> percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                 () -> percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                () -> percentToAngularVelocity(MAX_ANGULAR_VELOCITY, rotateRate),
+                () -> percentageToAngularVelocity(MAX_ANGULAR_VELOCITY, rotateRate),
                 reference);
     }
 
     /**
-     * Moves with the ability to control rotation with with a target angle.
-     * 
-     * @param x
-     * @param y
-     * @param targetAngle
+     * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
+     * CENTRIC.
      */
     private void moveWithLockedAngle(
             LinearVelocity x,
@@ -184,8 +187,8 @@ public class Drive extends GeneratedDrive {
     }
 
     public Result<Command, CommandError> angleToOutpost(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y) {
+            Supplier<Dimensionless> x,
+            Supplier<Dimensionless> y) {
 
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
@@ -203,7 +206,10 @@ public class Drive extends GeneratedDrive {
                         targetAngle = ALLIANCE_RED_SIDE;
                     }
 
-                    moveWithLockedAngle(x.get(), y.get(), targetAngle);
+                    moveWithLockedAngle(
+                            percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                            percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                            targetAngle);
                 }));
     }
 

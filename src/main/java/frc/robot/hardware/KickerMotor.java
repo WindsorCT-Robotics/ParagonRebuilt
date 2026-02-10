@@ -9,11 +9,14 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.Percent;
-import frc.robot.interfaces.IDutyCycleMotor;
+import frc.robot.interfaces.IMotor;
 
-public class KickerMotor implements IDutyCycleMotor {
+public class KickerMotor implements IMotor, Sendable {
     private final SparkMaxConfig configuaration;
     private final SparkMax motor;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
@@ -26,13 +29,19 @@ public class KickerMotor implements IDutyCycleMotor {
     }
 
     @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addDoubleProperty("Voltage (V)", () -> getVoltage(), null);
+        builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
+    }
+
+    @Override
     public void setVoltage(Voltage voltage) {
         motor.setVoltage(voltage.in(Volts));
     }
 
     @Override
-    public void getVoltage() {
-        motor.getBusVoltage();
+    public double getVoltage() {
+        return motor.getBusVoltage();
     }
 
     @Override

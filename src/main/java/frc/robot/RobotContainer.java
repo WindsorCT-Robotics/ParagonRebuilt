@@ -60,7 +60,7 @@ public class RobotContainer implements Sendable {
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putData("Autonomous", autonomousChooser);
-    SmartDashboard.putString("Relative Reference", getRelativeReference().get().toString());
+    SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
@@ -76,8 +76,8 @@ public class RobotContainer implements Sendable {
     return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
   }
 
-  private Supplier<RelativeReference> getRelativeReference() {
-    return () -> relativeReference;
+  private RelativeReference getRelativeReference() {
+    return relativeReference;
   }
 
   private void configureControllerBindings() {
@@ -90,17 +90,17 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
         curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-        getRelativeReference()));
+        () -> getRelativeReference()));
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
-      if (getRelativeReference().get() == RelativeReference.ROBOT_CENTRIC) {
+      if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = RelativeReference.FIELD_CENTRIC;
       } else {
         relativeReference = RelativeReference.ROBOT_CENTRIC;
       }
 
-      SmartDashboard.putString("Relative Reference", getRelativeReference().get().toString());
+      SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
 
     // Half Speed
@@ -109,7 +109,7 @@ public class RobotContainer implements Sendable {
             curveAxis(() -> controllerLeftAxisX.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(() -> controllerLeftAxisY.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-            getRelativeReference()));
+            () -> getRelativeReference()));
 
     controller.a().toggleOnTrue(
         drive.angleToOutpost(

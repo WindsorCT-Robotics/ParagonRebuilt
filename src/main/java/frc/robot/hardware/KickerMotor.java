@@ -30,6 +30,8 @@ public class KickerMotor implements IMotor, Sendable {
 
     @Override
     public void initSendable(SendableBuilder builder) {
+        builder.setActuator(true);
+        builder.setSafeState(this::stop);
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage(), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
     }

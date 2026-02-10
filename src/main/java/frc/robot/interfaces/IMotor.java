@@ -7,7 +7,7 @@ public interface IMotor {
 
     public void getVoltage();
 
-    public void isMoving();
+    public boolean isMoving();
 
     public void stop();
 

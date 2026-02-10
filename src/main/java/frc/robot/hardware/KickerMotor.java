@@ -9,12 +9,16 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
+import static edu.wpi.first.units.Units.Value;
+import static edu.wpi.first.units.Units.Percent;
 import frc.robot.interfaces.IDutyCycleMotor;
 
 public class KickerMotor implements IDutyCycleMotor {
     private final CanId canId;
     private final SparkMaxConfig configuaration;
     private final SparkMax motor;
+    private static final Dimensionless MAX_DUTY = Percent.of(100);
+    private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
     public KickerMotor(CanId canId) {
         this.canId = canId;
@@ -31,31 +35,30 @@ public class KickerMotor implements IDutyCycleMotor {
 
     @Override
     public void getVoltage() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getVoltage'");
+        motor.getBusVoltage();
     }
 
     @Override
-    public void isMoving() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isMoving'");
+    public boolean isMoving() {
+        return (motor.getEncoder().getVelocity() != 0);
     }
 
     @Override
     public void stop() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stop'");
+        motor.stopMotor();
     }
 
     @Override
     public void resetRelativeEncoder() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'resetRelativeEncoder'");
+        motor.getEncoder().setPosition(0);
     }
 
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setDutyCycle'");
+        if (percentage.gt(MAX_DUTY) || percentage.lt(MIN_DUTY)) {
+            throw new IllegalArgumentException("Percentage " + percentage
+                    + " is out of bounds for duty motor Acceptable ranges are [" + MIN_DUTY + ", " + MAX_DUTY + "].");
+        }
+        motor.set(percentage.in(Value));
     }
 }

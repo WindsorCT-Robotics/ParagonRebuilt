@@ -4,7 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,14 +45,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.GeneratedDrive;
-import frc.robot.result.Failure;
-import frc.robot.result.Result;
-import frc.robot.result.Success;
+import frc.robot.generated.TunerConstants;
 
 public class Drive extends GeneratedDrive {
     // TODO: Max velocities should be properly tested.
-    private static final LinearVelocity MAX_LINEAR_VELOCITY = MetersPerSecond.of(1);
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(1);
+    private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
     private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(7, 0, 0);
     private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
     private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
@@ -62,18 +60,13 @@ public class Drive extends GeneratedDrive {
     private final RobotConfig robotConfiguration;
     private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
 
-    public sealed interface CommandError permits AllianceUnknown {
-    }
-
-    public record AllianceUnknown() implements CommandError {
-    }
-
     public Drive(
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
 
         super(drivetrainConstants, modules);
 
+        // TODO: Properly set GUI Settings in PathPlanner
         robotConfiguration = RobotConfig.fromGUISettings();
 
         AutoBuilder.configure(
@@ -102,52 +95,57 @@ public class Drive extends GeneratedDrive {
                 .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
     }
 
-    private enum RelativeReference {
-        ROBOT_RELATIVE,
-        FIELD_RELATIVE
+    public enum RelativeReference {
+        ROBOT_CENTRIC,
+        FIELD_CENTRIC
     }
 
-    private Command robotCentricMove(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y,
-            Supplier<AngularVelocity> rotateRate) {
-        return applyRequest(() -> new RobotCentric()
-                .withVelocityX(x.get())
-                .withVelocityY(y.get())
-                .withRotationalRate(rotateRate.get()));
+    private SwerveRequest robotCentricSwerveRequest(
+            LinearVelocity x,
+            LinearVelocity y,
+            AngularVelocity rotateRate) {
+        return new RobotCentric()
+                .withVelocityX(x)
+                .withVelocityY(y)
+                .withRotationalRate(rotateRate);
     }
 
-    private Command fieldCentricMove(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y,
-            Supplier<AngularVelocity> rotateRate) {
-        return applyRequest(() -> new FieldCentric()
-                .withVelocityX(x.get())
-                .withVelocityY(y.get())
-                .withRotationalRate(rotateRate.get()));
+    private SwerveRequest fieldCentricSwerveRequest(
+            LinearVelocity x,
+            LinearVelocity y,
+            AngularVelocity rotateRate) {
+        return new FieldCentric()
+                .withVelocityX(x)
+                .withVelocityY(y)
+                .withRotationalRate(rotateRate);
     }
 
     public Command move(
             Supplier<LinearVelocity> x,
             Supplier<LinearVelocity> y,
             Supplier<AngularVelocity> rotateRate,
-            RelativeReference reference) {
-        switch (reference) {
-            case ROBOT_RELATIVE:
-                return robotCentricMove(x, y, rotateRate);
-            case FIELD_RELATIVE:
-                return fieldCentricMove(x, y, rotateRate);
-            default:
-                throw new IllegalArgumentException(
-                        "Unable to determine the SwerveRequest return. Illegal RelativeReference: " + reference);
-        }
+            Supplier<RelativeReference> reference) {
+        return run(() -> {
+            switch (reference.get()) {
+                case ROBOT_CENTRIC:
+                    robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    break;
+                case FIELD_CENTRIC:
+                    fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Unable to determine the SwerveRequest return. Illegal RelativeReference: "
+                                    + reference.get().toString());
+            }
+        });
     }
 
     private LinearVelocity percentageToLinearVelocity(LinearVelocity velocity, Supplier<Dimensionless> percent) {
         return velocity.times(percent.get());
     }
 
-    private AngularVelocity percentToAngularVelocity(AngularVelocity velocity, Supplier<Dimensionless> percent) {
+    private AngularVelocity percentageToAngularVelocity(AngularVelocity velocity, Supplier<Dimensionless> percent) {
         return velocity.times(percent.get());
     }
 
@@ -155,20 +153,17 @@ public class Drive extends GeneratedDrive {
             Supplier<Dimensionless> x,
             Supplier<Dimensionless> y,
             Supplier<Dimensionless> rotateRate,
-            RelativeReference reference) {
+            Supplier<RelativeReference> reference) {
         return move(
                 () -> percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                 () -> percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                () -> percentToAngularVelocity(MAX_ANGULAR_VELOCITY, rotateRate),
+                () -> percentageToAngularVelocity(MAX_ANGULAR_VELOCITY, rotateRate),
                 reference);
     }
 
     /**
-     * Moves with the ability to control rotation with with a target angle.
-     * 
-     * @param x
-     * @param y
-     * @param targetAngle
+     * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
+     * CENTRIC.
      */
     private void moveWithLockedAngle(
             LinearVelocity x,
@@ -183,28 +178,27 @@ public class Drive extends GeneratedDrive {
                         .withTargetDirection(new Rotation2d(targetAngle.in(Degrees))));
     }
 
-    public Result<Command, CommandError> angleToOutpost(
-            Supplier<LinearVelocity> x,
-            Supplier<LinearVelocity> y) {
+    public Command angleToOutpost(
+            Supplier<Dimensionless> x,
+            Supplier<Dimensionless> y) {
+        return run(() -> {
+            Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
 
-        Optional<Alliance> alliance = DriverStation.getAlliance();
+            maybeAlliance.ifPresent(alliance -> {
+                Angle targetAngle;
 
-        if (alliance.isEmpty()) {
-            return new Failure<>(new AllianceUnknown());
-        }
+                if (maybeAlliance.get().equals(Alliance.Blue)) {
+                    targetAngle = ALLIANCE_BLUE_SIDE;
+                } else {
+                    targetAngle = ALLIANCE_RED_SIDE;
+                }
 
-        return new Success<>(
-                run(() -> {
-                    Angle targetAngle;
-
-                    if (alliance.get().equals(Alliance.Blue)) {
-                        targetAngle = ALLIANCE_BLUE_SIDE;
-                    } else {
-                        targetAngle = ALLIANCE_RED_SIDE;
-                    }
-
-                    moveWithLockedAngle(x.get(), y.get(), targetAngle);
-                }));
+                moveWithLockedAngle(
+                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                        targetAngle);
+            });
+        }).unless(DriverStation.getAlliance()::isEmpty);
     }
 
     private PathPlannerPath createPathToPosition(

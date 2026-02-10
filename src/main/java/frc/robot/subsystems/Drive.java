@@ -60,12 +60,6 @@ public class Drive extends GeneratedDrive {
     private final RobotConfig robotConfiguration;
     private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
 
-    public sealed interface CommandError permits AllianceUnknown {
-    }
-
-    public record AllianceUnknown() implements CommandError {
-    }
-
     public Drive(
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
@@ -204,8 +198,7 @@ public class Drive extends GeneratedDrive {
                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                         targetAngle);
             });
-        })
-                .unless(DriverStation.getAlliance()::isEmpty);
+        }).unless(DriverStation.getAlliance()::isEmpty);
     }
 
     private PathPlannerPath createPathToPosition(

@@ -37,7 +37,7 @@ public class RobotContainer implements Sendable {
   private final CommandXboxController controller;
   private static final double MOVE_ROBOT_CURVE = 2.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
-  private Supplier<RelativeReference> relativeReference;
+  private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
   private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
@@ -54,13 +54,13 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    relativeReference = () -> RelativeReference.FIELD_CENTRIC;
+    relativeReference = RelativeReference.FIELD_CENTRIC;
 
     controller = new CommandXboxController(0);
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putData("Autonomous", autonomousChooser);
-    SmartDashboard.putString("Relative Reference", relativeReference.get().name());
+    SmartDashboard.putString("Relative Reference", getRelativeReference().get().toString());
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
@@ -76,6 +76,10 @@ public class RobotContainer implements Sendable {
     return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
   }
 
+  private Supplier<RelativeReference> getRelativeReference() {
+    return () -> relativeReference;
+  }
+
   private void configureControllerBindings() {
     Supplier<Dimensionless> controllerLeftAxisX = () -> Percent.of(controller.getLeftX());
     Supplier<Dimensionless> controllerLeftAxisY = () -> Percent.of(controller.getLeftY());
@@ -86,17 +90,17 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
         curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-        relativeReference));
+        getRelativeReference()));
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
-      if (relativeReference.get() == RelativeReference.ROBOT_CENTRIC) {
-        relativeReference = () -> RelativeReference.FIELD_CENTRIC;
+      if (getRelativeReference().get() == RelativeReference.ROBOT_CENTRIC) {
+        relativeReference = RelativeReference.FIELD_CENTRIC;
       } else {
-        relativeReference = () -> RelativeReference.ROBOT_CENTRIC;
+        relativeReference = RelativeReference.ROBOT_CENTRIC;
       }
 
-      SmartDashboard.putString("Relative Reference", relativeReference.get().toString());
+      SmartDashboard.putString("Relative Reference", getRelativeReference().get().toString());
     }));
 
     // Half Speed
@@ -105,7 +109,7 @@ public class RobotContainer implements Sendable {
             curveAxis(() -> controllerLeftAxisX.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(() -> controllerLeftAxisY.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-            relativeReference));
+            getRelativeReference()));
 
     controller.a().toggleOnTrue(
         drive.angleToOutpost(

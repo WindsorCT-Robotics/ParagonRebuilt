@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import org.json.simple.parser.ParseException;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -23,12 +25,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
-import frc.robot.result.Result;
 import frc.robot.subsystems.Drive;
-import frc.robot.subsystems.Drive.CommandError;
 import frc.robot.subsystems.Drive.RelativeReference;
 
 public class RobotContainer implements Sendable {
+  private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
+  private final Telemetry logger;
+
   private final Drive drive;
 
   private final CommandXboxController controller;
@@ -59,6 +62,9 @@ public class RobotContainer implements Sendable {
     SmartDashboard.putData("Autonomous", autonomousChooser);
     SmartDashboard.putString("Relative Reference", relativeReference.get().name());
     configureControllerBindings();
+
+    logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
+    drive.registerTelemetry(logger::telemeterize);
   }
 
   @Override
@@ -66,29 +72,23 @@ public class RobotContainer implements Sendable {
 
   }
 
-  private Dimensionless rootPercent(Supplier<Dimensionless> percent, double root) {
-    return Percent.of(Math.pow(percent.get().in(Percent), 1.0 / root));
-  }
-
-  private Command angleToOutpost(Result<Command, CommandError> commandState) {
-    if (commandState.isFailure()) {
-      return Commands.none(); // TODO: Instead of returning a none command it should just cancel the command.
-    }
-
-    return commandState.getValue();
+  private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
+    return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
   }
 
   private void configureControllerBindings() {
+    Supplier<Dimensionless> controllerLeftAxisX = () -> Percent.of(controller.getLeftX());
+    Supplier<Dimensionless> controllerLeftAxisY = () -> Percent.of(controller.getLeftY());
+    Supplier<Dimensionless> controllerRightAxisX = () -> Percent.of(controller.getRightX());
+    Supplier<Dimensionless> controllerRightAxisY = () -> Percent.of(controller.getRightY());
+
     drive.setDefaultCommand(drive.moveWithPercentages(
-        () -> rootPercent(() -> Percent.of(controller.getLeftX()), moveRootCurve),
-        () -> rootPercent(() -> Percent.of(controller.getLeftY()), moveRootCurve),
-        () -> rootPercent(() -> Percent.of(controller.getRightX()), turnRootCurve),
+        curveAxis(controllerLeftAxisX, moveRootCurve),
+        curveAxis(controllerLeftAxisY, moveRootCurve),
+        curveAxis(controllerRightAxisX, turnRootCurve),
         relativeReference));
-    /*
-     * Switches RelativeReference
-     * TODO: Allow Drive Subsystem to dynamically switch between
-     * relativeReferences.
-     */
+
+    // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
       if (relativeReference.get() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = () -> RelativeReference.FIELD_CENTRIC;
@@ -102,19 +102,15 @@ public class RobotContainer implements Sendable {
     // Half Speed
     controller.rightBumper().whileTrue(
         drive.moveWithPercentages(
-            () -> rootPercent(() -> Percent.of(controller.getLeftX()).div(2), moveRootCurve),
-            () -> rootPercent(() -> Percent.of(controller.getLeftY()).div(2), moveRootCurve),
-            () -> rootPercent(() -> Percent.of(controller.getRightX()), turnRootCurve),
+            curveAxis(() -> controllerLeftAxisX.get().div(2), moveRootCurve),
+            curveAxis(() -> controllerLeftAxisY.get().div(2), moveRootCurve),
+            curveAxis(controllerRightAxisX, turnRootCurve),
             relativeReference));
 
-    /*
-     * TODO: Angle To Outpost should either schedule the command or does nothing and
-     * let the default command of drive take over.
-     */
-    controller.a().toggleOnTrue(angleToOutpost(
+    controller.a().toggleOnTrue(
         drive.angleToOutpost(
-            () -> rootPercent(() -> Percent.of(controller.getLeftX()), moveRootCurve),
-            () -> rootPercent(() -> Percent.of(controller.getLeftY()), moveRootCurve))));
+            curveAxis(controllerLeftAxisX, moveRootCurve),
+            curveAxis(controllerLeftAxisY, moveRootCurve)));
 
     /*
      * Note that each routine should be run exactly once in a single log.

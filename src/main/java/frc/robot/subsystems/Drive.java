@@ -4,7 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,14 +45,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.GeneratedDrive;
-import frc.robot.result.Failure;
-import frc.robot.result.Result;
-import frc.robot.result.Success;
+import frc.robot.generated.TunerConstants;
 
 public class Drive extends GeneratedDrive {
     // TODO: Max velocities should be properly tested.
-    private static final LinearVelocity MAX_LINEAR_VELOCITY = MetersPerSecond.of(1);
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(1);
+    private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
     private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(7, 0, 0);
     private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
     private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
@@ -186,31 +184,28 @@ public class Drive extends GeneratedDrive {
                         .withTargetDirection(new Rotation2d(targetAngle.in(Degrees))));
     }
 
-    public Result<Command, CommandError> angleToOutpost(
+    public Command angleToOutpost(
             Supplier<Dimensionless> x,
             Supplier<Dimensionless> y) {
+        return run(() -> {
+            Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
 
-        Optional<Alliance> alliance = DriverStation.getAlliance();
+            maybeAlliance.ifPresent(alliance -> {
+                Angle targetAngle;
 
-        if (alliance.isEmpty()) {
-            return new Failure<>(new AllianceUnknown());
-        }
+                if (maybeAlliance.get().equals(Alliance.Blue)) {
+                    targetAngle = ALLIANCE_BLUE_SIDE;
+                } else {
+                    targetAngle = ALLIANCE_RED_SIDE;
+                }
 
-        return new Success<>(
-                run(() -> {
-                    Angle targetAngle;
-
-                    if (alliance.get().equals(Alliance.Blue)) {
-                        targetAngle = ALLIANCE_BLUE_SIDE;
-                    } else {
-                        targetAngle = ALLIANCE_RED_SIDE;
-                    }
-
-                    moveWithLockedAngle(
-                            percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                            percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                            targetAngle);
-                }));
+                moveWithLockedAngle(
+                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                        targetAngle);
+            });
+        })
+                .unless(DriverStation.getAlliance()::isEmpty);
     }
 
     private PathPlannerPath createPathToPosition(

@@ -35,8 +35,8 @@ public class RobotContainer implements Sendable {
   private final Drive drive;
 
   private final CommandXboxController controller;
-  private static final double moveRootCurve = 2.0;
-  private static final double turnRootCurve = 2.0;
+  private static final double MOVE_ROBOT_CURVE = 2.0;
+  private static final double TURN_ROBOT_CURVE = 2.0;
   private Supplier<RelativeReference> relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
@@ -83,9 +83,9 @@ public class RobotContainer implements Sendable {
     Supplier<Dimensionless> controllerRightAxisY = () -> Percent.of(controller.getRightY());
 
     drive.setDefaultCommand(drive.moveWithPercentages(
-        curveAxis(controllerLeftAxisX, moveRootCurve),
-        curveAxis(controllerLeftAxisY, moveRootCurve),
-        curveAxis(controllerRightAxisX, turnRootCurve),
+        curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
+        curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
+        curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
         relativeReference));
 
     // Switches RelativeReference
@@ -102,15 +102,15 @@ public class RobotContainer implements Sendable {
     // Half Speed
     controller.rightBumper().whileTrue(
         drive.moveWithPercentages(
-            curveAxis(() -> controllerLeftAxisX.get().div(2), moveRootCurve),
-            curveAxis(() -> controllerLeftAxisY.get().div(2), moveRootCurve),
-            curveAxis(controllerRightAxisX, turnRootCurve),
+            curveAxis(() -> controllerLeftAxisX.get().div(2), MOVE_ROBOT_CURVE),
+            curveAxis(() -> controllerLeftAxisY.get().div(2), MOVE_ROBOT_CURVE),
+            curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
             relativeReference));
 
     controller.a().toggleOnTrue(
         drive.angleToOutpost(
-            curveAxis(controllerLeftAxisX, moveRootCurve),
-            curveAxis(controllerLeftAxisY, moveRootCurve)));
+            curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
+            curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
 
     /*
      * Note that each routine should be run exactly once in a single log.

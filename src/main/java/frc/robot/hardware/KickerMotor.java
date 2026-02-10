@@ -14,14 +14,12 @@ import static edu.wpi.first.units.Units.Percent;
 import frc.robot.interfaces.IDutyCycleMotor;
 
 public class KickerMotor implements IDutyCycleMotor {
-    private final CanId canId;
     private final SparkMaxConfig configuaration;
     private final SparkMax motor;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
     public KickerMotor(CanId canId) {
-        this.canId = canId;
         configuaration = new SparkMaxConfig();
         configuaration.idleMode(IdleMode.kBrake);
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
@@ -31,7 +29,6 @@ public class KickerMotor implements IDutyCycleMotor {
     public void setVoltage(Voltage voltage) {
         motor.setVoltage(voltage.in(Volts));
     }
-    
 
     @Override
     public void getVoltage() {

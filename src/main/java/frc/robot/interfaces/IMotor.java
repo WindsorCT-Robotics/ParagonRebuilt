@@ -6,7 +6,7 @@ import edu.wpi.first.units.measure.Voltage;
 public interface IMotor {
     public void setVoltage(Voltage voltage);
 
-    public double getVoltage();
+    public Voltage getVoltage();
 
     public boolean isMoving();
 

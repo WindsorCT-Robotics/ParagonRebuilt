@@ -32,7 +32,7 @@ public class KickerMotor implements IMotor, Sendable {
     public void initSendable(SendableBuilder builder) {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage(), null);
+        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
     }
 
@@ -42,8 +42,8 @@ public class KickerMotor implements IMotor, Sendable {
     }
 
     @Override
-    public double getVoltage() {
-        return motor.getBusVoltage();
+    public Voltage getVoltage() {
+        return Volts.of(motor.getBusVoltage());
     }
 
     @Override

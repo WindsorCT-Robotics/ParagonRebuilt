@@ -84,13 +84,12 @@ public class RobotContainer implements Sendable {
     Supplier<Dimensionless> controllerLeftAxisX = () -> Percent.of(controller.getLeftX());
     Supplier<Dimensionless> controllerLeftAxisY = () -> Percent.of(controller.getLeftY());
     Supplier<Dimensionless> controllerRightAxisX = () -> Percent.of(controller.getRightX());
-    Supplier<Dimensionless> controllerRightAxisY = () -> Percent.of(controller.getRightY());
 
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
         curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-        () -> getRelativeReference()));
+        this::getRelativeReference));
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
@@ -109,7 +108,7 @@ public class RobotContainer implements Sendable {
             curveAxis(() -> controllerLeftAxisX.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(() -> controllerLeftAxisY.get().div(2), MOVE_ROBOT_CURVE),
             curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-            () -> getRelativeReference()));
+            this::getRelativeReference));
 
     controller.a().toggleOnTrue(
         drive.angleToOutpost(

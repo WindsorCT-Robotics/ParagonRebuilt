@@ -11,4 +11,5 @@ public class IntakeBayDoorMotor { // TODO: Extend IMotor once it's merged into m
     public IntakeBayDoorMotor() {
 
     }
+
 }

@@ -44,6 +44,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.TunerConstants;
 
@@ -100,13 +101,14 @@ public class Drive extends GeneratedDrive {
         FIELD_CENTRIC
     }
 
+    // TODO: Forward is intakw side.
     private SwerveRequest robotCentricSwerveRequest(
             LinearVelocity x,
             LinearVelocity y,
             AngularVelocity rotateRate) {
         return new RobotCentric()
-                .withVelocityX(x)
-                .withVelocityY(y)
+                .withVelocityX(y)
+                .withVelocityY(x)
                 .withRotationalRate(rotateRate);
     }
 
@@ -115,8 +117,8 @@ public class Drive extends GeneratedDrive {
             LinearVelocity y,
             AngularVelocity rotateRate) {
         return new FieldCentric()
-                .withVelocityX(x)
-                .withVelocityY(y)
+                .withVelocityX(y)
+                .withVelocityY(x)
                 .withRotationalRate(rotateRate);
     }
 
@@ -126,12 +128,13 @@ public class Drive extends GeneratedDrive {
             Supplier<AngularVelocity> rotateRate,
             Supplier<RelativeReference> reference) {
         return run(() -> {
+            System.out.println("Velocity X (M/S): " + x.get() + " | " + "Velocity Y (M/S): " + y.get());
             switch (reference.get()) {
                 case ROBOT_CENTRIC:
-                    robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    setControl(robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));
                     break;
                 case FIELD_CENTRIC:
-                    fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get());
+                    setControl(fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -250,5 +253,9 @@ public class Drive extends GeneratedDrive {
                         goalEndState,
                         robotNextControlDistance,
                         endAnchorPreviousControlDistance));
+    }
+
+    public Command resetGyro() {
+        return Commands.runOnce(() -> getPigeon2().setYaw(Degrees.of(0.0)));
     }
 }

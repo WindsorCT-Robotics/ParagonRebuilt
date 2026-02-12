@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Value;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -16,6 +17,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -74,7 +76,7 @@ public class RobotContainer implements Sendable {
   }
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
+    return () -> Percent.of(Math.abs(percent.get().in(Percent)) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {
@@ -116,6 +118,7 @@ public class RobotContainer implements Sendable {
             curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
 
+    controller.povDown().onTrue(drive.resetGyro());
     /*
      * Note that each routine should be run exactly once in a single log.
      * TODO: After PID Tuning with sysIdDynamics these are no longer needed until

@@ -101,7 +101,7 @@ public class Drive extends GeneratedDrive {
         FIELD_CENTRIC
     }
 
-    // TODO: Forward is intakw side.
+    // TODO: Forward is intake side.
     private SwerveRequest robotCentricSwerveRequest(
             LinearVelocity x,
             LinearVelocity y,

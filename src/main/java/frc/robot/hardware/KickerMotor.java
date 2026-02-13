@@ -7,13 +7,18 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.util.sendable.SendableRegistry;
 
-import static edu.wpi.first.units.Units.Value;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import frc.robot.interfaces.IMotor;
 
 public class KickerMotor implements IMotor, Sendable {
@@ -22,7 +27,11 @@ public class KickerMotor implements IMotor, Sendable {
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
-    public KickerMotor(CanId canId) {
+    public KickerMotor(
+            String name,
+            CanId canId) {
+        SendableRegistry.add(this, name);
+
         configuaration = new SparkMaxConfig();
         configuaration.idleMode(IdleMode.kBrake);
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
@@ -32,8 +41,12 @@ public class KickerMotor implements IMotor, Sendable {
     public void initSendable(SendableBuilder builder) {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
+
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
+        builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), null);
+        builder.addDoubleProperty("RPS (Rotations Per Second)", () -> getRPS().in(RotationsPerSecond), null);
+        builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 
     @Override
@@ -67,6 +80,15 @@ public class KickerMotor implements IMotor, Sendable {
             throw new IllegalArgumentException("Percentage " + percentage
                     + " is out of bounds for duty motor Acceptable ranges are [" + MIN_DUTY + ", " + MAX_DUTY + "].");
         }
-        motor.set(percentage.in(Value));
+
+        motor.set(percentage.in(Percent));
+    }
+
+    private AngularVelocity getRPS() {
+        return RotationsPerSecond.of(motor.getEncoder().getVelocity()).div(60);
+    }
+
+    private Temperature getTemperature() {
+        return Celsius.of(motor.getMotorTemperature());
     }
 }

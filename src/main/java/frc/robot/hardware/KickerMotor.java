@@ -48,7 +48,7 @@ public class KickerMotor implements IMotor, Sendable {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
+        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), this::setVoltage);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
         builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), this::setDutyCycle);
@@ -60,6 +60,10 @@ public class KickerMotor implements IMotor, Sendable {
     @Override
     public void setVoltage(Voltage voltage) {
         motor.setVoltage(voltage.in(Volts));
+    }
+
+    private void setVoltage(double voltage) {
+        motor.setVoltage(voltage);
     }
 
     @Override

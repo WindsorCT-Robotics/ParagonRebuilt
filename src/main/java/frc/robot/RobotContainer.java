@@ -36,7 +36,7 @@ public class RobotContainer implements Sendable {
   private final Drive drive;
 
   private final CommandXboxController controller;
-  private static final double MOVE_ROBOT_CURVE = 2.0;
+  private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
   private RelativeReference relativeReference;
 
@@ -74,8 +74,8 @@ public class RobotContainer implements Sendable {
   }
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent.of(Math.abs(percent.get().in(Percent)) * Math.abs(percent.get().in(Percent))
-        * percent.get().times(-1).in(Percent) * 100);
+    return () -> Percent
+        .of(Math.pow(percent.get().in(Percent), exponent - 1) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {

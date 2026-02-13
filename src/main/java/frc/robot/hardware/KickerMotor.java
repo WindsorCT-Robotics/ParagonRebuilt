@@ -8,6 +8,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -15,6 +16,7 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -43,6 +45,7 @@ public class KickerMotor implements IMotor, Sendable {
         builder.setSafeState(this::stop);
 
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
+        builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
         builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), null);
         builder.addDoubleProperty("RPS (Rotations Per Second)", () -> getRPS().in(RotationsPerSecond), null);
@@ -90,5 +93,9 @@ public class KickerMotor implements IMotor, Sendable {
 
     private Temperature getTemperature() {
         return Celsius.of(motor.getMotorTemperature());
+    }
+
+    private Current getCurrent() {
+        return Amps.of(motor.getOutputCurrent());
     }
 }

@@ -10,8 +10,9 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -31,12 +32,29 @@ public abstract class KrakenMotorBase implements IMotor, Sendable {
     // https://docs.wcproducts.com/welcome/electronics/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance#trapezoidal-commutation
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(6000);
 
+    /**
+     * 
+     * @param name
+     * @param canId
+     * @param motorConfiguration
+     * @param resetMode          It's recommended that when initalized, it should be
+     *                           set to `kResetSafeParameters`
+     * @param persistMode        It's recommended that when initalized, it should be
+     *                           set to `kPersistParameters`
+     */
     public KrakenMotorBase(
             String name,
             CanId canId,
-            SparkMaxConfig motorConfiguration) {
+            SparkBaseConfig motorConfiguration,
+            ResetMode resetMode,
+            PersistMode persistMode) {
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
-        motor.configure(motorConfiguration, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // Reset Mode:
+        // https://docs.revrobotics.com/revlib/configuring-devices#applying-a-configuration-to-your-device
+        // Persist Mode:
+        // https://docs.revrobotics.com/revlib/spark/configuring-a-spark#persisting-parameters
+        motor.configure(motorConfiguration, resetMode, persistMode);
         SendableRegistry.add(this, name);
     }
 
@@ -94,13 +112,8 @@ public abstract class KrakenMotorBase implements IMotor, Sendable {
     }
 
     private void setDutyCycle(double percentage) {
-        if (percentage > 1) {
-            setDutyCycle(MAX_DUTY);
-        } else if (percentage < -1) {
-            setDutyCycle(MIN_DUTY);
-        } else {
-            setDutyCycle(Percent.of(percentage));
-        }
+        double clampPercentage = MathUtil.clamp(percentage, MIN_DUTY.in(Percent), MAX_DUTY.in(Percent));
+        setDutyCycle(Percent.of(clampPercentage));
     }
 
     private void setRPM(double rpm) {

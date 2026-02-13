@@ -26,6 +26,7 @@ import frc.robot.interfaces.IMotor;
 public class KickerMotor implements IMotor, Sendable {
     private final SparkMaxConfig configuaration;
     private final SparkMax motor;
+    private static final double RPM_TO_RPS = 60;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
@@ -88,7 +89,7 @@ public class KickerMotor implements IMotor, Sendable {
     }
 
     private AngularVelocity getRPS() {
-        return RotationsPerSecond.of(motor.getEncoder().getVelocity()).div(60);
+        return RotationsPerSecond.of(motor.getEncoder().getVelocity() / RPM_TO_RPS);
     }
 
     private Temperature getTemperature() {

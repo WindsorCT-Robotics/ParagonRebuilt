@@ -20,7 +20,6 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import frc.robot.interfaces.IMotor;
 
@@ -29,6 +28,10 @@ public class KickerMotor implements IMotor, Sendable {
     private final SparkMax motor;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
+
+    // Data:
+    // https://docs.wcproducts.com/welcome/electronics/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance#trapezoidal-commutation
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(6000);
 
     public KickerMotor(
             String name,
@@ -48,9 +51,9 @@ public class KickerMotor implements IMotor, Sendable {
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
-        builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), null);
-        builder.addDoubleProperty("RPS (Rotations Per Second)", () -> getAngularVelocity().in(RotationsPerSecond),
-                null);
+        builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), this::setDutyCycle);
+        builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
+                this::setRPM);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 
@@ -99,5 +102,19 @@ public class KickerMotor implements IMotor, Sendable {
 
     private Current getCurrent() {
         return Amps.of(motor.getOutputCurrent());
+    }
+
+    private void setDutyCycle(double percentage) {
+        if (percentage > 1) {
+            setDutyCycle(MAX_DUTY);
+        } else if (percentage < -1) {
+            setDutyCycle(MIN_DUTY);
+        } else {
+            setDutyCycle(Percent.of(percentage));
+        }
+    }
+
+    private void setRPM(double rpm) {
+        setDutyCycle(Percent.of(rpm / MAX_ANGULAR_VELOCITY.in(RPM)));
     }
 }

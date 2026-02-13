@@ -19,6 +19,7 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import frc.robot.interfaces.IMotor;
@@ -26,7 +27,6 @@ import frc.robot.interfaces.IMotor;
 public class KickerMotor implements IMotor, Sendable {
     private final SparkMaxConfig configuaration;
     private final SparkMax motor;
-    private static final double RPM_TO_RPS = 60;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
@@ -49,7 +49,8 @@ public class KickerMotor implements IMotor, Sendable {
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addBooleanProperty("Is Motor Moving?", () -> isMoving(), null);
         builder.addDoubleProperty("Target Duty Cycle %", () -> motor.getAppliedOutput(), null);
-        builder.addDoubleProperty("RPS (Rotations Per Second)", () -> getRPS().in(RotationsPerSecond), null);
+        builder.addDoubleProperty("RPS (Rotations Per Second)", () -> getAngularVelocity().in(RotationsPerSecond),
+                null);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 
@@ -88,8 +89,8 @@ public class KickerMotor implements IMotor, Sendable {
         motor.set(percentage.in(Percent));
     }
 
-    private AngularVelocity getRPS() {
-        return RotationsPerSecond.of(motor.getEncoder().getVelocity() / RPM_TO_RPS);
+    private AngularVelocity getAngularVelocity() {
+        return RPM.of(motor.getEncoder().getVelocity());
     }
 
     private Temperature getTemperature() {

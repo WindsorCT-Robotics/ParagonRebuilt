@@ -75,7 +75,7 @@ public class RobotContainer implements Sendable {
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
     return () -> Percent
-        .of(Math.pow(percent.get().in(Percent), exponent - 1) * percent.get().times(-1).in(Percent) * 100);
+        .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {

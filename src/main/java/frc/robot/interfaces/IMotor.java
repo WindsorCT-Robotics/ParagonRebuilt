@@ -16,6 +16,4 @@ public interface IMotor {
     public boolean isMoving();
 
     public void setDutyCycle(Dimensionless percentage);
-
-    public Dimensionless getAppliedOutput();
 }

@@ -25,7 +25,7 @@ import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
 public abstract class SparkMaxMotorBase implements IMotor, Sendable {
-    private final SparkMax motor;
+    protected final SparkMax motor;
     private final AngularVelocity maxAngularVelocity;
 
     private static final Dimensionless MAX_DUTY = Percent.of(100);

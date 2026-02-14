@@ -66,7 +66,7 @@ public abstract class KrakenMotorBase implements IMotor, Sendable {
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), this::setVoltage);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addBooleanProperty("Is Motor Moving?", this::isMoving, null);
-        builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycleDouble, this::setDutyCycle);
+        builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycle, this::setDutyCycle);
         builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
                 this::setRPM);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
@@ -116,11 +116,7 @@ public abstract class KrakenMotorBase implements IMotor, Sendable {
         setDutyCycle(Percent.of(clampPercentage));
     }
 
-    private Dimensionless getDutyCycle() {
-        return Percent.of(motor.getAppliedOutput());
-    }
-
-    private double getDutyCycleDouble() {
+    private double getDutyCycle() {
         return motor.getAppliedOutput();
     }
 

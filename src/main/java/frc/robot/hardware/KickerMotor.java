@@ -13,6 +13,7 @@ public class KickerMotor extends KrakenMotorBase {
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
     private static final Current CURRENT_LIMIT = Amps.of(0); // TODO: Get the recommended current limit of this motor.
+    
 
     public KickerMotor(String name, CanId canId) {
         super(

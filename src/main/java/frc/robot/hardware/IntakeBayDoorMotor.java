@@ -23,15 +23,18 @@ import frc.robot.interfaces.IAngularPositionMotor;
 public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPositionMotor {
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
+
     private static final Current CURRENT_LIMIT = Amps.of(0); // TODO: Get the recommended current limit of this motor.
     private final SparkBaseConfig motorConfiguration = new SparkMaxConfig().idleMode(IDLE_MODE).inverted(INVERTED);
+
     // https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control#tuning-for-maxmotion-position-control
     private static final PIDConstants MOTOR_PID = new PIDConstants(0, 0, 0); // TODO: Test pid constants.
     private static final Angle CLOSED_LOOP_ERROR = Degrees.of(0.0); // TODO: Decide room of error.
     private static final ClosedLoopSlot LOOP_SLOT = ClosedLoopSlot.kSlot0;
     private final ClosedLoopConfig motorClosedLoopConfiguration = motorConfiguration.closedLoop
             .pid(MOTOR_PID.kP, MOTOR_PID.kI, MOTOR_PID.kD)
-            .allowedClosedLoopError(0, LOOP_SLOT);
+            .allowedClosedLoopError(CLOSED_LOOP_ERROR.in(Rotations), LOOP_SLOT); // TODO: Ensure to set closedLoop error
+                                                                                 // position conversion.
 
     private static final Angle CLOSED_ANGLE = Degrees.of(0);
     private static final Angle OPENED_ANGLE = Degrees.of(0); // TODO: How much should the motor turn to become open to

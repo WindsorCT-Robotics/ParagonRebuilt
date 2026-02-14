@@ -24,8 +24,8 @@ public class TunerConstants {
         // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
         // TODO: Retry Steering Gains. CURRENTLY REVERTED TO DEFAULT.
         private static final Slot0Configs steerGains = new Slot0Configs()
-                        .withKP(100).withKI(0).withKD(0.5)
-                        .withKS(0.1).withKV(2.66).withKA(0)
+                        .withKP(0.9769775).withKI(0).withKD(0)
+                        .withKS(0.105491).withKV(2.488875).withKA(0.133638)
                         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
         // When using closed-loop control, the drive motor uses the control
         // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput

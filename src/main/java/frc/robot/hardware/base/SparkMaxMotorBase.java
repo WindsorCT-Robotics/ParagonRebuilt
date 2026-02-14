@@ -1,4 +1,4 @@
-package frc.robot.hardware;
+package frc.robot.hardware.base;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
@@ -6,11 +6,11 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -21,39 +21,38 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
+import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
-public abstract class KrakenMotorBase implements IMotor, Sendable {
+public abstract class SparkMaxMotorBase implements IMotor, Sendable {
     private final SparkMax motor;
+    private final AngularVelocity maxAngularVelocity;
 
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
-
-    // https://docs.wcproducts.com/welcome/electronics/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance#trapezoidal-commutation
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(6000);
 
     /**
      * 
      * @param name
      * @param canId
+     * @param motorType
+     * @param maxAngularVelocity
      * @param motorConfiguration
      * @param resetMode          It's recommended that when initalized, it should be
      *                           set to `kResetSafeParameters`
      * @param persistMode        It's recommended that when initalized, it should be
      *                           set to `kPersistParameters`
      */
-    protected KrakenMotorBase(
+    protected SparkMaxMotorBase(
             String name,
             CanId canId,
+            MotorType motorType,
+            AngularVelocity maxAngularVelocity,
             SparkBaseConfig motorConfiguration,
             ResetMode resetMode,
             PersistMode persistMode) {
-        motor = new SparkMax(canId.Id(), MotorType.kBrushless);
-
-        // Reset Mode:
-        // https://docs.revrobotics.com/revlib/configuring-devices#applying-a-configuration-to-your-device
-        // Persist Mode:
-        // https://docs.revrobotics.com/revlib/spark/configuring-a-spark#persisting-parameters
+        this.maxAngularVelocity = maxAngularVelocity;
+        motor = new SparkMax(canId.Id(), motorType);
         motor.configure(motorConfiguration, resetMode, persistMode);
         SendableRegistry.add(this, name);
     }
@@ -121,7 +120,7 @@ public abstract class KrakenMotorBase implements IMotor, Sendable {
     }
 
     private void setRPM(double rpm) {
-        setDutyCycle(Percent.of(rpm / MAX_ANGULAR_VELOCITY.in(RPM)));
+        setDutyCycle(Percent.of(rpm / maxAngularVelocity.in(RPM)));
     }
 
     private AngularVelocity getAngularVelocity() {

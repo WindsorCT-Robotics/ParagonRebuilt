@@ -8,6 +8,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Current;
+import frc.robot.hardware.base.KrakenMotorBase;
 
 public class KickerMotor extends KrakenMotorBase {
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;

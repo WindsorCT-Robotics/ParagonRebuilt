@@ -7,6 +7,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.units.measure.Current;
+import frc.robot.hardware.base.KrakenMotorBase;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
@@ -17,14 +18,14 @@ public class IntakeRollerMotor extends KrakenMotorBase {
 
     public IntakeRollerMotor(String name, CanId canId) {
         super(
-            name, 
-            canId, 
-            new SparkMaxConfig()
-            .idleMode(IDLE_MODE)
-            .inverted(INVERTED)
-            .smartCurrentLimit((int) CURRENT_LIMIT.in(Amps)), 
-            ResetMode.kResetSafeParameters, 
-            PersistMode.kPersistParameters);
+                name,
+                canId,
+                new SparkMaxConfig()
+                        .idleMode(IDLE_MODE)
+                        .inverted(INVERTED)
+                        .smartCurrentLimit((int) CURRENT_LIMIT.in(Amps)),
+                ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
 
     }
 }

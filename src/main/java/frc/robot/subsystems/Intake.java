@@ -1,20 +1,141 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Percent;
+
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
+import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.hardware.CanId;
 import frc.robot.hardware.intakeMotors.IntakeBayDoorDualMotors;
+import frc.robot.hardware.intakeMotors.IntakeBayDoorMotor;
+import frc.robot.hardware.intakeMotors.IntakeRollerMotor;
 
 public class Intake extends SubsystemBase {
+    private final IntakeBayDoorDualMotors dualMotors;
+    private final IntakeRollerMotor rollerMotor;
+    private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(0); // TODO: Determine percentage.
+    private static final boolean DUAL_MOTORS_INVERTED = false; // TODO: Which way goes forward?
+    private static final IdleMode OPEN_IDLE_MODE = IdleMode.kCoast;
+    private static final IdleMode OPEN_INTAKE_IDLE_MODE = IdleMode.kBrake;
+    private static final IdleMode CLOSE_IDLE_MODE = IdleMode.kBrake;
+    private BayDoorState bayDoorState = BayDoorState.UNKNOWN;
+    private boolean isAtClosedPosition = false;
 
     public Intake(
             String name,
-            IntakeBayDoorDualMotors dualMotors) {
+            CanId rollerMotorCanId,
+            CanId leadMotorCanId,
+            CanId followerMotorCanId) {
         SendableRegistry.add(this, name);
+        rollerMotor = new IntakeRollerMotor("Intake Roller Motor", rollerMotorCanId);
+        IntakeBayDoorMotor leadMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Lead", leadMotorCanId);
+        IntakeBayDoorMotor followerMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Follower", followerMotorCanId);
+        dualMotors = new IntakeBayDoorDualMotors("Intake Bay Door Dual Motors", leadMotor, followerMotor,
+                DUAL_MOTORS_INVERTED);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+
+        builder.addStringProperty("Intake Bay Door State: ", this::getBayDoorState, null);
+    }
+
+    private enum BayDoorState {
+        UNKNOWN,
+        OPENING,
+        OPENED,
+        CLOSING,
+        CLOSED
+    }
+
+    private enum BayDoorAction {
+        OPEN,
+        OPEN_AND_INTAKE,
+        CLOSE
+    }
+
+    /*
+     * IGNORE THOUGHT DUMP.
+     * Position Bay Door based on an enum.
+     * 
+     * When the command is runned it should check if the limit switch is hit or not,
+     * although RevLib already does that with its limit switch behavior.
+     * 
+     * Be able to simply run the rollers.
+     * 
+     * Create a sequencial command of opening and roller fuel.
+     * 
+     * Should be a state of baydoor open but not rollers moving and bayDoor motors
+     * should be on coast.
+     * 
+     * Moves bayDoor to reverse limit switch, once triggered it stops and sets the
+     * `BayDoorState`
+     * 
+     * There should be 2 different types of OPENED. One where the intake is actively
+     * on where the idle mode should be kBrake and if that's not enough maybe a
+     * small duty cycle. The other one is when the rollers are actively on. This is
+     * to reduce possible intake damage if a potential robot hits into us and it was
+     * also initally the entire reason we picked this design.
+     */
+
+    public Command homeBayDoor() {
+        return Commands.runEnd(
+                () -> dualMotors.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
+                () -> bayDoorState = BayDoorState.CLOSED).until(this::isAtClosedPosition);
+    }
+
+    private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
+        switch (bayDoorAction) {
+            case OPEN:
+                dualMotors.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+                dualMotors.setIdleMode(OPEN_IDLE_MODE);
+                bayDoorState = BayDoorState.OPENING;
+                break;
+            case OPEN_AND_INTAKE:
+                dualMotors.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+                dualMotors.setIdleMode(OPEN_INTAKE_IDLE_MODE);
+                bayDoorState = BayDoorState.OPENING;
+                break;
+            case CLOSE:
+                dualMotors.setAngularPosition(IntakeBayDoorMotor.CLOSED_ANGLE);
+                dualMotors.setIdleMode(CLOSE_IDLE_MODE);
+                bayDoorState = BayDoorState.CLOSING;
+                break;
+        }
+    }
+
+    public Command positionBayDoorTo(BayDoorAction bayDoorAction) {
+        switch (bayDoorAction) {
+            case OPEN:
+                return Commands.runEnd(
+                        () -> setPositionBayDoorTo(bayDoorAction),
+                        () -> bayDoorState = BayDoorState.OPENED)
+                        .until(this::isAtOpenedPosition);
+            case CLOSE:
+                return Commands.runEnd(
+                        () -> setPositionBayDoorTo(bayDoorAction),
+                        () -> bayDoorState = BayDoorState.CLOSED)
+                        .until(this::isAtClosedPosition);
+            default:
+                throw new IllegalStateException("Unknown Bay Door Position: " + bayDoorAction);
+        }
+    }
+
+    private String getBayDoorState() {
+        return bayDoorState.toString();
+    }
+
+    private boolean isAtClosedPosition() {
+        return dualMotors.isAtClosedPosition();
+    }
+
+    private boolean isAtOpenedPosition() {
+        return dualMotors.isAtOpenedPosition();
     }
 }

@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
@@ -76,12 +78,25 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
         leadMotor.stop();
     }
 
-    public Angle getAngle() {
-        return Degrees.of(leadMotor.getAngle() + followerMotor.getAngle()).div(2);
+    private Angle getAngle() {
+        return leadMotor.getAngle().plus(followerMotor.getAngle()).div(2);
     }
 
     private void setInverted(boolean inverted) {
         leadMotor.setInverted(inverted);
         followerMotor.setInverted(!inverted);
+    }
+
+    public boolean isAtClosedPosition() {
+        return leadMotor.isAtReverseLimit.getAsBoolean();
+    }
+
+    public boolean isAtOpenedPosition() {
+        return leadMotor.isAtForwardLimit.getAsBoolean();
+    }
+
+    public void setIdleMode(IdleMode idleMode) {
+        leadMotor.setIdleMode(idleMode);
+        followerMotor.setIdleMode(idleMode);
     }
 }

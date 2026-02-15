@@ -80,8 +80,6 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
 
         motorConfiguration.closedLoop.maxMotion
                 .apply(CLOSED_LOOP_MAX_MOTION_CONFIGURATION);
-
-        motor.configure(motorConfiguration, RESET_MODE, PERSIST_MODE);
     }
 
     @Override
@@ -104,6 +102,9 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
 
     public void setFollower(IntakeBayDoorMotor leadMotor) {
         motorConfiguration.follow(leadMotor.canId.Id());
-        motor.configure(motorConfiguration, RESET_MODE, PERSIST_MODE);
+    }
+
+    public void setInverted(boolean inverted) {
+        motorConfiguration.inverted(inverted);
     }
 }

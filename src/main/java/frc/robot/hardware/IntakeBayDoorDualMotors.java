@@ -21,11 +21,13 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
     public IntakeBayDoorDualMotors(
             String name,
             IntakeBayDoorMotor leftMotor,
-            IntakeBayDoorMotor rightMotor) { // TODO: Once implemented into subsystem ensure only one motor is inverted.
+            IntakeBayDoorMotor rightMotor,
+            boolean inverted) {
         SendableRegistry.add(this, name);
         this.leftMotor = leftMotor;
         this.rightMotor = rightMotor;
         rightMotor.setFollower(leftMotor);
+        setInverted(inverted);
     }
 
     @Override
@@ -76,5 +78,10 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
 
     public Angle getAngle() {
         return Degrees.of(leftMotor.getAngle() + rightMotor.getAngle()).div(2);
+    }
+
+    private void setInverted(boolean inverted) {
+        leftMotor.setInverted(!inverted);
+        rightMotor.setInverted(inverted);
     }
 }

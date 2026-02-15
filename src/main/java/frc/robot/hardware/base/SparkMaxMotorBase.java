@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.PersistMode;
@@ -26,7 +27,10 @@ import frc.robot.interfaces.IMotor;
 
 public abstract class SparkMaxMotorBase implements IMotor, Sendable {
     protected final SparkMax motor;
+    protected final SparkBaseConfig motorConfiguration;
+    protected final SparkClosedLoopController closedLoopController;
     private final AngularVelocity maxAngularVelocity;
+    private final CanId canId;
 
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
@@ -51,10 +55,13 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
             SparkBaseConfig motorConfiguration,
             ResetMode resetMode,
             PersistMode persistMode) {
-        this.maxAngularVelocity = maxAngularVelocity;
-        motor = new SparkMax(canId.Id(), motorType);
-        motor.configure(motorConfiguration, resetMode, persistMode);
         SendableRegistry.add(this, name);
+        this.canId = canId;
+        this.maxAngularVelocity = maxAngularVelocity;
+        this.motorConfiguration = motorConfiguration;
+        motor = new SparkMax(canId.Id(), motorType);
+        motor.configure(this.motorConfiguration, resetMode, persistMode);
+        closedLoopController = motor.getClosedLoopController();
     }
 
     @Override
@@ -133,5 +140,9 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
 
     private Current getCurrent() {
         return Amps.of(motor.getOutputCurrent());
+    }
+
+    public CanId getCanId() {
+        return canId;
     }
 }

@@ -81,7 +81,7 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
     }
 
     private void setInverted(boolean inverted) {
-        leftMotor.setInverted(!inverted);
-        rightMotor.setInverted(inverted);
+        leftMotor.setInverted(inverted);
+        rightMotor.setInverted(!inverted);
     }
 }

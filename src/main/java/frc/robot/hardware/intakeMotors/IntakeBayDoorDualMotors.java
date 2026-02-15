@@ -13,20 +13,20 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import frc.robot.interfaces.IAngularPositionMotor;
 
 public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable {
-    private final IntakeBayDoorMotor leftMotor;
-    private final IntakeBayDoorMotor rightMotor;
+    private final IntakeBayDoorMotor leadMotor;
+    private final IntakeBayDoorMotor followerMotor;
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
     public IntakeBayDoorDualMotors(
             String name,
-            IntakeBayDoorMotor leftMotor,
-            IntakeBayDoorMotor rightMotor,
+            IntakeBayDoorMotor leadMotor,
+            IntakeBayDoorMotor followerMotor,
             boolean inverted) {
         SendableRegistry.add(this, name);
-        this.leftMotor = leftMotor;
-        this.rightMotor = rightMotor;
-        rightMotor.setFollower(leftMotor);
+        this.leadMotor = leadMotor;
+        this.followerMotor = followerMotor;
+        followerMotor.setFollower(leadMotor);
         setInverted(inverted);
     }
 
@@ -42,46 +42,46 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
 
     @Override
     public void setAngularPosition(Angle angle) {
-        leftMotor.setAngularPosition(angle);
+        leadMotor.setAngularPosition(angle);
     }
 
     @Override
     public Voltage getVoltage() {
-        return leftMotor.getVoltage().plus(rightMotor.getVoltage()).div(2); // Average Between both motors
+        return leadMotor.getVoltage().plus(leadMotor.getVoltage()).div(2); // Average Between both motors
     }
 
     @Override
     public boolean isMoving() {
-        return leftMotor.isMoving();
+        return leadMotor.isMoving();
     }
 
     @Override
     public void resetRelativeEncoder() {
-        leftMotor.resetRelativeEncoder(); // TODO: Since right motor is following does the right motor encoder reset
+        leadMotor.resetRelativeEncoder(); // TODO: Since right motor is following does the right motor encoder reset
                                           // too?
     }
 
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        leftMotor.setDutyCycle(percentage);
+        leadMotor.setDutyCycle(percentage);
     }
 
     @Override
     public void setVoltage(Voltage voltage) {
-        leftMotor.setVoltage(voltage);
+        leadMotor.setVoltage(voltage);
     }
 
     @Override
     public void stop() {
-        leftMotor.stop();
+        leadMotor.stop();
     }
 
     public Angle getAngle() {
-        return Degrees.of(leftMotor.getAngle() + rightMotor.getAngle()).div(2);
+        return Degrees.of(leadMotor.getAngle() + followerMotor.getAngle()).div(2);
     }
 
     private void setInverted(boolean inverted) {
-        leftMotor.setInverted(inverted);
-        rightMotor.setInverted(!inverted);
+        leadMotor.setInverted(inverted);
+        followerMotor.setInverted(!inverted);
     }
 }

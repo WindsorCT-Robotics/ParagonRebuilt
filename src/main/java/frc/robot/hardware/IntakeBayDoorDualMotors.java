@@ -25,7 +25,7 @@ public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable 
         SendableRegistry.add(this, name);
         this.leftMotor = leftMotor;
         this.rightMotor = rightMotor;
-        rightMotor.setFollower(leftMotor.getCanId());
+        rightMotor.setFollower(leftMotor);
     }
 
     @Override

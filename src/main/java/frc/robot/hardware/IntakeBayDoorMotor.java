@@ -102,8 +102,8 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
         closedLoopController.setSetpoint(angle.in(Rotations), setPointControl);
     }
 
-    public void setFollower(CanId canId) {
-        motorConfiguration.follow(canId.Id());
+    public void setFollower(IntakeBayDoorMotor leadMotor) {
+        motorConfiguration.follow(leadMotor.canId.Id());
         motor.configure(motorConfiguration, RESET_MODE, PERSIST_MODE);
     }
 }

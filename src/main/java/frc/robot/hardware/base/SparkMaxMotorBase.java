@@ -29,8 +29,8 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
     protected final SparkMax motor;
     protected final SparkBaseConfig motorConfiguration;
     protected final SparkClosedLoopController closedLoopController;
+    protected final CanId canId;
     private final AngularVelocity maxAngularVelocity;
-    private final CanId canId;
 
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
@@ -140,9 +140,5 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
 
     private Current getCurrent() {
         return Amps.of(motor.getOutputCurrent());
-    }
-
-    public CanId getCanId() {
-        return canId;
     }
 }

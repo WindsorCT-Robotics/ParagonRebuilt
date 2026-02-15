@@ -1,4 +1,4 @@
-package frc.robot.hardware;
+package frc.robot.hardware.intakeMotors;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
@@ -21,7 +21,8 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import frc.robot.hardware.base.NeoMotorBase;
+import frc.robot.hardware.CanId;
+import frc.robot.hardware.baseMotors.NeoMotorBase;
 import frc.robot.interfaces.IAngularPositionMotor;
 
 public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPositionMotor {

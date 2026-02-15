@@ -1,4 +1,4 @@
-package frc.robot.hardware;
+package frc.robot.hardware.intakeMotors;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;

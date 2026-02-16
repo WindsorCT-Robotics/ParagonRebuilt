@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Drive;
@@ -135,11 +136,11 @@ public class RobotContainer implements Sendable {
     /*
      * Note that each routine should be run exactly once in a single log.
      */
-    // controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    // controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+    controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
+    controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
 
-    // controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    // controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+    controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
+    controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {

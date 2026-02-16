@@ -1,12 +1,10 @@
 # Vision Subsystem
 
+An algorithim that calculates and returns the pose estimation by having visual recongiztion and converts it into data to identify targets for the drive station.
+
 ## Dependencies
 
 Requires a camera that can accurately read april tags.
-
-Calculating LinearVelocity
-
-An algorithim to calculate the pose estimation.
 
 ## Public APIs
 
@@ -14,8 +12,8 @@ An algorithim to calculate the pose estimation.
 
 #### getPoseEstimate
 
-If robot is within area function handled outside of subsystems
+Calls the LimeLlight's position estimate to estimate the robot's position based off april tags and returns an error type incase of a bad postion estimate.
 
-#### getSupplierPoseEstimate
+#### getPoseEstimateSupplier
 
-Supplying the position estimate 
+Gets a stream of 'PoseEstimates'. 

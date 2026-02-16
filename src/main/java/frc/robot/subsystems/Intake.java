@@ -122,7 +122,8 @@ public class Intake extends SubsystemBase {
     }
 
     public Command wiggleBayDoor() {
-        return closeBayDoor().andThen(openBayDoor()).repeatedly(); // TODO: Possibly too much wiggle. Test.
+        return closeBayDoor().andThen(openBayDoor()).alongWith(intakeFuel()).repeatedly(); // TODO: Possibly too much
+                                                                                           // wiggle. Test.
     }
 
     private Command intakeFuel() {

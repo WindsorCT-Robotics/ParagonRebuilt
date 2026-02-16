@@ -34,7 +34,7 @@ public class RobotContainer implements Sendable {
   private final Telemetry logger;
 
   private final Drive drive;
-  private final Intake intake;
+  // private final Intake intake;
 
   private final CommandXboxController controller;
   private static final double MOVE_ROBOT_CURVE = 3.0;
@@ -56,7 +56,7 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    intake = new Intake("Intake", null, null, null); // TODO: Get canIds.
+    // intake = new Intake("Intake", null, null, null); // TODO: Get canIds.
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -96,7 +96,7 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    intake.setDefaultCommand(intake.homeBayDoor());
+    // intake.setDefaultCommand(intake.homeBayDoor());
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
@@ -129,8 +129,8 @@ public class RobotContainer implements Sendable {
     // and close the bay door and be able to open and intake at the same time with
     // one button and when you don't want to you can tap the button again to stop
     // intaking and put the bay door motors on coast.
-    controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
-    controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
+    // controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
+    // controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
 
     /*
      * Note that each routine should be run exactly once in a single log.

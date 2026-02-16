@@ -1,4 +1,4 @@
-package frc.robot.hardware.intakeMotors;
+package frc.robot.hardware.intake_motors;
 
 import static edu.wpi.first.units.Units.Amps;
 
@@ -8,7 +8,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.units.measure.Current;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.baseMotors.KrakenMotorBase;
+import frc.robot.hardware.base_motors.KrakenMotorBase;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 

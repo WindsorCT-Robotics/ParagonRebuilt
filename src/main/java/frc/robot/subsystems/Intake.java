@@ -19,15 +19,18 @@ import frc.robot.hardware.intakeMotors.IntakeRollerMotor;
 public class Intake extends SubsystemBase {
     private final IntakeBayDoorDualMotors bayDoorController;
     private final IntakeRollerMotor rollerMotor;
-    private static final Dimensionless ROLLER_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and ensure
-                                                                          // that positive duty cycle intakes.
+    private static final Dimensionless ROLLER_INTAKE_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and
+                                                                                 // ensure that positive duty cycle
+                                                                                 // intakes.
+    private static final Dimensionless ROLLER_SHUTTLE_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and
+                                                                                  // ensure that negative duty cycle
+                                                                                  // shuttles.
     private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(0); // TODO: Determine percentage.
     private static final boolean DUAL_MOTORS_INVERTED = false; // TODO: Which way goes forward?
     private static final IdleMode OPEN_IDLE_MODE = IdleMode.kCoast;
     private static final IdleMode OPEN_INTAKE_IDLE_MODE = IdleMode.kBrake;
     private static final IdleMode CLOSE_IDLE_MODE = IdleMode.kBrake;
     private BayDoorState bayDoorState = BayDoorState.UNKNOWN;
-    private boolean isAtClosedPosition = false;
 
     public Intake(
             String name,
@@ -85,6 +88,10 @@ public class Intake extends SubsystemBase {
      * small duty cycle. The other one is when the rollers are actively on. This is
      * to reduce possible intake damage if a potential robot hits into us and it was
      * also initally the entire reason we picked this design.
+     * 
+     * Should the the bay door be 2 separate mechanism? Does the rollers interfere
+     * with anything when rolling while closed? The build team said that potentially
+     * to get the remaining balls that're stuck in the intake.
      */
 
     public Command homeBayDoor() {
@@ -113,7 +120,7 @@ public class Intake extends SubsystemBase {
         }
     }
 
-    public Command positionBayDoorTo(BayDoorAction bayDoorAction) {
+    private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
         switch (bayDoorAction) {
             case OPEN:
                 return Commands.runEnd(
@@ -126,28 +133,58 @@ public class Intake extends SubsystemBase {
                         () -> bayDoorState = BayDoorState.CLOSED)
                         .until(isClosed());
             default:
-                throw new IllegalStateException("Unknown Bay Door Position: " + bayDoorAction);
+                throw new IllegalStateException("Unknown Bay Door Action: " + bayDoorAction);
         }
+    }
+
+    public Command openBayDoor() {
+        return positionBayDoorTo(BayDoorAction.OPEN);
+    }
+
+    public Command closeBayDoor() {
+        return positionBayDoorTo(BayDoorAction.CLOSE);
+    }
+
+    private Command openBayDoorAndHold() {
+        return positionBayDoorTo(BayDoorAction.OPEN_AND_INTAKE);
+    }
+
+    public Command wiggleBayDoor() {
+        return closeBayDoor().andThen(openBayDoor()).repeatedly(); // TODO: Possibly too much wiggle. Test.
     }
 
     private Command intakeFuel() {
         return Commands.run(() -> {
-            if (!(bayDoorState == BayDoorState.CLOSED)) {
-                rollerMotor.setDutyCycle(ROLLER_DUTY_CYCLE);
+            if (bayDoorState != BayDoorState.CLOSED) {
+                rollerMotor.setDutyCycle(ROLLER_INTAKE_DUTY_CYCLE);
             } else {
                 rollerMotor.stop();
             }
         });
     }
 
-    // This command should be able to deplay the bay door and start intaking fuel
+    private Command shuttleFuel() {
+        return Commands.run(() -> {
+            if (bayDoorState != BayDoorState.CLOSED) {
+                rollerMotor.setDutyCycle(ROLLER_SHUTTLE_DUTY_CYCLE);
+            } else {
+                rollerMotor.stop();
+            }
+        });
+    }
+
+    // This command should be able to deploy the bay door and start intaking fuel
     // once toggled. When this command ends it should call
     // `positionBayDoorTo(BayDoorAction.OPEN)` to let loose unless it starts
     // dragging on the floor then consider removing BayDoorAction.OPEN_AND_INTAKE
     // and have the line say:
     // `positionBayDoorTo(BayDoorAction.OPEN).andThen(intakeFuel())`.
     public Command openBayDoorAndIntakeFuel() {
-        return positionBayDoorTo(BayDoorAction.OPEN_AND_INTAKE).andThen(intakeFuel()).;
+        return openBayDoorAndHold().andThen(intakeFuel());
+    }
+
+    public Command openBayDoorAndShuttleFuel() {
+        return openBayDoorAndHold().andThen(shuttleFuel());
     }
 
     private String getBayDoorState() {

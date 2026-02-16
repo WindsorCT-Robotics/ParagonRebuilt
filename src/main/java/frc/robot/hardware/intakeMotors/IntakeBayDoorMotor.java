@@ -80,7 +80,11 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
         motorConfiguration.limitSwitch.forwardLimitSwitchPosition(OPENED_ANGLE.in(Rotations));
 
         motorConfiguration.closedLoop
-                .pid(MOTOR_PID.kP, MOTOR_PID.kI, MOTOR_PID.kD);
+                .pid(
+                        MOTOR_PID.kP,
+                        MOTOR_PID.kI,
+                        MOTOR_PID.kD,
+                        LOOP_SLOT);
 
         motorConfiguration.closedLoop.maxMotion
                 .apply(CLOSED_LOOP_MAX_MOTION_CONFIGURATION);

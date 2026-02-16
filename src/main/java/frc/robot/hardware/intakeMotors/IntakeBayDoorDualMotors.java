@@ -1,7 +1,6 @@
 package frc.robot.hardware.intakeMotors;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -18,8 +17,6 @@ import frc.robot.interfaces.IAngularPositionMotor;
 public class IntakeBayDoorDualMotors implements IAngularPositionMotor, Sendable {
     private final IntakeBayDoorMotor leadMotor;
     private final IntakeBayDoorMotor followerMotor;
-    private static final Dimensionless MAX_DUTY = Percent.of(100);
-    private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
     public IntakeBayDoorDualMotors(
             String name,

@@ -17,6 +17,7 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
@@ -109,7 +110,8 @@ public class Drive extends GeneratedDrive {
         return new RobotCentric()
                 .withVelocityX(y)
                 .withVelocityY(x)
-                .withRotationalRate(rotateRate);
+                .withRotationalRate(rotateRate)
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     }
 
     private SwerveRequest fieldCentricSwerveRequest(
@@ -119,7 +121,8 @@ public class Drive extends GeneratedDrive {
         return new FieldCentric()
                 .withVelocityX(y)
                 .withVelocityY(x)
-                .withRotationalRate(rotateRate);
+                .withRotationalRate(rotateRate)
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     }
 
     public Command move(

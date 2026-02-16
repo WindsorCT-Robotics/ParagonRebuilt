@@ -38,7 +38,7 @@ public class RobotContainer implements Sendable {
   private final Intake intake;
 
   private final CommandXboxController controller;
-  private static final double MOVE_ROBOT_CURVE = 2.0;
+  private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
   private RelativeReference relativeReference;
 
@@ -78,7 +78,8 @@ public class RobotContainer implements Sendable {
   }
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
+    return () -> Percent
+        .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {
@@ -122,6 +123,8 @@ public class RobotContainer implements Sendable {
             curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
 
+    controller.povDown().onTrue(drive.resetGyro());
+
     // Intake should defaultly close the bay door. The rollers and baydoor should be
     // able to work harmonously together. The intake should be able to toggle open
     // and close the bay door and be able to open and intake at the same time with
@@ -136,6 +139,7 @@ public class RobotContainer implements Sendable {
      */
     controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
     controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+
     controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
     controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
   }

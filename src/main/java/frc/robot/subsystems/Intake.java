@@ -19,6 +19,8 @@ import frc.robot.hardware.intakeMotors.IntakeRollerMotor;
 public class Intake extends SubsystemBase {
     private final IntakeBayDoorDualMotors bayDoorController;
     private final IntakeRollerMotor rollerMotor;
+    private static final Dimensionless ROLLER_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and ensure
+                                                                          // that positive duty cycle intakes.
     private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(0); // TODO: Determine percentage.
     private static final boolean DUAL_MOTORS_INVERTED = false; // TODO: Which way goes forward?
     private static final IdleMode OPEN_IDLE_MODE = IdleMode.kCoast;
@@ -88,7 +90,7 @@ public class Intake extends SubsystemBase {
     public Command homeBayDoor() {
         return Commands.runEnd(
                 () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                () -> bayDoorState = BayDoorState.CLOSED).until(isOpen());
+                () -> bayDoorState = BayDoorState.CLOSED).until(isClosed());
     }
 
     private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
@@ -126,6 +128,26 @@ public class Intake extends SubsystemBase {
             default:
                 throw new IllegalStateException("Unknown Bay Door Position: " + bayDoorAction);
         }
+    }
+
+    private Command intakeFuel() {
+        return Commands.run(() -> {
+            if (!(bayDoorState == BayDoorState.CLOSED)) {
+                rollerMotor.setDutyCycle(ROLLER_DUTY_CYCLE);
+            } else {
+                rollerMotor.stop();
+            }
+        });
+    }
+
+    // This command should be able to deplay the bay door and start intaking fuel
+    // once toggled. When this command ends it should call
+    // `positionBayDoorTo(BayDoorAction.OPEN)` to let loose unless it starts
+    // dragging on the floor then consider removing BayDoorAction.OPEN_AND_INTAKE
+    // and have the line say:
+    // `positionBayDoorTo(BayDoorAction.OPEN).andThen(intakeFuel())`.
+    public Command openBayDoorAndIntakeFuel() {
+        return positionBayDoorTo(BayDoorAction.OPEN_AND_INTAKE).andThen(intakeFuel()).;
     }
 
     private String getBayDoorState() {

@@ -1,11 +1,13 @@
 # Shooter Subsystem
 
+The Shooter subsystem will use three motors that will spin in unison in order to launch fuel
+
 ## Dependencies
-Main shooting mechanism that requires two motors that can spin by a dutyCycle. If one motor perofrma the action the other motor must perform the same action. The main motor must follow the other motor in hardware.
+Main shooting mechanism that requires three motors that can spin by a dutyCycle. If one motor preforms the action the other motor must perform the same action. The main motor must follow the other motors in hardware.
 
 The Kicker requires a motor that can be controlled with a dutyCycle.
 
-## API
+## Public APIs
 
 ### Commands
 

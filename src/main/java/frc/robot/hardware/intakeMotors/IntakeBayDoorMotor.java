@@ -42,6 +42,7 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
     // https://docs.revrobotics.com/revlib/spark/closed-loop/feed-forward-control#feed-forward-constant-terms
     private static final ControlType setPointControl = ControlType.kMAXMotionPositionControl;
     private static final ClosedLoopSlot LOOP_SLOT = ClosedLoopSlot.kSlot0;
+    // https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control#tuning-for-maxmotion-position-control
     private static final PIDConstants MOTOR_PID = new PIDConstants(0, 0, 0); // TODO: Figure PID Constants.
     private static final AngularVelocity MAX_LINEAR_VELOCITY = RPM.of(0); // TODO: Figure Max RPM
     private static final AngularAcceleration MAX_LINEAR_ACCELERATION = RotationsPerSecondPerSecond.of(0); // TODO:

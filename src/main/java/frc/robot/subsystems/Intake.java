@@ -10,13 +10,14 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.intakeMotors.IntakeBayDoorDualMotors;
 import frc.robot.hardware.intakeMotors.IntakeBayDoorMotor;
 import frc.robot.hardware.intakeMotors.IntakeRollerMotor;
 
 public class Intake extends SubsystemBase {
-    private final IntakeBayDoorDualMotors dualMotors;
+    private final IntakeBayDoorDualMotors bayDoorController;
     private final IntakeRollerMotor rollerMotor;
     private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(0); // TODO: Determine percentage.
     private static final boolean DUAL_MOTORS_INVERTED = false; // TODO: Which way goes forward?
@@ -35,7 +36,7 @@ public class Intake extends SubsystemBase {
         rollerMotor = new IntakeRollerMotor("Intake Roller Motor", rollerMotorCanId);
         IntakeBayDoorMotor leadMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Lead", leadMotorCanId);
         IntakeBayDoorMotor followerMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Follower", followerMotorCanId);
-        dualMotors = new IntakeBayDoorDualMotors("Intake Bay Door Dual Motors", leadMotor, followerMotor,
+        bayDoorController = new IntakeBayDoorDualMotors("Intake Bay Door Dual Motors", leadMotor, followerMotor,
                 DUAL_MOTORS_INVERTED);
     }
 
@@ -86,25 +87,25 @@ public class Intake extends SubsystemBase {
 
     public Command homeBayDoor() {
         return Commands.runEnd(
-                () -> dualMotors.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                () -> bayDoorState = BayDoorState.CLOSED).until(this::isAtClosedPosition);
+                () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
+                () -> bayDoorState = BayDoorState.CLOSED).until(isOpen());
     }
 
     private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
         switch (bayDoorAction) {
             case OPEN:
-                dualMotors.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
-                dualMotors.setIdleMode(OPEN_IDLE_MODE);
+                bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+                bayDoorController.setIdleMode(OPEN_IDLE_MODE);
                 bayDoorState = BayDoorState.OPENING;
                 break;
             case OPEN_AND_INTAKE:
-                dualMotors.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
-                dualMotors.setIdleMode(OPEN_INTAKE_IDLE_MODE);
+                bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+                bayDoorController.setIdleMode(OPEN_INTAKE_IDLE_MODE);
                 bayDoorState = BayDoorState.OPENING;
                 break;
             case CLOSE:
-                dualMotors.setAngularPosition(IntakeBayDoorMotor.CLOSED_ANGLE);
-                dualMotors.setIdleMode(CLOSE_IDLE_MODE);
+                bayDoorController.setAngularPosition(IntakeBayDoorMotor.CLOSED_ANGLE);
+                bayDoorController.setIdleMode(CLOSE_IDLE_MODE);
                 bayDoorState = BayDoorState.CLOSING;
                 break;
         }
@@ -116,12 +117,12 @@ public class Intake extends SubsystemBase {
                 return Commands.runEnd(
                         () -> setPositionBayDoorTo(bayDoorAction),
                         () -> bayDoorState = BayDoorState.OPENED)
-                        .until(this::isAtOpenedPosition);
+                        .until(isOpen());
             case CLOSE:
                 return Commands.runEnd(
                         () -> setPositionBayDoorTo(bayDoorAction),
                         () -> bayDoorState = BayDoorState.CLOSED)
-                        .until(this::isAtClosedPosition);
+                        .until(isClosed());
             default:
                 throw new IllegalStateException("Unknown Bay Door Position: " + bayDoorAction);
         }
@@ -131,11 +132,11 @@ public class Intake extends SubsystemBase {
         return bayDoorState.toString();
     }
 
-    private boolean isAtClosedPosition() {
-        return dualMotors.isAtClosedPosition();
+    private final Trigger isClosed() {
+        return bayDoorController.isClosed();
     }
 
-    private boolean isAtOpenedPosition() {
-        return dualMotors.isAtOpenedPosition();
+    private final Trigger isOpen() {
+        return bayDoorController.isOpen();
     }
 }

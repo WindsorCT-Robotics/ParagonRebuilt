@@ -69,7 +69,7 @@ public class Intake extends SubsystemBase {
     public Command homeBayDoor() {
         return Commands.runEnd(
                 () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                () -> bayDoorState = BayDoorState.CLOSED).until(isClosed());
+                () -> setDefaultCommand(closeBayDoor())).until(isClosed());
     }
 
     private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
@@ -144,7 +144,7 @@ public class Intake extends SubsystemBase {
             }
         });
     }
-    
+
     public Command openBayDoorAndIntakeFuel() {
         return openBayDoorAndHold().andThen(intakeFuel());
     }

@@ -21,11 +21,14 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.baseMotors.NeoMotorBase;
 import frc.robot.interfaces.IAngularPositionMotor;
 
 public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPositionMotor {
+    public final Trigger isAtForwardLimit = new Trigger(this::isAtForwardSoftLimit);
+    public final Trigger isAtReverseLimit = new Trigger(this::isAtReverseLimit);
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
     private static final ResetMode RESET_MODE = ResetMode.kResetSafeParameters;
@@ -39,6 +42,7 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
     // https://docs.revrobotics.com/revlib/spark/closed-loop/feed-forward-control#feed-forward-constant-terms
     private static final ControlType setPointControl = ControlType.kMAXMotionPositionControl;
     private static final ClosedLoopSlot LOOP_SLOT = ClosedLoopSlot.kSlot0;
+    // https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control#tuning-for-maxmotion-position-control
     private static final PIDConstants MOTOR_PID = new PIDConstants(0, 0, 0); // TODO: Figure PID Constants.
     private static final AngularVelocity MAX_LINEAR_VELOCITY = RPM.of(0); // TODO: Figure Max RPM
     private static final AngularAcceleration MAX_LINEAR_ACCELERATION = RotationsPerSecondPerSecond.of(0); // TODO:
@@ -77,7 +81,11 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
         motorConfiguration.limitSwitch.forwardLimitSwitchPosition(OPENED_ANGLE.in(Rotations));
 
         motorConfiguration.closedLoop
-                .pid(MOTOR_PID.kP, MOTOR_PID.kI, MOTOR_PID.kD);
+                .pid(
+                        MOTOR_PID.kP,
+                        MOTOR_PID.kI,
+                        MOTOR_PID.kD,
+                        LOOP_SLOT);
 
         motorConfiguration.closedLoop.maxMotion
                 .apply(CLOSED_LOOP_MAX_MOTION_CONFIGURATION);
@@ -85,15 +93,11 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
 
     @Override
     public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty("Angle (Degrees)", this::getAngle, null);
+        builder.addDoubleProperty("Angle (Degrees)", () -> getAngle().in(Degrees), null);
     }
 
-    /**
-     * 
-     * @return Degrees
-     */
-    public double getAngle() {
-        return Rotations.of(motor.getEncoder().getPosition()).in(Degrees);
+    public Angle getAngle() {
+        return Rotations.of(motor.getEncoder().getPosition());
     }
 
     @Override
@@ -107,5 +111,17 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
 
     public void setInverted(boolean inverted) {
         motorConfiguration.inverted(inverted);
+    }
+
+    private boolean isAtReverseLimit() {
+        return motor.getReverseLimitSwitch().isPressed();
+    }
+
+    private boolean isAtForwardSoftLimit() {
+        return motor.getForwardSoftLimit().isReached();
+    }
+
+    public void setIdleMode(IdleMode idleMode) {
+        motorConfiguration.idleMode(idleMode);
     }
 }

@@ -28,15 +28,17 @@ import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Drive.RelativeReference;
+import frc.robot.subsystems.Intake;
 
 public class RobotContainer implements Sendable {
   private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
   private final Telemetry logger;
 
   private final Drive drive;
+  // private final Intake intake;
 
   private final CommandXboxController controller;
-  private static final double MOVE_ROBOT_CURVE = 2.0;
+  private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
   private RelativeReference relativeReference;
 
@@ -54,6 +56,8 @@ public class RobotContainer implements Sendable {
     } catch (IOException | ParseException e) {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
+
+    // intake = new Intake("Intake", null, null, null); // TODO: Get canIds.
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -74,7 +78,8 @@ public class RobotContainer implements Sendable {
   }
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
+    return () -> Percent
+        .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {
@@ -91,6 +96,8 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
         this::getRelativeReference));
+
+    // intake.setDefaultCommand(intake.homeBayDoor());
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
@@ -111,18 +118,27 @@ public class RobotContainer implements Sendable {
             curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
             this::getRelativeReference));
 
-    controller.a().toggleOnTrue(
+    controller.y().toggleOnTrue(
         drive.angleToOutpost(
             curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
 
+    controller.povDown().onTrue(drive.resetGyro());
+
+    // Intake should defaultly close the bay door. The rollers and baydoor should be
+    // able to work harmonously together. The intake should be able to toggle open
+    // and close the bay door and be able to open and intake at the same time with
+    // one button and when you don't want to you can tap the button again to stop
+    // intaking and put the bay door motors on coast.
+    // controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
+    // controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
+
     /*
      * Note that each routine should be run exactly once in a single log.
-     * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
-     * tuning PID again.
      */
     controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
     controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+
     controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
     controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
   }

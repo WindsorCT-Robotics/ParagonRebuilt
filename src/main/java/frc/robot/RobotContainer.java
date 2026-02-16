@@ -118,7 +118,7 @@ public class RobotContainer implements Sendable {
             curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
             this::getRelativeReference));
 
-    controller.a().toggleOnTrue(
+    controller.y().toggleOnTrue(
         drive.angleToOutpost(
             curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
@@ -130,18 +130,17 @@ public class RobotContainer implements Sendable {
     // and close the bay door and be able to open and intake at the same time with
     // one button and when you don't want to you can tap the button again to stop
     // intaking and put the bay door motors on coast.
-    controller.b().toggleOnTrue(intake.openBayDoor().until(controller.x()));
-    controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel());
-    controller.x().toggleOnFalse(intake.openBayDoor());
+    controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
+    controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
 
     /*
      * Note that each routine should be run exactly once in a single log.
      */
-    controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+    // controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
+    // controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
 
-    controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+    // controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
+    // controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {

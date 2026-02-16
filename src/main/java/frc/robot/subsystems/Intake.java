@@ -66,34 +66,6 @@ public class Intake extends SubsystemBase {
         CLOSE
     }
 
-    /*
-     * IGNORE THOUGHT DUMP.
-     * Position Bay Door based on an enum.
-     * 
-     * When the command is runned it should check if the limit switch is hit or not,
-     * although RevLib already does that with its limit switch behavior.
-     * 
-     * Be able to simply run the rollers.
-     * 
-     * Create a sequencial command of opening and roller fuel.
-     * 
-     * Should be a state of baydoor open but not rollers moving and bayDoor motors
-     * should be on coast.
-     * 
-     * Moves bayDoor to reverse limit switch, once triggered it stops and sets the
-     * `BayDoorState`
-     * 
-     * There should be 2 different types of OPENED. One where the intake is actively
-     * on where the idle mode should be kBrake and if that's not enough maybe a
-     * small duty cycle. The other one is when the rollers are actively on. This is
-     * to reduce possible intake damage if a potential robot hits into us and it was
-     * also initally the entire reason we picked this design.
-     * 
-     * Should the the bay door be 2 separate mechanism? Does the rollers interfere
-     * with anything when rolling while closed? The build team said that potentially
-     * to get the remaining balls that're stuck in the intake.
-     */
-
     public Command homeBayDoor() {
         return Commands.runEnd(
                 () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
@@ -172,13 +144,7 @@ public class Intake extends SubsystemBase {
             }
         });
     }
-
-    // This command should be able to deploy the bay door and start intaking fuel
-    // once toggled. When this command ends it should call
-    // `positionBayDoorTo(BayDoorAction.OPEN)` to let loose unless it starts
-    // dragging on the floor then consider removing BayDoorAction.OPEN_AND_INTAKE
-    // and have the line say:
-    // `positionBayDoorTo(BayDoorAction.OPEN).andThen(intakeFuel())`.
+    
     public Command openBayDoorAndIntakeFuel() {
         return openBayDoorAndHold().andThen(intakeFuel());
     }

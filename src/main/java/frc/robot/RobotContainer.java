@@ -26,16 +26,18 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
+import frc.robot.hardware.CanId;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Drive.RelativeReference;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.IntakeBasic;
 
 public class RobotContainer implements Sendable {
   private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
   private final Telemetry logger;
 
   private final Drive drive;
-  // private final Intake intake;
+  private final IntakeBasic intake;
 
   private final CommandXboxController controller;
   private static final double MOVE_ROBOT_CURVE = 3.0;
@@ -57,7 +59,7 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    // intake = new Intake("Intake", null, null, null); // TODO: Get canIds.
+    intake = new IntakeBasic("Intake", new CanId((byte) 16), new CanId((byte) 15), new CanId((byte) 14)); // TODO: Get canIds.
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -97,7 +99,7 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    // intake.setDefaultCommand(intake.homeBayDoor());
+    intake.setDefaultCommand(intake.homeBayDoor());
 
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
@@ -130,8 +132,8 @@ public class RobotContainer implements Sendable {
     // and close the bay door and be able to open and intake at the same time with
     // one button and when you don't want to you can tap the button again to stop
     // intaking and put the bay door motors on coast.
-    // controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
-    // controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
+    controller.x().toggleOnTrue(intake.openBayDoorAndIntakeFuel().until(controller.b()));
+    controller.x().toggleOnFalse(intake.openBayDoor().until(controller.b()));
 
     /*
      * Note that each routine should be run exactly once in a single log.

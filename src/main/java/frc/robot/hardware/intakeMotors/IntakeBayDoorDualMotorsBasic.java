@@ -11,12 +11,15 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.interfaces.IAngularPositionMotor;
 
 public class IntakeBayDoorDualMotorsBasic implements IAngularPositionMotor, Sendable {
     private final IntakeBayDoorMotorBasic leadMotor;
     private final IntakeBayDoorMotorBasic followerMotor;
+    private static final int limitPin = 0;
+    private final DigitalInput homeLimit;
 
     public IntakeBayDoorDualMotorsBasic(
             String name,
@@ -28,6 +31,7 @@ public class IntakeBayDoorDualMotorsBasic implements IAngularPositionMotor, Send
         this.followerMotor = followerMotor;
         followerMotor.setFollower(leadMotor);
         setInverted(inverted);
+        homeLimit = new DigitalInput(limitPin);
     }
 
     @Override
@@ -90,11 +94,11 @@ public class IntakeBayDoorDualMotorsBasic implements IAngularPositionMotor, Send
     }
 
     public final Trigger isClosed() {
-        return leadMotor.isAtReverseLimit;
+        return new Trigger(() -> homeLimit.get());
     }
 
     public final Trigger isOpen() {
-        return leadMotor.isAtReverseLimit;
+        return leadMotor.isAtForwardLimit;
     }
 
     public void setIdleMode(IdleMode idleMode) {

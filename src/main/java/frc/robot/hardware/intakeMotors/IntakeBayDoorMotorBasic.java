@@ -15,14 +15,15 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.baseMotors.NeoMotorBase;
 
 public class IntakeBayDoorMotorBasic extends NeoMotorBase {
-
+    
     public final Trigger isAtForwardLimit = new Trigger(this::isAtForwardSoftLimit);
-    public final Trigger isAtReverseLimit = new Trigger(this::isAtReverseLimit);
+    // public final Trigger isAtReverseLimit = new Trigger(this::isAtReverseLimit);
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
     private static final Current CURRENT_LIMIT = Amps.of(80);
@@ -31,7 +32,7 @@ public class IntakeBayDoorMotorBasic extends NeoMotorBase {
     public static final Angle CLOSED_ANGLE = Degrees.of(0);
     public static final Angle OPENED_ANGLE = Degrees.of(0); // TODO: How much should the motor turn to become open to
                                                             // intake fuel?
-    public static final Dimensionless ARM_SPEED = Percent.of(20);
+    public static final Dimensionless ARM_SPEED = Percent.of(5);
     private static final Behavior REVERSE_LIMIT_BEHAVIOR = Behavior.kStopMovingMotorAndSetPosition;
     private static final Behavior FORWARD_LIMIT_BEHAVIOR = Behavior.kStopMovingMotorAndSetPosition;
 
@@ -46,6 +47,7 @@ public class IntakeBayDoorMotorBasic extends NeoMotorBase {
                 RESET_MODE,
                 PERSIST_MODE);
 
+        
         motorConfiguration.limitSwitch.reverseLimitSwitchTriggerBehavior(REVERSE_LIMIT_BEHAVIOR);
         motorConfiguration.limitSwitch.forwardLimitSwitchTriggerBehavior(FORWARD_LIMIT_BEHAVIOR);
     }
@@ -67,9 +69,9 @@ public class IntakeBayDoorMotorBasic extends NeoMotorBase {
         motorConfiguration.inverted(inverted);
     }
 
-    private boolean isAtReverseLimit() {
-        return motor.getReverseLimitSwitch().isPressed();
-    }
+    // private boolean isAtReverseLimit() {
+    //     return !homeLimit.get();
+    // }
 
     private boolean isAtForwardSoftLimit() {
         return getAngle().gte(OPENED_ANGLE);

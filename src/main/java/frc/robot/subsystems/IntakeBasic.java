@@ -8,6 +8,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -56,6 +57,11 @@ public class IntakeBasic extends SubsystemBase {
         builder.addDoubleProperty("Voltage (V)", this::getVoltage, this::setVoltage);
     }
 
+    @Override
+    public void periodic() {
+        SmartDashboard.putBoolean("LIMIT", bayDoorController.isClosed().getAsBoolean());
+    }
+
     private double getVoltage() {
         return bayDoorController.getVoltage().in(Volts);
     }
@@ -81,7 +87,7 @@ public class IntakeBasic extends SubsystemBase {
     public Command homeBayDoor() {
         return Commands.runEnd(
                 () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                () -> setDefaultCommand(closeBayDoor())).until(isClosed());
+                () -> setDefaultCommand(closeBayDoor()), this).until(isClosed());
     }
 
     private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
@@ -106,7 +112,7 @@ public class IntakeBasic extends SubsystemBase {
 
     private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
         switch (bayDoorAction) {
-            case OPEN:
+            case OPEN, OPEN_AND_INTAKE:
                 return Commands.runEnd(
                         () -> setPositionBayDoorTo(bayDoorAction),
                         () -> bayDoorState = BayDoorState.OPENED)

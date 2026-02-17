@@ -86,6 +86,12 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
                         MOTOR_PID.kI,
                         MOTOR_PID.kD,
                         LOOP_SLOT);
+        // .feedForward
+        // .kS()
+        // .kV()
+        // .kA()
+        // .kCos()
+        // .kCosRatio();
 
         motorConfiguration.closedLoop.maxMotion
                 .apply(CLOSED_LOOP_MAX_MOTION_CONFIGURATION);
@@ -124,4 +130,26 @@ public class IntakeBayDoorMotor extends NeoMotorBase implements IAngularPosition
     public void setIdleMode(IdleMode idleMode) {
         motorConfiguration.idleMode(idleMode);
     }
+
+    // private double getP() {
+    // return pid.kP;
+    // }
+
+    // private double getI() {
+    // return pid.kI;
+    // }
+
+    // private double getD() {
+    // return pid.kD;
+    // }
+
+    // private void setP(double p) {
+
+    // }
+
+    // private void setI(double i) {
+    // }
+
+    // private void setD(double d) {
+    // }
 }

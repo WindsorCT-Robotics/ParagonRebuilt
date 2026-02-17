@@ -3,7 +3,6 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.pathplanner.lib.config.PIDConstants;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Dimensionless;
@@ -14,37 +13,38 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.intakeMotors.IntakeBayDoorDualMotors;
+import frc.robot.hardware.intakeMotors.IntakeBayDoorDualMotorsBasic;
 import frc.robot.hardware.intakeMotors.IntakeBayDoorMotor;
+import frc.robot.hardware.intakeMotors.IntakeBayDoorMotorBasic;
 import frc.robot.hardware.intakeMotors.IntakeRollerMotor;
 
-public class Intake extends SubsystemBase {
-    private final IntakeBayDoorDualMotors bayDoorController;
+public class IntakeBasic extends SubsystemBase {
+    private final IntakeBayDoorDualMotorsBasic bayDoorController;
     private final IntakeRollerMotor rollerMotor;
-    private PIDConstants pid = new PIDConstants(0.0, 0.0, 0.0);
-    private static final Dimensionless ROLLER_INTAKE_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and
-                                                                                 // ensure that positive duty cycle
-                                                                                 // intakes.
-    private static final Dimensionless ROLLER_SHUTTLE_DUTY_CYCLE = Percent.of(0); // TODO: Find a good percentage and
-                                                                                  // ensure that negative duty cycle
-                                                                                  // shuttles.
-    private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(0); // TODO: Determine percentage.
+    private static final Dimensionless ROLLER_INTAKE_DUTY_CYCLE = Percent.of(10); // TODO: Find a good percentage and
+                                                                                  // ensure that positive duty cycle
+                                                                                  // intakes.
+    private static final Dimensionless ROLLER_SHUTTLE_DUTY_CYCLE = Percent.of(-10); // TODO: Find a good percentage and
+                                                                                    // ensure that negative duty cycle
+                                                                                    // shuttles.
+    private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(-5); // TODO: Determine percentage.
     private static final boolean DUAL_MOTORS_INVERTED = false; // TODO: Which way goes forward?
     private static final IdleMode OPEN_IDLE_MODE = IdleMode.kCoast;
     private static final IdleMode OPEN_INTAKE_IDLE_MODE = IdleMode.kBrake;
     private static final IdleMode CLOSE_IDLE_MODE = IdleMode.kBrake;
     private BayDoorState bayDoorState = BayDoorState.UNKNOWN;
 
-    public Intake(
+    public IntakeBasic(
             String name,
             CanId rollerMotorCanId,
             CanId leadMotorCanId,
             CanId followerMotorCanId) {
         SendableRegistry.add(this, name);
         rollerMotor = new IntakeRollerMotor("Intake Roller Motor", rollerMotorCanId);
-        IntakeBayDoorMotor leadMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Lead", leadMotorCanId);
-        IntakeBayDoorMotor followerMotor = new IntakeBayDoorMotor("Intake Bay Door Motor Follower", followerMotorCanId);
-        bayDoorController = new IntakeBayDoorDualMotors("Intake Bay Door Dual Motors", leadMotor, followerMotor,
+        IntakeBayDoorMotorBasic leadMotor = new IntakeBayDoorMotorBasic("Intake Bay Door Motor Lead", leadMotorCanId);
+        IntakeBayDoorMotorBasic followerMotor = new IntakeBayDoorMotorBasic("Intake Bay Door Motor Follower",
+                followerMotorCanId);
+        bayDoorController = new IntakeBayDoorDualMotorsBasic("Intake Bay Door Dual Motors", leadMotor, followerMotor,
                 DUAL_MOTORS_INVERTED);
     }
 

@@ -35,6 +35,10 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
+    // https://docs.revrobotics.com/brushless/spark-max/specs#main-electrical-specifications
+    private static final Voltage MAX_VOLTAGE = Volts.of(24.0);
+    private static final Voltage MIN_VOLTAGE = Volts.of(5.5);
+
     /**
      * 
      * @param name
@@ -88,9 +92,19 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         motor.getEncoder().setPosition(0);
     }
 
+    // https://docs.revrobotics.com/brushless/spark-max/specs#main-electrical-specifications
     @Override
     public void setVoltage(Voltage voltage) {
-        motor.setVoltage(voltage.in(Volts));
+        Voltage power = voltage;
+
+        if (voltage.gt(MAX_VOLTAGE)) {
+            power = MAX_VOLTAGE;
+        }
+
+        if (voltage.lt(MIN_VOLTAGE)) {
+            power = MIN_VOLTAGE;
+        }
+        motor.setVoltage(power.in(Volts));
     }
 
     private void setVoltage(double voltage) {

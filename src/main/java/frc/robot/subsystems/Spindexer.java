@@ -24,10 +24,14 @@ public class Spindexer extends SubsystemBase {
 
     @Override
     public void initSendable(SendableBuilder builder) {
-
+        
     }
 
     public Command indexFuel() {
         return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE), () -> motor.stop());
+    }
+
+    public Command releaseFuel() {
+        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE.times(-1)), () -> motor.stop());
     }
 }

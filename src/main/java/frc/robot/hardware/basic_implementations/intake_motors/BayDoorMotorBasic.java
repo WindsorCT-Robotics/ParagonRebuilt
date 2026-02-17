@@ -18,7 +18,7 @@ import frc.robot.interfaces.IAngularPositionMotor;
 public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionMotor {
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
-    private static final Current CURRENT_LIMIT = Amps.of(80);
+    private static final Current CURRENT_LIMIT = DEFAULT_CURRENT;
     private static final ResetMode RESET_MODE = ResetMode.kResetSafeParameters;
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);

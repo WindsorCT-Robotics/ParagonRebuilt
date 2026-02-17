@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -14,6 +15,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -126,7 +128,7 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         return motor.getAppliedOutput();
     }
 
-    private void setRPM(double rpm) {
+    public void setRPM(double rpm) {
         setDutyCycle(Percent.of(rpm / maxAngularVelocity.in(RPM)));
     }
 
@@ -140,5 +142,13 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
 
     private Current getCurrent() {
         return Amps.of(motor.getOutputCurrent());
+    }
+
+    public Angle getRotation() {
+        return Rotations.of(motor.getEncoder().getPosition());
+    }
+
+    public void setInverted(boolean inverted) {
+        motorConfiguration.inverted(inverted);
     }
 }

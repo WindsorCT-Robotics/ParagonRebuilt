@@ -2,10 +2,11 @@
 
 ## Table of Contents
 
+* [Robot Container](RobotContainer.md)
 * Subsystems
   * [Drive](Subsystems/Drive.md)
   * [Shooter](Subsystems/Shooter.md)
-  * [Indexer](Subsystems/Indexer.md)
+  * [Indexer](Subsystems/Spindexer.md)
   * [Vision](Subsystems/Vision.md)
   * [LED](Subsystems/LED.md)
 * [Autonomous](Autonomous.md)

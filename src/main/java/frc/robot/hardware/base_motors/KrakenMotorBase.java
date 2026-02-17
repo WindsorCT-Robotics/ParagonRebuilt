@@ -1,4 +1,4 @@
-package frc.robot.hardware.baseMotors;
+package frc.robot.hardware.base_motors;
 
 import static edu.wpi.first.units.Units.RPM;
 

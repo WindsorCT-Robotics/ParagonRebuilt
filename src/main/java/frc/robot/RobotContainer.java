@@ -26,7 +26,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
+import frc.robot.hardware.CanId;
+import frc.robot.hardware.spindexer_motor.SpindexterMotor;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
 
 public class RobotContainer implements Sendable {
@@ -34,9 +37,11 @@ public class RobotContainer implements Sendable {
   private final Telemetry logger;
 
   private final Drive drive;
+  private final Spindexer spindexer;
 
   private final CommandXboxController controller;
-  private static final double MOVE_ROBOT_CURVE = 2.0;
+  private final CommandXboxController operator;
+  private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
   private RelativeReference relativeReference;
 
@@ -55,9 +60,12 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
+    spindexer = new Spindexer("Spindexer", new SpindexterMotor("Spindexer Motor", new CanId((byte) 13)));
+
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
     controller = new CommandXboxController(0);
+    operator = new CommandXboxController(1);
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putData("Autonomous", autonomousChooser);
@@ -73,8 +81,9 @@ public class RobotContainer implements Sendable {
 
   }
 
-  private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent.of(Math.pow(percent.get().in(Percent), exponent));
+   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
+    return () -> Percent
+        .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
   }
 
   private RelativeReference getRelativeReference() {
@@ -125,6 +134,9 @@ public class RobotContainer implements Sendable {
     controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
     controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
     controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+
+    // Operator
+    operator.a().onTrue(spindexer.indexFuel());
   }
 
   public Command getAutonomousCommand() {

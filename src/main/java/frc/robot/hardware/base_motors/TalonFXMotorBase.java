@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -41,7 +42,7 @@ public abstract class TalonFXMotorBase implements IMotor, Sendable {
         Current currentLimit,
         AngularVelocity maxAngularVelocity
     ) {
-        motor = new TalonFX(0);
+        motor = new TalonFX(canId.Id());
         motorConfigurator = motor.getConfigurator();
         TalonFXConfiguration motorConfiguration = new TalonFXConfiguration()
         .withMotorOutput(

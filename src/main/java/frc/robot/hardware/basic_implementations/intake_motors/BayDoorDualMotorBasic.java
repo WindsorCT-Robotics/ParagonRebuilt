@@ -14,7 +14,7 @@ public class BayDoorDualMotorBasic implements IMotor {
             String name,
             CanId leadId,
             CanId followerId) {
-        leadMotor = new BayDoorMotorBasic(name, followerId);
+        leadMotor = new BayDoorMotorBasic(name, leadId);
         followerMotor = new BayDoorMotorBasic(name, followerId);
         followerMotor.setFollower(leadMotor);
         leadMotor.setInverted(INVERTED);

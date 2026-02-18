@@ -27,8 +27,11 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.basic_implementations.intake_motors.BayDoorDualMotorBasic;
+import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 import frc.robot.hardware.spindexer_motor.SpindexterMotor;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
 
@@ -37,6 +40,7 @@ public class RobotContainer implements Sendable {
   private final Telemetry logger;
 
   private final Drive drive;
+  private final Intake intake;
   private final Spindexer spindexer;
 
   private final CommandXboxController controller;
@@ -60,6 +64,7 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
+    intake = new Intake("Intake", new IntakeRollerMotor("Intake Roller", new CanId((byte) 16)), new BayDoorDualMotorBasic("BayDoor Coonteorlewlogodgoiglkdfksjg", new CanId((byte) 15), new CanId((byte) 14)));
     spindexer = new Spindexer("Spindexer", new SpindexterMotor("Spindexer Motor", new CanId((byte) 13)));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
@@ -125,6 +130,8 @@ public class RobotContainer implements Sendable {
             curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
 
+    controller.povDown().onTrue(drive.resetGyro());
+
     /*
      * Note that each routine should be run exactly once in a single log.
      * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
@@ -136,7 +143,8 @@ public class RobotContainer implements Sendable {
     controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
 
     // Operator
-    operator.a().onTrue(spindexer.indexFuel());
+    operator.a().whileTrue(spindexer.indexFuel());
+    operator.b().whileTrue(intake.intakeFuel());
   }
 
   public Command getAutonomousCommand() {

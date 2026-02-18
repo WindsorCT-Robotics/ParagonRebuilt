@@ -45,6 +45,14 @@ public class BayDoorDualMotorBasic implements IMotor {
         rightMotor.setDutyCycle(percentage);
     }
 
+    public void setLeftMotorDutyCycle(Dimensionless percentage) {
+        leftMotor.setDutyCycle(percentage);
+    }
+
+    public void setRightMotorDutyCycle(Dimensionless percentage) {
+        rightMotor.setDutyCycle(percentage);
+    }
+
     @Override
     public void setVoltage(Voltage voltage) {
         leftMotor.setVoltage(voltage);
@@ -63,6 +71,22 @@ public class BayDoorDualMotorBasic implements IMotor {
 
     public void stopRightMotor() {
         rightMotor.stop();
+    }
+
+    public boolean atLeftMotorSoftForwardLimit() {
+        return leftMotor.atSoftForwardLimit();
+    }
+
+    public boolean atRightMotorSoftForwardLimit() {
+        return rightMotor.atSoftForwardLimit();
+    }
+
+    public boolean atLeftMotorSoftReverseLimit() {
+        return leftMotor.atSoftReverseLimit();
+    }
+
+    public boolean atRightMotorSoftReverseLimit() {
+        return rightMotor.atSoftReverseLimit();
     }
 
     public void setIdleMode(IdleMode idleMode) {

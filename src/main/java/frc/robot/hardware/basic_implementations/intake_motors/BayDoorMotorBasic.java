@@ -3,6 +3,7 @@ package frc.robot.hardware.basic_implementations.intake_motors;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -23,6 +24,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     private static final ResetMode RESET_MODE = ResetMode.kResetSafeParameters;
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);
+    private static final Angle LIMIT_ROOM = Degrees.of(5);
 
     public static final Angle OPEN_ANGLE = Degrees.of(20);
     public static final Angle CLOSE_ANGLE = Degrees.of(0);
@@ -52,5 +54,17 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
 
     public void setIdleMode(IdleMode idleMode) {
         motorConfiguration.idleMode(idleMode);
+    }
+
+    private Angle getMotorPosition() {
+        return Rotations.of(motor.getEncoder().getPosition());
+    }
+
+    public boolean atSoftForwardLimit() {
+        return getMotorPosition().isNear(OPEN_ANGLE, LIMIT_ROOM);
+    }
+
+    public boolean atSoftReverseLimit() {
+        return getMotorPosition().isNear(CLOSE_ANGLE, LIMIT_ROOM);
     }
 }

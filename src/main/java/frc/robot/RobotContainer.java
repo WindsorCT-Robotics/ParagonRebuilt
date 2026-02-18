@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
@@ -43,6 +44,17 @@ public class RobotContainer implements Sendable {
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 14);
   private static final CanId INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 15);
+  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIGITAL_INPUT_OUTPUT = new DigitalInputOutput((byte) 0); // TOOD:
+                                                                                                                       // Check
+                                                                                                                       // if
+                                                                                                                       // this
+                                                                                                                       // are
+                                                                                                                       // in
+                                                                                                                       // the
+                                                                                                                       // correct
+                                                                                                                       // DIO
+                                                                                                                       // ids.
+  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIGITAL_INPUT_OUTPUT = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
@@ -71,7 +83,9 @@ public class RobotContainer implements Sendable {
         "Intake",
         INTAKE_ROLLER_MOTOR_CAN_ID,
         INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID,
-        INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID);
+        INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID,
+        INTAKE_LEFT_BAYDOOR_DIGITAL_INPUT_OUTPUT,
+        INTAKE_RIGHT_BAYDOOR_DIGITAL_INPUT_OUTPUT);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;

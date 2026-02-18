@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -35,24 +34,23 @@ public abstract class TalonFXMotorBase implements IMotor, Sendable {
     private final AngularVelocity maxAngularVelocity;
 
     protected TalonFXMotorBase(
-        String name,
-        CanId canId,
-        NeutralModeValue neutralMode,
-        InvertedValue inverted,
-        Current currentLimit,
-        AngularVelocity maxAngularVelocity
-    ) {
+            String name,
+            CanId canId,
+            NeutralModeValue neutralMode,
+            InvertedValue inverted,
+            Current currentLimit,
+            AngularVelocity maxAngularVelocity) {
         motor = new TalonFX(canId.Id());
         motorConfigurator = motor.getConfigurator();
         TalonFXConfiguration motorConfiguration = new TalonFXConfiguration()
-        .withMotorOutput(
-            new MotorOutputConfigs()
-            .withNeutralMode(neutralMode)
-            .withInverted(inverted)
-        ).withCurrentLimits(
-            new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(currentLimit)
-            .withStatorCurrentLimitEnable(true));
+                .withMotorOutput(
+                        new MotorOutputConfigs()
+                                .withNeutralMode(neutralMode)
+                                .withInverted(inverted))
+                .withCurrentLimits(
+                        new CurrentLimitsConfigs()
+                                .withStatorCurrentLimit(currentLimit)
+                                .withStatorCurrentLimitEnable(true));
         motorConfigurator.apply(motorConfiguration);
         this.maxAngularVelocity = maxAngularVelocity;
     }
@@ -69,7 +67,7 @@ public abstract class TalonFXMotorBase implements IMotor, Sendable {
         builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
                 this::setRPM);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
-        
+
     }
 
     @Override

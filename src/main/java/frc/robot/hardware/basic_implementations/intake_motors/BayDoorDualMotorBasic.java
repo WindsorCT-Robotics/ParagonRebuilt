@@ -1,5 +1,7 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.hardware.CanId;
@@ -60,5 +62,10 @@ public class BayDoorDualMotorBasic implements IMotor {
 
     public void stopRightMotor() {
         rightMotor.stop();
+    }
+
+    public void setIdleMode(IdleMode idleMode) {
+        leftMotor.setIdleMode(idleMode);
+        rightMotor.setIdleMode(idleMode);
     }
 }

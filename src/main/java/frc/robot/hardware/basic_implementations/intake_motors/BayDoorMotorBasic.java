@@ -49,4 +49,8 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
             setRPM(POSITION_ANGULAR_VELOCITY.times(-1).in(RPM));
         }
     }
+
+    public void setIdleMode(IdleMode idleMode) {
+        motorConfiguration.idleMode(idleMode);
+    }
 }

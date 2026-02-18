@@ -60,11 +60,15 @@ public class Intake extends SubsystemBase {
         CLOSE
     }
 
-    // public Command homeBayDoor() {
-    // return Commands.runEnd(
-    // () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-    // () -> setDefaultCommand(closeBayDoor())).until(isClosed());
-    // }
+    public Command homeBayDoor() {
+        return new ParallelCommandGroup(
+                Commands.runEnd(
+                        () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
+                        () -> setDefaultCommand(closeBayDoor())).until(this::atLeftHardClosed),
+                Commands.runEnd(
+                        () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
+                        () -> setDefaultCommand(closeBayDoor())).until(this::atRightHardClosed));
+    }
 
     // With `getRotation()` figure the condition to decide if
     // Shouldn't need to set the duty cycle of both motors with seperate methods.
@@ -126,18 +130,7 @@ public class Intake extends SubsystemBase {
     // its final position the other should keep going to the final location
     // regardless of the other motor.
     private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
-        switch (bayDoorAction) {
-            case OPEN:
-                return moveToPosition(bayDoorAction);
-            case CLOSE:
-                return new ParallelCommandGroup(
-                        Commands.runEnd(() -> bayDoorController.setLeftMotorDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                                () -> bayDoorController.stopLeftMotor()).unless(this::atLeftClosed),
-                        Commands.runEnd(() -> bayDoorController.setRightMotorDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                                () -> bayDoorController.stopRightMotor()).until(this::atRightClosed));
-            default:
-                throw new IllegalStateException("Unknown Bay Door Action: " + bayDoorAction);
-        }
+        return moveToPosition(bayDoorAction);
     }
 
     public Command openBayDoor() {

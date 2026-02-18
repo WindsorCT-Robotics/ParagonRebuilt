@@ -1,6 +1,7 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.revrobotics.PersistMode;
@@ -23,6 +24,9 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);
 
+    public static final Angle OPEN_ANGLE = Degrees.of(20);
+    public static final Angle CLOSE_ANGLE = Degrees.of(0);
+
     public BayDoorMotorBasic(String name, CanId canId) {
         super(
                 name,
@@ -33,10 +37,6 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
                         .smartCurrentLimit((int) CURRENT_LIMIT.in(Amps)),
                 RESET_MODE,
                 PERSIST_MODE);
-    }
-
-    public void setFollower(BayDoorMotorBasic leadMotor) {
-        motorConfiguration.follow(leadMotor.canId.Id()); // TODO: Check if this actually follows the leadMotor.
     }
 
     @Override

@@ -6,48 +6,51 @@ import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
 public class BayDoorDualMotorBasic implements IMotor {
-    private final BayDoorMotorBasic leadMotor;
-    private final BayDoorMotorBasic followerMotor;
+    private final BayDoorMotorBasic leftMotor;
+    private final BayDoorMotorBasic rightMotor;
     private final static boolean INVERTED = false;
 
     public BayDoorDualMotorBasic(
             String name,
-            CanId leadId,
-            CanId followerId) {
-        leadMotor = new BayDoorMotorBasic(name, leadId);
-        followerMotor = new BayDoorMotorBasic(name, followerId);
-        followerMotor.setFollower(leadMotor);
-        leadMotor.setInverted(INVERTED);
-        followerMotor.setInverted(!INVERTED);
+            CanId leftMotorId,
+            CanId rightMotorId) {
+        leftMotor = new BayDoorMotorBasic(name, leftMotorId);
+        rightMotor = new BayDoorMotorBasic(name, rightMotorId);
+        leftMotor.setInverted(INVERTED);
+        rightMotor.setInverted(!INVERTED);
     }
 
     @Override
     public Voltage getVoltage() {
-        return leadMotor.getVoltage().plus(followerMotor.getVoltage()).div(2);
+        return leftMotor.getVoltage().plus(rightMotor.getVoltage()).div(2);
     }
 
     @Override
     public boolean isMoving() {
-        return leadMotor.isMoving();
+        return leftMotor.isMoving() || rightMotor.isMoving();
     }
 
     @Override
     public void resetRelativeEncoder() {
-        leadMotor.resetRelativeEncoder();
+        leftMotor.resetRelativeEncoder();
+        rightMotor.resetRelativeEncoder();
     }
 
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        leadMotor.setDutyCycle(percentage);
+        leftMotor.setDutyCycle(percentage);
+        rightMotor.setDutyCycle(percentage);
     }
 
     @Override
     public void setVoltage(Voltage voltage) {
-        leadMotor.setVoltage(voltage);
+        leftMotor.setVoltage(voltage);
+        rightMotor.setVoltage(voltage);
     }
 
     @Override
     public void stop() {
-        leadMotor.stop();
+        leftMotor.stop();
+        rightMotor.stop();
     }
 }

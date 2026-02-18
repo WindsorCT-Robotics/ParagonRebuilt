@@ -16,7 +16,7 @@ public class SpindexterMotor extends KrakenMotorBase {
     private static final ResetMode RESET_MODE = ResetMode.kResetSafeParameters;
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final boolean INVERTED = false;
-    private static final Current CURRENT_LIMIT = Amps.of(0); // TODO: Get the recommended current limit of this motor.
+    private static final Current CURRENT_LIMIT = DEFAULT_CURRENT;
 
     public SpindexterMotor(String name, CanId canId) {
         super(

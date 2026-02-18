@@ -27,8 +27,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.basic_implementations.intake_motors.BayDoorDualMotorBasic;
-import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 import frc.robot.hardware.spindexer_motor.SpindexterMotor;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
@@ -42,6 +40,12 @@ public class RobotContainer implements Sendable {
   private final Drive drive;
   private final Intake intake;
   private final Spindexer spindexer;
+
+  private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
+  private static final CanId INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 14);
+  private static final CanId INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 15);
+
+  private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
   private final CommandXboxController controller;
   private final CommandXboxController operator;
@@ -64,8 +68,12 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    intake = new Intake("Intake", new IntakeRollerMotor("Intake Roller", new CanId((byte) 16)), new BayDoorDualMotorBasic("BayDoor Coonteorlewlogodgoiglkdfksjg", new CanId((byte) 15), new CanId((byte) 14)));
-    spindexer = new Spindexer("Spindexer", new SpindexterMotor("Spindexer Motor", new CanId((byte) 13)));
+    intake = new Intake(
+        "Intake",
+        INTAKE_ROLLER_MOTOR_CAN_ID,
+        INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID,
+        INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID);
+    spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -86,7 +94,7 @@ public class RobotContainer implements Sendable {
 
   }
 
-   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
+  private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
     return () -> Percent
         .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
   }

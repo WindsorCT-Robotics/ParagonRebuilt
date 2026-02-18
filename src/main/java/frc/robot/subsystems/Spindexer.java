@@ -8,6 +8,7 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.hardware.CanId;
 import frc.robot.hardware.spindexer_motor.SpindexterMotor;
 
 public class Spindexer extends SubsystemBase {
@@ -17,14 +18,14 @@ public class Spindexer extends SubsystemBase {
 
     public Spindexer(
             String name,
-            SpindexterMotor motor) {
+            CanId motorCanId) {
         SendableRegistry.add(this, name);
-        this.motor = motor;
+        motor = new SpindexterMotor(name, motorCanId);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
-        
+
     }
 
     public Command indexFuel() {

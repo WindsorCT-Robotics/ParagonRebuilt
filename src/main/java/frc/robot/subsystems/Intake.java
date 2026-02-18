@@ -7,6 +7,7 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.hardware.CanId;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorDualMotorBasic;
 import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 
@@ -19,12 +20,14 @@ public class Intake extends SubsystemBase {
     private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(-1);
 
     public Intake(
-        String name, 
-        IntakeRollerMotor rollerMotor,
-        BayDoorDualMotorBasic bayDoorController) {
-            SendableRegistry.add(this, name);
-            this.rollerMotor = rollerMotor;
-            this.bayDoorController = bayDoorController;
+            String name,
+            CanId intakeRollerMotorCanId,
+            CanId intakeBayDoorLeftMotorCanId,
+            CanId intakeBayDoorRightMotorCanId) {
+        SendableRegistry.add(this, name);
+        this.rollerMotor = new IntakeRollerMotor("Intake Roller Motor", intakeRollerMotorCanId);
+        this.bayDoorController = new BayDoorDualMotorBasic("Intake Bay Door", intakeBayDoorLeftMotorCanId,
+                intakeBayDoorRightMotorCanId);
     }
 
     private enum BayDoorState {
@@ -42,63 +45,65 @@ public class Intake extends SubsystemBase {
     }
 
     // public Command homeBayDoor() {
-    //     return Commands.runEnd(
-    //             () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-    //             () -> setDefaultCommand(closeBayDoor())).until(isClosed());
+    // return Commands.runEnd(
+    // () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
+    // () -> setDefaultCommand(closeBayDoor())).until(isClosed());
     // }
 
     // private void setPositionBayDoorTo(BayDoorAction bayDoorAction) {
-    //     switch (bayDoorAction) {
-    //         case OPEN:
-    //             bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
-    //             bayDoorController.setIdleMode(OPEN_IDLE_MODE);
-    //             bayDoorState = BayDoorState.OPENING;
-    //             break;
-    //         case OPEN_AND_INTAKE:
-    //             bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
-    //             bayDoorController.setIdleMode(OPEN_INTAKE_IDLE_MODE);
-    //             bayDoorState = BayDoorState.OPENING;
-    //             break;
-    //         case CLOSE:
-    //             bayDoorController.setAngularPosition(IntakeBayDoorMotor.CLOSED_ANGLE);
-    //             bayDoorController.setIdleMode(CLOSE_IDLE_MODE);
-    //             bayDoorState = BayDoorState.CLOSING;
-    //             break;
-    //     }
+    // switch (bayDoorAction) {
+    // case OPEN:
+    // bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+    // bayDoorController.setIdleMode(OPEN_IDLE_MODE);
+    // bayDoorState = BayDoorState.OPENING;
+    // break;
+    // case OPEN_AND_INTAKE:
+    // bayDoorController.setAngularPosition(IntakeBayDoorMotor.OPENED_ANGLE);
+    // bayDoorController.setIdleMode(OPEN_INTAKE_IDLE_MODE);
+    // bayDoorState = BayDoorState.OPENING;
+    // break;
+    // case CLOSE:
+    // bayDoorController.setAngularPosition(IntakeBayDoorMotor.CLOSED_ANGLE);
+    // bayDoorController.setIdleMode(CLOSE_IDLE_MODE);
+    // bayDoorState = BayDoorState.CLOSING;
+    // break;
+    // }
     // }
 
     // private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
-    //     switch (bayDoorAction) {
-    //         case OPEN:
-    //             return Commands.runEnd(
-    //                     () -> setPositionBayDoorTo(bayDoorAction),
-    //                     () -> bayDoorState = BayDoorState.OPENED)
-    //                     .until(isOpen());
-    //         case CLOSE:
-    //             return Commands.runEnd(
-    //                     () -> setPositionBayDoorTo(bayDoorAction),
-    //                     () -> bayDoorState = BayDoorState.CLOSED)
-    //                     .until(isClosed());
-    //         default:
-    //             throw new IllegalStateException("Unknown Bay Door Action: " + bayDoorAction);
-    //     }
+    // switch (bayDoorAction) {
+    // case OPEN:
+    // return Commands.runEnd(
+    // () -> setPositionBayDoorTo(bayDoorAction),
+    // () -> bayDoorState = BayDoorState.OPENED)
+    // .until(isOpen());
+    // case CLOSE:
+    // return Commands.runEnd(
+    // () -> setPositionBayDoorTo(bayDoorAction),
+    // () -> bayDoorState = BayDoorState.CLOSED)
+    // .until(isClosed());
+    // default:
+    // throw new IllegalStateException("Unknown Bay Door Action: " + bayDoorAction);
+    // }
     // }
 
     // public Command openBayDoor() {
-    //     return positionBayDoorTo(BayDoorAction.OPEN);
+    // return positionBayDoorTo(BayDoorAction.OPEN);
     // }
 
     // public Command closeBayDoor() {
-    //     return positionBayDoorTo(BayDoorAction.CLOSE);
+    // return positionBayDoorTo(BayDoorAction.CLOSE);
     // }
 
     // private Command openBayDoorAndHold() {
-    //     return positionBayDoorTo(BayDoorAction.OPEN_AND_INTAKE);
+    // return positionBayDoorTo(BayDoorAction.OPEN_AND_INTAKE);
     // }
 
     // public Command wiggleBayDoor() {
-    //     return closeBayDoor().andThen(openBayDoor()).alongWith(intakeFuel()).repeatedly(); // TODO: Possibly too much
-    //                                                                                        // wiggle. Test.
+    // return
+    // closeBayDoor().andThen(openBayDoor()).alongWith(intakeFuel()).repeatedly();
+    // // TODO: Possibly too much
+    // // wiggle. Test.
     // }
 
     public Command intakeFuel() {
@@ -114,24 +119,24 @@ public class Intake extends SubsystemBase {
     }
 
     // private Command shuttleFuel() {
-    //     return Commands.run(() -> {
-    //         if (bayDoorState != BayDoorState.CLOSED) {
-    //             rollerMotor.setDutyCycle(ROLLER_SHUTTLE_DUTY_CYCLE);
-    //         } else {
-    //             rollerMotor.stop();
-    //         }
-    //     });
+    // return Commands.run(() -> {
+    // if (bayDoorState != BayDoorState.CLOSED) {
+    // rollerMotor.setDutyCycle(ROLLER_SHUTTLE_DUTY_CYCLE);
+    // } else {
+    // rollerMotor.stop();
+    // }
+    // });
     // }
 
     // public Command openBayDoorAndIntakeFuel() {
-    //     return openBayDoorAndHold().andThen(intakeFuel());
+    // return openBayDoorAndHold().andThen(intakeFuel());
     // }
 
     // public Command openBayDoorAndShuttleFuel() {
-    //     return openBayDoorAndHold().andThen(shuttleFuel());
+    // return openBayDoorAndHold().andThen(shuttleFuel());
     // }
 
     // private String getBayDoorState() {
-    //     return bayDoorState.toString();
+    // return bayDoorState.toString();
     // }
 }

@@ -53,4 +53,12 @@ public class BayDoorDualMotorBasic implements IMotor {
         leftMotor.stop();
         rightMotor.stop();
     }
+
+    public void stopLeftMotor() {
+        leftMotor.stop();
+    }
+
+    public void stopRightMotor() {
+        rightMotor.stop();
+    }
 }

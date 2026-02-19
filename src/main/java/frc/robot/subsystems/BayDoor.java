@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
@@ -18,6 +19,7 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.CanId;
@@ -59,17 +61,17 @@ public class BayDoor extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // SmartDashboard.putBoolean("Left Limit", atLeftHardClosed());
-        // SmartDashboard.putBoolean("Right Limit", atRightHardClosed());
-        // SmartDashboard.putString("Bay Door State", bayDoorState.toString());
-        // SmartDashboard.putNumber("Left Motor Encoder Degrees",
-        // bayDoorController.getLeftRotation().in(Degrees));
-        // SmartDashboard.putNumber("Left Motor Encoder Rotations",
-        // bayDoorController.getLeftRotation().in(Rotations));
-        // SmartDashboard.putNumber("Right Motor Encoder Degrees",
-        // bayDoorController.getRightRotation().in(Degrees));
-        // SmartDashboard.putNumber("Right Motor Encoder Rotations",
-        // bayDoorController.getRightRotation().in(Rotations));
+        SmartDashboard.putBoolean("Left Limit", atLeftHardClosed());
+        SmartDashboard.putBoolean("Right Limit", atRightHardClosed());
+        SmartDashboard.putString("Bay Door State", bayDoorState.toString());
+        SmartDashboard.putNumber("Left Motor Encoder Degrees",
+        bayDoorController.getLeftRotation().in(Degrees));
+        SmartDashboard.putNumber("Left Motor Encoder Rotations",
+        bayDoorController.getLeftRotation().in(Rotations));
+        SmartDashboard.putNumber("Right Motor Encoder Degrees",
+        bayDoorController.getRightRotation().in(Degrees));
+        SmartDashboard.putNumber("Right Motor Encoder Rotations",
+        bayDoorController.getRightRotation().in(Rotations));
     }
 
     private enum BayDoorState {

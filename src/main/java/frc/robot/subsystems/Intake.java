@@ -27,4 +27,8 @@ public class Intake extends SubsystemBase {
     public Command shuttleFuel() {
         return runEnd(() -> motor.setDutyCycle(SHUTTLE_FUEL_DUTY_CYCLE), () -> motor.stop());
     }
+
+    public Command stopIntake() {
+        return run(() -> motor.stop());
+    }
 }

@@ -28,6 +28,7 @@ import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
+import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
@@ -39,20 +40,27 @@ public class RobotContainer implements Sendable {
 
   private final Drive drive;
   private final Intake intake;
+  private final BayDoor bayDoor;
   private final Spindexer spindexer;
 
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
-  private static final CanId INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 14);
-  private static final CanId INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 15);
+  private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
+  private static final CanId BAYDOOR_MOTOR_RIGHT_CAN_ID = new CanId((byte) 15);
   private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
   private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
-  private final CommandXboxController controller;
+  private final CommandXboxController driver;
   private final CommandXboxController operator;
+  private Dimensionless maxDriverLeftJoyStickSpeedX = Percent.of(100);
+  private Dimensionless maxDriverLeftJoyStickSpeedY = Percent.of(100);
+  private Dimensionless maxDriverRightJoyStickSpeedX = Percent.of(100);
+  private static final Dimensionless REDUCE_SPEED = Percent.of(75);
+  private static final Dimensionless TRIGGER_THRESHOLD = Percent.of(10);
   private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
+
   private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
@@ -70,18 +78,14 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    intake = new Intake(
-        "Intake",
-        INTAKE_ROLLER_MOTOR_CAN_ID,
-        INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID,
-        INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID,
-        INTAKE_LEFT_BAYDOOR_DIO,
-        INTAKE_RIGHT_BAYDOOR_DIO);
+    intake = new Intake("Intake", INTAKE_ROLLER_MOTOR_CAN_ID);
+    bayDoor = new BayDoor("Spindexer", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
+        INTAKE_LEFT_BAYDOOR_DIO);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
-    controller = new CommandXboxController(0);
+    driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
@@ -107,21 +111,28 @@ public class RobotContainer implements Sendable {
     return relativeReference;
   }
 
+  private Dimensionless getBoundsOfAxis(Dimensionless percent, Dimensionless bounds) {
+    return percent.times(bounds);
+  }
+
   private void configureControllerBindings() {
-    Supplier<Dimensionless> controllerLeftAxisX = () -> Percent.of(controller.getLeftX());
-    Supplier<Dimensionless> controllerLeftAxisY = () -> Percent.of(controller.getLeftY());
-    Supplier<Dimensionless> controllerRightAxisX = () -> Percent.of(controller.getRightX());
+    Supplier<Dimensionless> driverLeftAxisX = () -> Percent.of(driver.getLeftX())
+        .times(maxDriverLeftJoyStickSpeedX);
+    Supplier<Dimensionless> driverLeftAxisY = () -> Percent.of(driver.getLeftY())
+        .times(maxDriverLeftJoyStickSpeedY);
+    Supplier<Dimensionless> driverRightAxisX = () -> Percent.of(driver.getRightX());
 
     drive.setDefaultCommand(drive.moveWithPercentages(
-        curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
-        curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE),
-        curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
+        curveAxis(() -> getBoundsOfAxis(driverLeftAxisX.get(), maxDriverLeftJoyStickSpeedX), MOVE_ROBOT_CURVE),
+        curveAxis(() -> getBoundsOfAxis(driverLeftAxisY.get(), maxDriverLeftJoyStickSpeedY), MOVE_ROBOT_CURVE),
+        curveAxis(() -> getBoundsOfAxis(driverRightAxisX.get(), maxDriverRightJoyStickSpeedX), TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    intake.setDefaultCommand(intake.homeBayDoor());
+    intake.setDefaultCommand(intake.stopIntake());
 
-    // Switches RelativeReference
-    controller.leftBumper().onTrue(Commands.runOnce(() -> {
+    bayDoor.setDefaultCommand(bayDoor.homeBayDoor());
+
+    driver.b().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = RelativeReference.FIELD_CENTRIC;
       } else {
@@ -131,39 +142,48 @@ public class RobotContainer implements Sendable {
       SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
 
-    // Half Speed
-    controller.rightBumper().whileTrue(
-        drive.moveWithPercentages(
-            curveAxis(() -> controllerLeftAxisX.get().div(2), MOVE_ROBOT_CURVE),
-            curveAxis(() -> controllerLeftAxisY.get().div(2), MOVE_ROBOT_CURVE),
-            curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
-            this::getRelativeReference));
+    driver.rightBumper().whileTrue(Commands.runEnd(() -> {
+      maxDriverLeftJoyStickSpeedX = REDUCE_SPEED;
+      maxDriverLeftJoyStickSpeedY = REDUCE_SPEED;
+    }, () -> {
+      maxDriverLeftJoyStickSpeedX = Percent.of(100);
+      maxDriverLeftJoyStickSpeedY = Percent.of(100);
+    }));
 
-    controller.a().toggleOnTrue(
+    driver.rightTrigger(TRIGGER_THRESHOLD.in(Percent)).whileTrue(Commands.runEnd(
+        () -> {
+          Dimensionless limit = Percent.of(100).minus(Percent.of(driver.getRightTriggerAxis()));
+          maxDriverLeftJoyStickSpeedX = limit;
+          maxDriverLeftJoyStickSpeedY = limit;
+        }, () -> {
+          maxDriverLeftJoyStickSpeedX = Percent.of(100);
+          maxDriverLeftJoyStickSpeedY = Percent.of(100);
+        }));
+
+    driver.y().toggleOnTrue(
         drive.angleToOutpost(
-            curveAxis(controllerLeftAxisX, MOVE_ROBOT_CURVE),
-            curveAxis(controllerLeftAxisY, MOVE_ROBOT_CURVE)));
+            curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
+            curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
-    controller.povDown().onTrue(drive.resetGyro());
+    driver.x().toggleOnTrue(bayDoor.openBayDoorAndBrake().alongWith(intake.intakeFuel()));
+
+    // This will be reserved for the composiiton of shooting, and indexing.
+    // driver.leftBumper().whileTrue();
+
+    driver.povDown().onTrue(drive.resetGyro());
 
     /*
      * Note that each routine should be run exactly once in a single log.
      * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
      * tuning PID again.
      */
-    controller.back().and(controller.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    controller.back().and(controller.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
-    controller.start().and(controller.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    controller.start().and(controller.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+    driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
 
     // Operator
-    operator.a().whileTrue(spindexer.indexFuel());
-    operator.b().whileTrue(intake.intakeFuel(() -> Percent.of(operator.getRightY())).asProxy());
-    operator.y().whileTrue(intake.moveBayDoor(() -> Percent.of(operator.getRightY() / 20)));
-    operator.x().onTrue(intake.resetEncoders());
 
-    operator.povUp().toggleOnTrue(intake.openBayDoor());
-    operator.povDown().toggleOnTrue(intake.closeBayDoor());
   }
 
   public Command getAutonomousCommand() {

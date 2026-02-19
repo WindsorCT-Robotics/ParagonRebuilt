@@ -2,24 +2,18 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 
-import java.util.function.Supplier;
-
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorDualMotorBasic;
-import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 
 public class BayDoor extends SubsystemBase {
-    private final IntakeRollerMotor rollerMotor;
     private final BayDoorDualMotorBasic bayDoorController;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
@@ -36,13 +30,11 @@ public class BayDoor extends SubsystemBase {
 
     public BayDoor(
             String name,
-            CanId intakeRollerMotorCanId,
             CanId intakeBayDoorLeftMotorCanId,
             CanId intakeBayDoorRightMotorCanId,
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
         SendableRegistry.add(this, name);
-        this.rollerMotor = new IntakeRollerMotor("Intake Roller Motor", intakeRollerMotorCanId);
         this.bayDoorController = new BayDoorDualMotorBasic("Intake Bay Door", intakeBayDoorLeftMotorCanId,
                 intakeBayDoorRightMotorCanId);
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());

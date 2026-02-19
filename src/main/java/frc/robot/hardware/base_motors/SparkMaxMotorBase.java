@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -76,13 +77,18 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        // builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), this::setVoltage);
-        // builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
+        // builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
+        // this::setVoltage);
+        // builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps),
+        // null);
         // builder.addBooleanProperty("Is Motor Moving?", this::isMoving, null);
-        // builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycle, this::setDutyCycle);
-        // builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
-        //         this::setRPM);
-        // builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
+        // builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycle,
+        // this::setDutyCycle);
+        // builder.addDoubleProperty("RPM (Rotations Per Minute)", () ->
+        // getAngularVelocity().in(RPM),
+        // this::setRPM);
+        // builder.addDoubleProperty("Temperature (C)", () ->
+        // getTemperature().in(Celsius), null);
     }
 
     @Override
@@ -121,7 +127,8 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
                     + " is out of bounds for duty motor Acceptable ranges are [" + MIN_DUTY + ", " + MAX_DUTY + "].");
         }
 
-        System.out.println(percentage.in(Percent) + " PERCENTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGE.");
+        System.out.println(percentage.in(Percent)
+                + " PERCENTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGE.");
         motor.set(percentage.in(Percent));
     }
 
@@ -134,8 +141,8 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         return motor.getAppliedOutput();
     }
 
-    public void setRPM(double rpm) {
-        setDutyCycle(Percent.of(rpm / maxAngularVelocity.in(RPM)));
+    public void setRPS(AngularVelocity velocity) {
+        setDutyCycle(Percent.of(velocity.div(maxAngularVelocity).in(Percent)));
     }
 
     private AngularVelocity getAngularVelocity() {

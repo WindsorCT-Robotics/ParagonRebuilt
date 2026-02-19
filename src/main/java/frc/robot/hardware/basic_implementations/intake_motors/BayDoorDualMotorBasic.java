@@ -3,6 +3,7 @@ package frc.robot.hardware.basic_implementations.intake_motors;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.hardware.CanId;
@@ -51,6 +52,22 @@ public class BayDoorDualMotorBasic implements IMotor {
 
     public void setRightMotorDutyCycle(Dimensionless percentage) {
         rightMotor.setDutyCycle(percentage);
+    }
+
+    public void setLeftMotorRPS(AngularVelocity velocity) {
+        leftMotor.setRPS(velocity);
+    }
+
+    public void setRightMotorRPS(AngularVelocity velocity) {
+        rightMotor.setRPS(velocity);
+    }
+
+    public AngularVelocity getLeftMotorAngularVelocity() {
+        return leftMotor.getVelocity();
+    }
+
+    public AngularVelocity getRightMotorAngularVelocity() {
+        return rightMotor.getVelocity();
     }
 
     @Override

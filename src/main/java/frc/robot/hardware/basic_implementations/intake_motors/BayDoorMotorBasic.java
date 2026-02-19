@@ -1,7 +1,6 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 
@@ -24,7 +23,6 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     private static final ResetMode RESET_MODE = ResetMode.kResetSafeParameters;
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);
-    private static final Angle LIMIT_ROOM = Degrees.of(5);
 
     public static final Angle OPEN_ANGLE = Rotations.of(21.5);
     public static final Angle CLOSE_ANGLE = Rotations.of(0);
@@ -44,11 +42,11 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     @Override
     public void setAngularPosition(Angle angle) {
         if (angle.gt(getRotation())) {
-            setRPM(POSITION_ANGULAR_VELOCITY.in(RPM));
+            setRPS(POSITION_ANGULAR_VELOCITY);
         }
 
         if (angle.lt(getRotation())) {
-            setRPM(POSITION_ANGULAR_VELOCITY.times(-1).in(RPM));
+            setRPS(POSITION_ANGULAR_VELOCITY);
         }
     }
 
@@ -66,5 +64,9 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
 
     public boolean atSoftReverseLimit() {
         return getMotorPosition().lte(CLOSE_ANGLE);
+    }
+
+    public AngularVelocity getVelocity() {
+        return RPM.of(motor.getEncoder().getVelocity());
     }
 }

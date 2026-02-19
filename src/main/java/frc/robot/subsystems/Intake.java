@@ -1,12 +1,17 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Rotations;
+
+import java.util.function.Supplier;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -21,10 +26,10 @@ public class Intake extends SubsystemBase {
     private final IntakeRollerMotor rollerMotor;
     private final BayDoorDualMotorBasic bayDoorController;
     private BayDoorState bayDoorState = BayDoorState.UNKNOWN;
-    private static final Dimensionless ROLLER_INTAKE_DUTY_CYCLE = Percent.of(1);
-    private static final Dimensionless ROLLER_SHUTTLE_DUTY_CYCLE = Percent.of(1);
-    private static final Dimensionless BAY_DOOR_ACTION_DUTY_CYCLE = Percent.of(1);
-    private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(-1);
+    private static final Dimensionless ROLLER_INTAKE_DUTY_CYCLE = Percent.of(0.1);
+    private static final Dimensionless ROLLER_SHUTTLE_DUTY_CYCLE = Percent.of(0.1);
+    private static final Dimensionless BAY_DOOR_ACTION_DUTY_CYCLE = Percent.of(0.1);
+    private static final Dimensionless HOME_BAY_DOOR_DUTY_CYCLE = Percent.of(-0.1);
     private static final IdleMode OPEN_IDLE_MODE = IdleMode.kCoast;
     private static final IdleMode OPEN_INTAKE_IDLE_MODE = IdleMode.kBrake;
     private static final IdleMode CLOSE_IDLE_MODE = IdleMode.kBrake;
@@ -46,6 +51,17 @@ public class Intake extends SubsystemBase {
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
     }
 
+    @Override
+    public void periodic() {
+        SmartDashboard.putBoolean("Left Limit", atLeftHardClosed());
+        SmartDashboard.putBoolean("Right Limit", atRightHardClosed());
+        SmartDashboard.putString("Bay Door State", bayDoorState.toString());
+        SmartDashboard.putNumber("Left Motor Encoder Degrees", bayDoorController.getLeftRotation().in(Degrees));
+        SmartDashboard.putNumber("Left Motor Encoder Rotations", bayDoorController.getLeftRotation().in(Rotations));
+        SmartDashboard.putNumber("Right Motor Encoder Degrees", bayDoorController.getRightRotation().in(Degrees));
+        SmartDashboard.putNumber("Right Motor Encoder Rotations", bayDoorController.getRightRotation().in(Rotations));
+    }
+
     private enum BayDoorState {
         UNKNOWN,
         OPENING,
@@ -61,66 +77,59 @@ public class Intake extends SubsystemBase {
     }
 
     public Command homeBayDoor() {
-        return new ParallelCommandGroup(
-                Commands.runEnd(
-                        () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                        () -> setDefaultCommand(closeBayDoor())).until(this::atLeftHardClosed),
-                Commands.runEnd(
-                        () -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE),
-                        () -> setDefaultCommand(closeBayDoor())).until(this::atRightHardClosed));
+        return runEnd(() -> bayDoorController.setDutyCycle(HOME_BAY_DOOR_DUTY_CYCLE), () -> {
+            bayDoorController.stop();
+            setDefaultCommand(closeBayDoor());
+            bayDoorState = BayDoorState.CLOSED;
+            bayDoorController.resetRelativeEncoder();
+        }).until(this::isClosed);
+    }
+
+    public Command resetEncoders() {
+        return Commands.runOnce(() -> bayDoorController.resetRelativeEncoder());
+    }
+
+    public Command moveBayDoor(Supplier<Dimensionless> percent) {
+        return runEnd(() -> bayDoorController.setDutyCycle(percent.get()), () -> bayDoorController.stop());
     }
 
     // With `getRotation()` figure the condition to decide if
     // Shouldn't need to set the duty cycle of both motors with seperate methods.
     // Since both should rotate until final direction it met so they should be
     // individually stop when needed.
-    private Command moveToPosition(BayDoorAction bayDoorAction) {
+    private void moveToPosition(BayDoorAction bayDoorAction) {
         switch (bayDoorAction) {
             case OPEN:
-                return new SequentialCommandGroup(
-                        Commands.runOnce(() -> {
-                            bayDoorController.setIdleMode(OPEN_IDLE_MODE);
-                            bayDoorState = BayDoorState.OPENING;
-                        }),
-                        new ParallelCommandGroup(
-                                Commands.runEnd(
-                                        () -> bayDoorController.setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE),
-                                        () -> bayDoorController.stopLeftMotor()).unless(this::atLeftOpen),
-                                Commands.runEnd(
-                                        () -> bayDoorController.setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE),
-                                        () -> bayDoorController.stopRightMotor()).until(this::atRightOpen)),
-                        Commands.runOnce(() -> bayDoorState = BayDoorState.OPENED));
+                if (!atSoftForwardLimit()) {
+                    bayDoorController.setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE);
+                    bayDoorController.setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE);
+                    bayDoorController.setIdleMode(OPEN_IDLE_MODE);
+                    bayDoorState = BayDoorState.OPENING;
+                } else {
+                    bayDoorController.stop();
+                }
+                break;
             case OPEN_AND_INTAKE:
-                return new SequentialCommandGroup(
-                        Commands.runOnce(() -> {
-                            bayDoorController.setIdleMode(OPEN_INTAKE_IDLE_MODE);
-                            bayDoorState = BayDoorState.OPENING;
-                        }),
-                        new ParallelCommandGroup(
-                                Commands.runEnd(
-                                        () -> bayDoorController.setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE),
-                                        () -> bayDoorController.stopLeftMotor()).unless(this::atLeftOpen),
-                                Commands.runEnd(
-                                        () -> bayDoorController.setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE),
-                                        () -> bayDoorController.stopRightMotor()).until(this::atRightOpen)),
-                        Commands.runOnce(() -> bayDoorState = BayDoorState.OPENED));
-
+                if (!atSoftForwardLimit()) {
+                    bayDoorController.setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE);
+                    bayDoorController.setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE);
+                    bayDoorController.setIdleMode(OPEN_INTAKE_IDLE_MODE);
+                    bayDoorState = BayDoorState.OPENING;
+                } else {
+                    bayDoorController.stop();
+                }
+                break;
             case CLOSE:
-                return new SequentialCommandGroup(
-                        Commands.runOnce(() -> {
-                            bayDoorController.setIdleMode(CLOSE_IDLE_MODE);
-                            bayDoorState = BayDoorState.CLOSING;
-                        }),
-                        new ParallelCommandGroup(
-                                Commands.runEnd(
-                                        () -> bayDoorController
-                                                .setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE.times(-1)),
-                                        () -> bayDoorController.stopLeftMotor()).unless(this::atLeftClosed),
-                                Commands.runEnd(
-                                        () -> bayDoorController
-                                                .setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE.times(-1)),
-                                        () -> bayDoorController.stopRightMotor()).until(this::atRightClosed)),
-                        Commands.runOnce(() -> bayDoorState = BayDoorState.CLOSED));
+                if (!atSoftReverseLimit()) {
+                    bayDoorController.setLeftMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE.times(-1));
+                    bayDoorController.setRightMotorDutyCycle(BAY_DOOR_ACTION_DUTY_CYCLE.times(-1));
+                    bayDoorController.setIdleMode(CLOSE_IDLE_MODE);
+                    bayDoorState = BayDoorState.CLOSING;
+                    bayDoorState = BayDoorState.OPENING;
+                } else {
+                    bayDoorController.stop();
+                }
+                break;
             default:
                 throw new IllegalStateException("Unknown Bay Door Action: " + bayDoorAction);
         }
@@ -130,7 +139,7 @@ public class Intake extends SubsystemBase {
     // its final position the other should keep going to the final location
     // regardless of the other motor.
     private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
-        return moveToPosition(bayDoorAction);
+        return runEnd(() -> moveToPosition(bayDoorAction), () -> bayDoorController.stop());
     }
 
     public Command openBayDoor() {
@@ -138,7 +147,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command closeBayDoor() {
-        return positionBayDoorTo(BayDoorAction.CLOSE);
+        return positionBayDoorTo(BayDoorAction.CLOSE).unless(this::isClosed).until(this::isClosed);
     }
 
     private Command openBayDoorAndHold() {
@@ -152,10 +161,10 @@ public class Intake extends SubsystemBase {
     // // wiggle. Test.
     // }
 
-    public Command intakeFuel() {
+    public Command intakeFuel(Supplier<Dimensionless> percent) {
         return Commands.runEnd(() -> {
             if (bayDoorState != BayDoorState.CLOSED) {
-                rollerMotor.setDutyCycle(ROLLER_INTAKE_DUTY_CYCLE);
+                rollerMotor.setDutyCycle(percent.get());
             } else {
                 rollerMotor.stop();
             }
@@ -210,5 +219,21 @@ public class Intake extends SubsystemBase {
 
     private boolean atRightHardClosed() {
         return rightHardLimit.get();
+    }
+
+    private boolean isClosed() {
+        return atLeftHardClosed() || atRightHardClosed();
+    }
+
+    private boolean isOpen() {
+        return atLeftOpen() || atRightOpen();
+    }
+
+    private boolean atSoftForwardLimit() {
+        return bayDoorController.atLeftMotorSoftForwardLimit() || bayDoorController.atRightMotorSoftForwardLimit();
+    }
+
+    private boolean atSoftReverseLimit() {
+        return bayDoorController.atLeftMotorSoftReverseLimit() || bayDoorController.atRightMotorSoftReverseLimit();
     }
 }

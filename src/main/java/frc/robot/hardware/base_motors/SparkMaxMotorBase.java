@@ -37,6 +37,9 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
     private static final Dimensionless MAX_DUTY = Percent.of(100);
     private static final Dimensionless MIN_DUTY = Percent.of(-100);
 
+    private final ResetMode resetMode;
+    private final PersistMode persistMode;
+
     /**
      * 
      * @param name
@@ -64,6 +67,8 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         motor = new SparkMax(canId.Id(), motorType);
         motor.configure(this.motorConfiguration, resetMode, persistMode);
         closedLoopController = motor.getClosedLoopController();
+        this.resetMode = resetMode;
+        this.persistMode = persistMode;
     }
 
     @Override
@@ -71,13 +76,13 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), this::setVoltage);
-        builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
-        builder.addBooleanProperty("Is Motor Moving?", this::isMoving, null);
-        builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycle, this::setDutyCycle);
-        builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
-                this::setRPM);
-        builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
+        // builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), this::setVoltage);
+        // builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
+        // builder.addBooleanProperty("Is Motor Moving?", this::isMoving, null);
+        // builder.addDoubleProperty("Target Duty Cycle %", this::getDutyCycle, this::setDutyCycle);
+        // builder.addDoubleProperty("RPM (Rotations Per Minute)", () -> getAngularVelocity().in(RPM),
+        //         this::setRPM);
+        // builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 
     @Override
@@ -116,6 +121,7 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
                     + " is out of bounds for duty motor Acceptable ranges are [" + MIN_DUTY + ", " + MAX_DUTY + "].");
         }
 
+        System.out.println(percentage.in(Percent) + " PERCENTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGE.");
         motor.set(percentage.in(Percent));
     }
 
@@ -150,5 +156,10 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
 
     public void setInverted(boolean inverted) {
         motorConfiguration.inverted(inverted);
+        motor.configure(motorConfiguration, resetMode, persistMode);
+    }
+
+    public boolean getInversion() {
+        return motor.configAccessor.getInverted();
     }
 }

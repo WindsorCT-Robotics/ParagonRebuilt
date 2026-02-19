@@ -26,8 +26,8 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);
     private static final Angle LIMIT_ROOM = Degrees.of(5);
 
-    public static final Angle OPEN_ANGLE = Degrees.of(20);
-    public static final Angle CLOSE_ANGLE = Degrees.of(0);
+    public static final Angle OPEN_ANGLE = Rotations.of(21.5);
+    public static final Angle CLOSE_ANGLE = Rotations.of(0);
 
     public BayDoorMotorBasic(String name, CanId canId) {
         super(
@@ -61,10 +61,10 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     }
 
     public boolean atSoftForwardLimit() {
-        return getMotorPosition().isNear(OPEN_ANGLE, LIMIT_ROOM);
+        return getMotorPosition().gte(OPEN_ANGLE);
     }
 
     public boolean atSoftReverseLimit() {
-        return getMotorPosition().isNear(CLOSE_ANGLE, LIMIT_ROOM);
+        return getMotorPosition().lte(CLOSE_ANGLE);
     }
 }

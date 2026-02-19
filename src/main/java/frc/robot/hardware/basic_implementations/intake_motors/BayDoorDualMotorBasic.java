@@ -11,7 +11,7 @@ import frc.robot.interfaces.IMotor;
 public class BayDoorDualMotorBasic implements IMotor {
     private final BayDoorMotorBasic leftMotor;
     private final BayDoorMotorBasic rightMotor;
-    private final static boolean INVERTED = false;
+    private final static boolean INVERTED = true;
 
     public BayDoorDualMotorBasic(
             String name,
@@ -92,6 +92,14 @@ public class BayDoorDualMotorBasic implements IMotor {
     public void setIdleMode(IdleMode idleMode) {
         leftMotor.setIdleMode(idleMode);
         rightMotor.setIdleMode(idleMode);
+    }
+
+    public Angle getLeftRotation() {
+        return leftMotor.getRotation();
+    }
+
+    public Angle getRightRotation() {
+        return rightMotor.getRotation();
     }
 
     public Angle getRotation() {

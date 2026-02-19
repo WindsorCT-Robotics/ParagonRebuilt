@@ -44,17 +44,8 @@ public class RobotContainer implements Sendable {
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 14);
   private static final CanId INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 15);
-  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0); // TOOD:
-                                                                                                                       // Check
-                                                                                                                       // if
-                                                                                                                       // this
-                                                                                                                       // are
-                                                                                                                       // in
-                                                                                                                       // the
-                                                                                                                       // correct
-                                                                                                                       // DIO
-                                                                                                                       // ids.
-  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
+  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
+  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
@@ -127,6 +118,8 @@ public class RobotContainer implements Sendable {
         curveAxis(controllerRightAxisX, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
+    intake.setDefaultCommand(intake.homeBayDoor());
+
     // Switches RelativeReference
     controller.leftBumper().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
@@ -165,7 +158,12 @@ public class RobotContainer implements Sendable {
 
     // Operator
     operator.a().whileTrue(spindexer.indexFuel());
-    operator.b().whileTrue(intake.intakeFuel());
+    operator.b().whileTrue(intake.intakeFuel(() -> Percent.of(operator.getRightY())).asProxy());
+    operator.y().whileTrue(intake.moveBayDoor(() -> Percent.of(operator.getRightY() / 20)));
+    operator.x().onTrue(intake.resetEncoders());
+
+    operator.povUp().toggleOnTrue(intake.openBayDoor());
+    operator.povDown().toggleOnTrue(intake.closeBayDoor());
   }
 
   public Command getAutonomousCommand() {

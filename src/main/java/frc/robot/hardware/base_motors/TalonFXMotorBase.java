@@ -29,8 +29,8 @@ import frc.robot.hardware.CanId;
 
 public abstract class TalonFXMotorBase implements IMotor, Sendable {
     // https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/api-usage/configuration.html
-    private final TalonFX motor;
-    private final TalonFXConfigurator motorConfigurator;
+    protected final TalonFX motor;
+    protected final TalonFXConfigurator motorConfigurator;
     private final AngularVelocity maxAngularVelocity;
 
     protected TalonFXMotorBase(

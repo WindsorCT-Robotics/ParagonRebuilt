@@ -44,7 +44,7 @@ public class RobotContainer implements Sendable {
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 14);
   private static final CanId INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID = new CanId((byte) 15);
-  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIGITAL_INPUT_OUTPUT = new DigitalInputOutput((byte) 0); // TOOD:
+  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0); // TOOD:
                                                                                                                        // Check
                                                                                                                        // if
                                                                                                                        // this
@@ -54,7 +54,7 @@ public class RobotContainer implements Sendable {
                                                                                                                        // correct
                                                                                                                        // DIO
                                                                                                                        // ids.
-  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIGITAL_INPUT_OUTPUT = new DigitalInputOutput((byte) 1);
+  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
@@ -84,8 +84,8 @@ public class RobotContainer implements Sendable {
         INTAKE_ROLLER_MOTOR_CAN_ID,
         INTAKE_LEFT_BAYDOOR_MOTOR_CAN_ID,
         INTAKE_RIGHT_BAYDOOR_MOTOR_CAN_ID,
-        INTAKE_LEFT_BAYDOOR_DIGITAL_INPUT_OUTPUT,
-        INTAKE_RIGHT_BAYDOOR_DIGITAL_INPUT_OUTPUT);
+        INTAKE_LEFT_BAYDOOR_DIO,
+        INTAKE_RIGHT_BAYDOOR_DIO);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;

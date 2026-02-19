@@ -36,14 +36,14 @@ public class Intake extends SubsystemBase {
             CanId intakeRollerMotorCanId,
             CanId intakeBayDoorLeftMotorCanId,
             CanId intakeBayDoorRightMotorCanId,
-            DigitalInputOutput leftLimitSwitchDigitalInputOutput,
-            DigitalInputOutput rightLimitSwitchDigitalInputOutput) {
+            DigitalInputOutput leftLimitSwitchDIO,
+            DigitalInputOutput rightLimitSwitchDIO) {
         SendableRegistry.add(this, name);
         this.rollerMotor = new IntakeRollerMotor("Intake Roller Motor", intakeRollerMotorCanId);
         this.bayDoorController = new BayDoorDualMotorBasic("Intake Bay Door", intakeBayDoorLeftMotorCanId,
                 intakeBayDoorRightMotorCanId);
-        leftHardLimit = new DigitalInput(leftLimitSwitchDigitalInputOutput.Id());
-        rightHardLimit = new DigitalInput(rightLimitSwitchDigitalInputOutput.Id());
+        leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
+        rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
     }
 
     private enum BayDoorState {

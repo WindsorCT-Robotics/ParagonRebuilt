@@ -269,9 +269,12 @@ public class BayDoor extends SubsystemBase {
     // its final position the other should keep going to the final location
     // regardless of the other motor.
     private Command positionBayDoorTo(BayDoorAction bayDoorAction) {
-        return runEnd(() -> motionProfileBayDoorTo(bayDoorAction), () -> bayDoorController.stop()); // TODO: See if
-                                                                                                    // motion profiling
-                                                                                                    // works.
+        return runEnd(() -> motionProfileBayDoorTo(bayDoorAction), () -> bayDoorController.stop())
+                .handleInterrupt(() -> {
+                    bayDoorState = BayDoorState.UNKNOWN;
+                    setDefaultCommand(homeBayDoor());
+                });
+        // TODO: See if motion profiling works.
     } // TODO: remove the dual motor class.
 
     public Command openBayDoor() {

@@ -29,6 +29,8 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     public static final Angle OPEN_ANGLE = Rotations.of(21.5);
     public static final Angle CLOSE_ANGLE = Rotations.of(0);
 
+    private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
+
     public BayDoorMotorBasic(String name, CanId canId) {
         super(
                 name,
@@ -41,13 +43,15 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
                 PERSIST_MODE);
     }
 
+    
+
     @Override
     public void setAngularPosition(Angle angle) {
         if (angle.gt(getRotation())) {
             setRPS(POSITION_ANGULAR_VELOCITY);
         }
 
-        if (angle.lt(getRotation())) {
+        if (angle.lte(getRotation())) {
             setRPS(POSITION_ANGULAR_VELOCITY);
         }
     }
@@ -74,5 +78,13 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
 
     public AngularVelocity getVelocity() {
         return RPM.of(motor.getEncoder().getVelocity());
+    }
+
+    public BayDoorState getBayMotorState() {
+        return motorBayDoorState;
+    }
+
+    public void setBayMotorState(BayDoorState state) {
+        motorBayDoorState = state;
     }
 }

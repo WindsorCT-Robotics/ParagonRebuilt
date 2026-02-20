@@ -29,6 +29,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.subsystems.BayDoor;
+import frc.robot.subsystems.BayDoor2;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
@@ -40,7 +41,7 @@ public class RobotContainer implements Sendable {
 
   private final Drive drive;
   private final Intake intake;
-  private final BayDoor bayDoor;
+  private final BayDoor2 bayDoor;
   private final Spindexer spindexer;
 
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
@@ -79,7 +80,7 @@ public class RobotContainer implements Sendable {
     }
 
     intake = new Intake("Intake", INTAKE_ROLLER_MOTOR_CAN_ID);
-    bayDoor = new BayDoor("Spindexer", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
+    bayDoor = new BayDoor2("Spindexer", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
         INTAKE_LEFT_BAYDOOR_DIO);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
 
@@ -165,7 +166,7 @@ public class RobotContainer implements Sendable {
             curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoorAndBrake().alongWith(intake.intakeFuel()));
+    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
 
     // This will be reserved for the composiiton of shooting, and indexing.
     // driver.leftBumper().whileTrue();

@@ -122,4 +122,12 @@ public class BayDoorDualMotorBasic implements IMotor {
     public Angle getRotation() {
         return leftMotor.getRotation().plus(rightMotor.getRotation()).div(2);
     }
+
+    public Dimensionless getLeftMotorDutyCycle() {
+        return leftMotor.getDutyCycle();
+    }
+
+    public Dimensionless getRightMotorDutyCycle() {
+        return rightMotor.getDutyCycle();
+    }
 }

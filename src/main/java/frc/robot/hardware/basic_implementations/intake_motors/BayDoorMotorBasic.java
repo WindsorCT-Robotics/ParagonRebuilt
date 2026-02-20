@@ -1,6 +1,7 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 
@@ -12,6 +13,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Dimensionless;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 import frc.robot.interfaces.IAngularPositionMotor;
@@ -48,6 +50,10 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
         if (angle.lt(getRotation())) {
             setRPS(POSITION_ANGULAR_VELOCITY);
         }
+    }
+
+    public Dimensionless getDutyCycle() {
+        return Percent.of(motor.get());
     }
 
     public void setIdleMode(IdleMode idleMode) {

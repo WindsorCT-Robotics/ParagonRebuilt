@@ -1,3 +1,4 @@
+
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -32,6 +33,8 @@ import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.BayDoor2;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Kicker;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
 
@@ -43,6 +46,8 @@ public class RobotContainer implements Sendable {
   private final Intake intake;
   private final BayDoor2 bayDoor;
   private final Spindexer spindexer;
+  private final Shooter shooter;
+  private final Kicker kicker;
 
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
@@ -51,6 +56,11 @@ public class RobotContainer implements Sendable {
   private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
+
+  private static final CanId SHOOTER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
+  private static final CanId SHOOTER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
+
+  private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
   private final CommandXboxController driver;
   private final CommandXboxController operator;
@@ -83,6 +93,8 @@ public class RobotContainer implements Sendable {
     bayDoor = new BayDoor2("Spindexer", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
         INTAKE_LEFT_BAYDOOR_DIO);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
+    shooter = new Shooter("Shooter", SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
+    kicker = new Kicker("Kicker", KICKER_MOTOR_CAN_ID);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -133,15 +145,15 @@ public class RobotContainer implements Sendable {
 
     bayDoor.setDefaultCommand(bayDoor.homeBayDoor());
 
-    driver.b().onTrue(Commands.runOnce(() -> {
-      if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
-        relativeReference = RelativeReference.FIELD_CENTRIC;
-      } else {
-        relativeReference = RelativeReference.ROBOT_CENTRIC;
-      }
+    // driver.b().onTrue(Commands.runOnce(() -> {
+    //   if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
+    //     relativeReference = RelativeReference.FIELD_CENTRIC;
+    //   } else {
+    //     relativeReference = RelativeReference.ROBOT_CENTRIC;
+    //   }
 
-      SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
-    }));
+    //   SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
+    // }));
 
     driver.rightBumper().whileTrue(Commands.runEnd(() -> {
       maxDriverLeftJoyStickSpeedX = REDUCE_SPEED;
@@ -167,6 +179,7 @@ public class RobotContainer implements Sendable {
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
     driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
+    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
 
     // This will be reserved for the composiiton of shooting, and indexing.
     // driver.leftBumper().whileTrue();
@@ -184,7 +197,7 @@ public class RobotContainer implements Sendable {
     driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
 
     // Operator
-
+    operator.x().whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
   }
 
   public Command getAutonomousCommand() {

@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 
@@ -19,7 +18,8 @@ public class BayDoor2 extends SubsystemBase {
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
-    private static final Angle POSITION_TOLERANCE = Rotations.of(1);
+    private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
+    private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(0.1);
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
     private static final boolean INVERTED = true;
@@ -41,8 +41,10 @@ public class BayDoor2 extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putString("Bay Door State: ", bayDoorState.toString());
+        SmartDashboard.putString("Bay Door State", bayDoorState.toString());
         SmartDashboard.putBoolean("Is Moving", (leftMotor.isMoving() || rightMotor.isMoving()));
+        SmartDashboard.putNumber("Left Motor Rotation", leftMotor.getRotation().in(Rotations));
+        SmartDashboard.putNumber("Right Motor Rotation", rightMotor.getRotation().in(Rotations));
     }
 
     private enum BayDoorState {
@@ -66,8 +68,9 @@ public class BayDoor2 extends SubsystemBase {
         }
     }
 
-    private void moveToPosition(BayDoorMotorBasic motor, Angle position, Angle goalPosition) {
-        if (!position.isNear(goalPosition, POSITION_TOLERANCE)) {
+    private void moveToPosition(BayDoorMotorBasic motor, Angle position, Angle goalPosition, Angle tolerance) {
+        System.out.println(goalPosition.in(Rotations) + " | " + position.in(Rotations));
+        if (!position.isNear(goalPosition, tolerance)) {
             moveTowards(motor, goalPosition);
         } else {
             motor.stop();
@@ -77,23 +80,26 @@ public class BayDoor2 extends SubsystemBase {
     // TODO: Detect if at ends such as OPEN and CLOSE. Currently doesn't set that.
     private Command moveBayDoorTo(BayDoorAction action) {
         Angle goalPosition;
+        Angle tolerance;
 
         switch (action) {
             case OPEN:
                 goalPosition = BayDoorMotorBasic.OPEN_ANGLE;
                 bayDoorState = BayDoorState.OPENING;
+                tolerance = FORWARD_POSITION_TOLERANCE;
                 break;
             case CLOSE:
                 goalPosition = BayDoorMotorBasic.CLOSE_ANGLE;
                 bayDoorState = BayDoorState.CLOSING;
+                tolerance = REVERSE_POSITION_TOLERANCE;
                 break;
             default:
                 throw new IllegalStateException("Unknown Bay Door Action: " + action);
         }
 
         return run(() -> {
-                    moveToPosition(leftMotor, POSITION_TOLERANCE, goalPosition);
-                    moveToPosition(rightMotor, POSITION_TOLERANCE, goalPosition);
+                    moveToPosition(leftMotor, leftMotor.getRotation(), goalPosition, tolerance);
+                    moveToPosition(rightMotor, rightMotor.getRotation(), goalPosition, tolerance);
                 });
     }
 
@@ -118,12 +124,18 @@ public class BayDoor2 extends SubsystemBase {
         return rightHardLimit.get();
     }
 
+    private void resetEncoders() {
+        leftMotor.resetRelativeEncoder();
+        rightMotor.resetRelativeEncoder();
+    }
+
     public Command homeBayDoor() {
         return runEnd(() -> {
             moveTowards(leftMotor, Rotations.of(Integer.MIN_VALUE));
             moveTowards(rightMotor, Rotations.of(Integer.MIN_VALUE));
         }, () -> {
             stop();
+            resetEncoders();
             setDefaultCommand(closeBayDoor());
         }).until(() -> atHardLeft() && atHardRight());
     }

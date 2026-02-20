@@ -14,7 +14,7 @@ import frc.robot.hardware.spindexer_motor.SpindexterMotor;
 public class Spindexer extends SubsystemBase {
     private final SpindexterMotor motor;
 
-    private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(20);
+    private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(100);
 
     public Spindexer(
             String name,

@@ -1,5 +1,6 @@
 package frc.robot.hardware.shooter_motors;
 
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -17,5 +18,9 @@ public class KickerMotor extends KrakenMotorBase {
                 NeutralModeValue.Brake,
                 InvertedValue.Clockwise_Positive,
                 CURRENT_LIMIT);
+    }
+
+    public void setInverted(InvertedValue inverted) {
+        motorConfigurator.apply(new MotorOutputConfigs().withInverted(inverted));
     }
 }

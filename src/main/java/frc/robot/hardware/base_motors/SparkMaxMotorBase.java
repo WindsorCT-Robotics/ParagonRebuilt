@@ -127,8 +127,6 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
                     + " is out of bounds for duty motor Acceptable ranges are [" + MIN_DUTY + ", " + MAX_DUTY + "].");
         }
 
-        System.out.println(percentage.in(Percent)
-                + " PERCENTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGE.");
         motor.set(percentage.in(Percent));
     }
 

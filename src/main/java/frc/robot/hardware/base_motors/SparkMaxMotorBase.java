@@ -139,10 +139,6 @@ public abstract class SparkMaxMotorBase implements IMotor, Sendable {
         return motor.getAppliedOutput();
     }
 
-    public void setRPS(AngularVelocity velocity) {
-        setDutyCycle(Percent.of(velocity.div(maxAngularVelocity).in(Percent)));
-    }
-
     private AngularVelocity getAngularVelocity() {
         return RPM.of(motor.getEncoder().getVelocity());
     }

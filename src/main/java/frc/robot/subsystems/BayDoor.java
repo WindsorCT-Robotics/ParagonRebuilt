@@ -2,10 +2,18 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -24,11 +32,15 @@ public class BayDoor extends SubsystemBase {
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(0.1);
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
     private static final boolean INVERTED = true;
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
+    private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1 );
+    private static final TrapezoidProfile.Constraints MOTION_CONSTRAINTS = new Constraints(
+            MAX_ANGULAR_VELOCITY.in(RotationsPerSecond), MAX_ANGULAR_ACCELERATION.in(RotationsPerSecondPerSecond));
 
     public BayDoor(
-            String name, 
-            CanId leftMotorId, 
-            CanId rightMotorId, 
+            String name,
+            CanId leftMotorId,
+            CanId rightMotorId,
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
         leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId);
@@ -43,9 +55,10 @@ public class BayDoor extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putString("Left Bay Motor State", leftMotor.getBayMotorState().toString());
         SmartDashboard.putString("Right Bay Motor State", rightMotor.getBayMotorState().toString());
-        SmartDashboard.putBoolean("Is Moving", (leftMotor.isMoving() || rightMotor.isMoving()));
         SmartDashboard.putNumber("Left Motor Rotation", leftMotor.getRotation().in(Rotations));
         SmartDashboard.putNumber("Right Motor Rotation", rightMotor.getRotation().in(Rotations));
+        SmartDashboard.putNumber("Left Bay Motor Velocity (RPS)", leftMotor.getVelocity().in(RotationsPerSecond));
+        SmartDashboard.putNumber("Right Bay Motor Velocity (RPS)", rightMotor.getVelocity().in(RotationsPerSecond));
     }
 
     private enum BayDoorAction {
@@ -53,19 +66,33 @@ public class BayDoor extends SubsystemBase {
         CLOSE
     }
 
-    private void moveTowards(BayDoorMotorBasic motor, Angle position) {
+    private void moveTowards(
+            BayDoorMotorBasic motor,
+            Angle position,
+            TrapezoidProfile.Constraints constraints) {
+        TrapezoidProfile.State currentState = new State(motor.getRotation().in(Rotations),
+                motor.getVelocity().in(RotationsPerSecond));
+        TrapezoidProfile.State goalState = new State(position.in(Rotations),
+                RotationsPerSecond.zero().in(RotationsPerSecond));
+        TrapezoidProfile motionProfile = new TrapezoidProfile(constraints);
         
-        if (motor.getRotation().lt(position)) {
-            motor.setDutyCycle(DEFAULT_DUTY_CYCLE);
-        } else {
-            motor.setDutyCycle(DEFAULT_DUTY_CYCLE.times(-1));
-        }
+        AngularVelocity velocity = RotationsPerSecond
+                .of(motionProfile.calculate(TimedRobot.kDefaultPeriod, currentState, goalState).velocity);
+        
+                motor.setRPS(velocity);
+        SmartDashboard.putNumber("Desired Position", goalState.position);
+        SmartDashboard.putNumber("Velocity", velocity.in(RotationsPerSecond));
     }
 
-    private void moveToPosition(BayDoorMotorBasic motor, Angle position, Angle goalPosition, Angle tolerance, BayDoorState medianState, BayDoorState endState) {
-        System.out.println(goalPosition.in(Rotations) + " | " + position.in(Rotations));
+    private void moveToPosition(
+            BayDoorMotorBasic motor,
+            Angle position,
+            Angle goalPosition,
+            Angle tolerance,
+            BayDoorState medianState,
+            BayDoorState endState) {
         if (!position.isNear(goalPosition, tolerance)) {
-            moveTowards(motor, goalPosition);
+            moveTowards(motor, goalPosition, MOTION_CONSTRAINTS);
             motor.setBayMotorState(medianState);
         } else {
             motor.stop();
@@ -102,9 +129,9 @@ public class BayDoor extends SubsystemBase {
         }
 
         return run(() -> {
-                    moveToPosition(leftMotor, leftMotor.getRotation(), goalPosition, tolerance, medianState, endState);
-                    moveToPosition(rightMotor, rightMotor.getRotation(), goalPosition, tolerance, medianState, endState);
-                });
+            moveToPosition(leftMotor, leftMotor.getRotation(), goalPosition, tolerance, medianState, endState);
+            moveToPosition(rightMotor, rightMotor.getRotation(), goalPosition, tolerance, medianState, endState);
+        });
     }
 
     public Command openBayDoor() {
@@ -135,8 +162,8 @@ public class BayDoor extends SubsystemBase {
 
     public Command homeBayDoor() {
         return runEnd(() -> {
-            moveTowards(leftMotor, Rotations.of(Integer.MIN_VALUE));
-            moveTowards(rightMotor, Rotations.of(Integer.MIN_VALUE));
+            leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
+            rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
         }, () -> {
             stop();
             resetEncoders();

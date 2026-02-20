@@ -131,7 +131,6 @@ public class Drive extends GeneratedDrive {
             Supplier<AngularVelocity> rotateRate,
             Supplier<RelativeReference> reference) {
         return run(() -> {
-            // System.out.println("Velocity X (M/S): " + x.get() + " | " + "Velocity Y (M/S): " + y.get());
             switch (reference.get()) {
                 case ROBOT_CENTRIC:
                     setControl(robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));

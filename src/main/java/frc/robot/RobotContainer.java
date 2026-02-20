@@ -177,7 +177,7 @@ public class RobotContainer implements Sendable {
             curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
+    driver.x().toggleOnTrue(bayDoor.openBayDoor()); // TODO: Add intake command when done testing.
     driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
 
     // This will be reserved for the composiiton of shooting, and indexing.

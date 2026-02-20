@@ -4,12 +4,15 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -26,11 +29,14 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
     private static final AngularVelocity POSITION_ANGULAR_VELOCITY = RPM.of(1);
 
+    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure velocity (kV)
+
     public static final Angle OPEN_ANGLE = Rotations.of(21.5);
     public static final Angle CLOSE_ANGLE = Rotations.of(0);
 
     private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
 
+    // TODO: Put caps on speed.
     public BayDoorMotorBasic(String name, CanId canId) {
         super(
                 name,
@@ -78,6 +84,10 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
 
     public AngularVelocity getVelocity() {
         return RPM.of(motor.getEncoder().getVelocity());
+    }
+
+    public void setRPS(AngularVelocity velocity) {
+        setVoltage(Volts.of(feedforward.calculate(velocity.in(RotationsPerSecond))));
     }
 
     public BayDoorState getBayMotorState() {

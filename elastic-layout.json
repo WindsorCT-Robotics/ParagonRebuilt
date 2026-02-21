@@ -1,0 +1,78 @@
+{
+  "version": 1.0,
+  "grid_size": 16,
+  "tabs": [
+    {
+      "name": "Detailed",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Autonomous",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Autonomous",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "Relative Reference",
+            "x": 128.0,
+            "y": 0.0,
+            "width": 160.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Relative Reference",
+              "period": 0.06,
+              "data_type": "string",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Alliance",
+            "x": 288.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/FMSInfo/IsRedAlliance",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4294920007,
+              "false_color": 4282754047,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "StationNumber",
+            "x": 416.0,
+            "y": 0.0,
+            "width": 160.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/FMSInfo/StationNumber",
+              "period": 0.06,
+              "data_type": "int"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Competition",
+      "grid_layout": {
+        "layouts": [],
+        "containers": []
+      }
+    }
+  ]
+}

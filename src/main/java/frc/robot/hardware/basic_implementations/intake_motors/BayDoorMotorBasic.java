@@ -30,7 +30,7 @@ public class BayDoorMotorBasic extends NeoMotorBase {
     // These are zero because the Bay Door should only be controlled by setting the
     // rotations per second.
     private static final Voltage MAX_VOLTAGE = Volts.of(0);
-    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0);
+    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0.15);
 
     public static final Angle OPEN_ANGLE = Rotations.of(21.5);
     public static final Angle CLOSE_ANGLE = Rotations.of(0);
@@ -41,6 +41,7 @@ public class BayDoorMotorBasic extends NeoMotorBase {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) DEFAULT_CURRENT.in(Amps)),
+                // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
                 MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
     }

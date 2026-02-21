@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.shooter_motors.KickerMotor;
 import frc.robot.hardware.CanId;
 
-
 public class Kicker extends SubsystemBase {
     private final KickerMotor motor;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);

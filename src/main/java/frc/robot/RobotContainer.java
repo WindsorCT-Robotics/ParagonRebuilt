@@ -218,8 +218,6 @@ public class RobotContainer implements Sendable {
   private void bindPIDTuning() {
     /*
      * Note that each routine should be run exactly once in a single log.
-     * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
-     * tuning PID again.
      */
     driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
     driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));

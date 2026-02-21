@@ -5,6 +5,10 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
@@ -12,6 +16,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,7 +38,7 @@ public class BayDoor extends SubsystemBase {
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
     private static final boolean INVERTED = true;
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
-    private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1 );
+    private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1);
     private static final TrapezoidProfile.Constraints MOTION_CONSTRAINTS = new Constraints(
             MAX_ANGULAR_VELOCITY.in(RotationsPerSecond), MAX_ANGULAR_ACCELERATION.in(RotationsPerSecondPerSecond));
 
@@ -47,16 +52,31 @@ public class BayDoor extends SubsystemBase {
         rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId);
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor.setInverted(INVERTED);
-        rightMotor.setInverted(!INVERTED);
+
+        // TODO: Be able to apply configuration and keep the same ResetMode and
+        // PersisMode without hard coding.
+        leftMotor.configure(motor -> {
+            motor.configure(new SparkMaxConfig().inverted(INVERTED), ResetMode.kNoResetSafeParameters,
+                    PersistMode.kPersistParameters);
+        });
+
+        rightMotor.configure(motor -> {
+            motor.configure(new SparkMaxConfig().inverted(!INVERTED), ResetMode.kNoResetSafeParameters,
+                    PersistMode.kPersistParameters);
+        });
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+
     }
 
     @Override
     public void periodic() {
         SmartDashboard.putString("Left Bay Motor State", leftMotor.getBayMotorState().toString());
         SmartDashboard.putString("Right Bay Motor State", rightMotor.getBayMotorState().toString());
-        SmartDashboard.putNumber("Left Motor Rotation", leftMotor.getRotation().in(Rotations));
-        SmartDashboard.putNumber("Right Motor Rotation", rightMotor.getRotation().in(Rotations));
+        SmartDashboard.putNumber("Left Motor Rotation", leftMotor.getAngle().in(Rotations));
+        SmartDashboard.putNumber("Right Motor Rotation", rightMotor.getAngle().in(Rotations));
         SmartDashboard.putNumber("Left Bay Motor Velocity (RPS)", leftMotor.getVelocity().in(RotationsPerSecond));
         SmartDashboard.putNumber("Right Bay Motor Velocity (RPS)", rightMotor.getVelocity().in(RotationsPerSecond));
     }
@@ -70,16 +90,16 @@ public class BayDoor extends SubsystemBase {
             BayDoorMotorBasic motor,
             Angle position,
             TrapezoidProfile.Constraints constraints) {
-        TrapezoidProfile.State currentState = new State(motor.getRotation().in(Rotations),
+        TrapezoidProfile.State currentState = new State(motor.getAngle().in(Rotations),
                 motor.getVelocity().in(RotationsPerSecond));
         TrapezoidProfile.State goalState = new State(position.in(Rotations),
                 RotationsPerSecond.zero().in(RotationsPerSecond));
         TrapezoidProfile motionProfile = new TrapezoidProfile(constraints);
-        
+
         AngularVelocity velocity = RotationsPerSecond
                 .of(motionProfile.calculate(TimedRobot.kDefaultPeriod, currentState, goalState).velocity);
-        
-                motor.setRPS(velocity);
+
+        motor.setRPS(velocity);
         SmartDashboard.putNumber("Desired Position", goalState.position);
         SmartDashboard.putNumber("Velocity", velocity.in(RotationsPerSecond));
     }
@@ -100,7 +120,6 @@ public class BayDoor extends SubsystemBase {
         }
     }
 
-    // TODO: Detect if at ends such as OPEN and CLOSE. Currently doesn't set that.
     private Command moveBayDoorTo(BayDoorAction action) {
         Angle goalPosition;
         Angle tolerance;
@@ -129,8 +148,8 @@ public class BayDoor extends SubsystemBase {
         }
 
         return run(() -> {
-            moveToPosition(leftMotor, leftMotor.getRotation(), goalPosition, tolerance, medianState, endState);
-            moveToPosition(rightMotor, rightMotor.getRotation(), goalPosition, tolerance, medianState, endState);
+            moveToPosition(leftMotor, leftMotor.getAngle(), goalPosition, tolerance, medianState, endState);
+            moveToPosition(rightMotor, rightMotor.getAngle(), goalPosition, tolerance, medianState, endState);
         });
     }
 

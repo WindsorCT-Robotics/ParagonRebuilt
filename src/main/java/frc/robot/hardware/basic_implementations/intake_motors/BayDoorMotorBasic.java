@@ -21,7 +21,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 
-public class BayDoorMotorBasic2 extends NeoMotorBase {
+public class BayDoorMotorBasic extends NeoMotorBase {
     private static final Current STRUGGLE_THRESHOLD = Amps.of(40); // TODO: Test value
     private static final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure
                                                                                                   // velocity (kV)
@@ -37,7 +37,7 @@ public class BayDoorMotorBasic2 extends NeoMotorBase {
 
     private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
 
-    public BayDoorMotorBasic2(String name, CanId canId) {
+    public BayDoorMotorBasic(String name, CanId canId) {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) NeoMotorBase.DEFAULT_CURRENT.in(Amps)),

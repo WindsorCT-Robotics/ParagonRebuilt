@@ -46,6 +46,7 @@ public class Shooter extends SubsystemBase {
         rightMotor.stop();
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command shootFuel() {
         return runEnd(() -> {
             leftMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);

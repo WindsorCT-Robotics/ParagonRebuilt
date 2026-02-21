@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Dimensionless;
@@ -17,9 +18,12 @@ public class Kicker extends SubsystemBase {
 
     public Kicker(String name, CanId motorId) {
         motor = new KickerMotor("Kicker Motor", motorId);
-        motor.setInverted(InvertedValue.Clockwise_Positive);
+        motor.configure(motor -> {
+            motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
+        });
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command kickStartFuel() {
         return Commands.runEnd(() -> motor.setDutyCycle(DEFAULT_DUTY_CYCLE), () -> motor.stop());
     }

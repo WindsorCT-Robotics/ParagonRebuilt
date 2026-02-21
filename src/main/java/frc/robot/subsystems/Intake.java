@@ -20,10 +20,12 @@ public class Intake extends SubsystemBase {
         motor = new IntakeRollerMotor(name, motorCanId);
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command intakeFuel() {
         return runEnd(() -> motor.setDutyCycle(INTAKE_FUEL_DUTY_CYCLE), () -> motor.stop());
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command shuttleFuel() {
         return runEnd(() -> motor.setDutyCycle(SHUTTLE_FUEL_DUTY_CYCLE), () -> motor.stop());
     }

@@ -28,10 +28,12 @@ public class Spindexer extends SubsystemBase {
 
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command indexFuel() {
         return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE), () -> motor.stop());
     }
 
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command releaseFuel() {
         return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE.times(-1)), () -> motor.stop());
     }

@@ -22,7 +22,7 @@ import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 
 public class BayDoorMotorBasic2 extends NeoMotorBase {
-    private static final Current STRUGGLE_CURRENT = Amps.of(40);
+    private static final Current STRUGGLE_THRESHOLD = Amps.of(40); // TODO: Test value
     private static final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure
                                                                                                   // velocity (kV)
 
@@ -41,8 +41,8 @@ public class BayDoorMotorBasic2 extends NeoMotorBase {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) NeoMotorBase.DEFAULT_CURRENT.in(Amps)),
-                ResetMode.kNoResetSafeParameters,
-                PersistMode.kPersistParameters, MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
+                ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
+                MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
     }
 
     @Override
@@ -71,6 +71,6 @@ public class BayDoorMotorBasic2 extends NeoMotorBase {
     }
 
     public boolean isStruggling() {
-        return getCurrent().gt(STRUGGLE_CURRENT);
+        return getCurrent().gt(STRUGGLE_THRESHOLD);
     }
 }

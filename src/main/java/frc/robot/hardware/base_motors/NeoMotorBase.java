@@ -14,7 +14,7 @@ import frc.robot.hardware.CanId;
 
 public abstract class NeoMotorBase extends SparkMaxMotorBase {
     // https://docs.revrobotics.com/brushless/neo/v1.1#motor-specifications
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(5676);
+    public static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(5676);
     // https://docs.revrobotics.com/brushless/spark-max/gs/make-it-spin#limiting-current
     protected static final Current DEFAULT_CURRENT = Amps.of(60);
     private static final MotorType MOTOR_TYPE = MotorType.kBrushless;

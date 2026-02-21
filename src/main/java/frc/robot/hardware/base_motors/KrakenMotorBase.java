@@ -12,7 +12,7 @@ import frc.robot.hardware.CanId;
 
 public abstract class KrakenMotorBase extends TalonFXMotorBase {
     // https://docs.wcproducts.com/welcome/electronics/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance#trapezoidal-commutation
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(6000);
+    public static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(6000);
     // https://www.chiefdelphi.com/t/announcing-kraken-x60-powered-by-talon-fx/442236/1212?page=59
     protected static final Current DEFAULT_CURRENT = Amps.of(80);
 
@@ -23,11 +23,11 @@ public abstract class KrakenMotorBase extends TalonFXMotorBase {
             InvertedValue inverted,
             Current currentLimit) {
         super(
-            name, 
-            canId, 
-            neutralMode, 
-            inverted, 
-            currentLimit, 
-            MAX_ANGULAR_VELOCITY);
+                name,
+                canId,
+                neutralMode,
+                inverted,
+                currentLimit,
+                MAX_ANGULAR_VELOCITY);
     }
 }

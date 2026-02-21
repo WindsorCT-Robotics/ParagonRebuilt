@@ -40,7 +40,7 @@ public class BayDoorMotorBasic extends NeoMotorBase {
     public BayDoorMotorBasic(String name, CanId canId) {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
-                        (int) NeoMotorBase.DEFAULT_CURRENT.in(Amps)),
+                        (int) DEFAULT_CURRENT.in(Amps)),
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
                 MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
     }

@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
@@ -144,15 +143,15 @@ public class RobotContainer implements Sendable {
 
     bayDoor.setDefaultCommand(bayDoor.homeBayDoor());
 
-    // driver.b().onTrue(Commands.runOnce(() -> {
-    //   if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
-    //     relativeReference = RelativeReference.FIELD_CENTRIC;
-    //   } else {
-    //     relativeReference = RelativeReference.ROBOT_CENTRIC;
-    //   }
+    driver.b().onTrue(Commands.runOnce(() -> {
+      if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
+        relativeReference = RelativeReference.FIELD_CENTRIC;
+      } else {
+        relativeReference = RelativeReference.ROBOT_CENTRIC;
+      }
 
-    //   SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
-    // }));
+      SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
+    }));
 
     driver.rightBumper().whileTrue(Commands.runEnd(() -> {
       maxDriverLeftJoyStickSpeedX = REDUCE_SPEED;
@@ -177,11 +176,11 @@ public class RobotContainer implements Sendable {
             curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoor()); // TODO: Add intake command when done testing.
+    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
     driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
 
-    // This will be reserved for the composiiton of shooting, and indexing.
-    // driver.leftBumper().whileTrue();
+    driver.leftBumper()
+        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
 
     driver.povDown().onTrue(drive.resetGyro());
 
@@ -190,13 +189,13 @@ public class RobotContainer implements Sendable {
      * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
      * tuning PID again.
      */
-    driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+    // driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
+    // driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+    // driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
+    // driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
 
     // Operator
-    operator.x().whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
+    operator.y().whileTrue(bayDoor.openBayDoor());
   }
 
   public Command getAutonomousCommand() {

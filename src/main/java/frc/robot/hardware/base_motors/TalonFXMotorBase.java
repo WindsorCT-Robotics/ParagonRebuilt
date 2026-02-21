@@ -24,7 +24,6 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
@@ -45,7 +44,6 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage) {
-        SendableRegistry.addLW(this, name);
         motor = new TalonFX(canId.Id());
         configurator = motor.getConfigurator();
         this.configuration = configuration;

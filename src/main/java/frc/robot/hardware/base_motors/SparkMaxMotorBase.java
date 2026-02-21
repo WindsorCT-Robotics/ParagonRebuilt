@@ -37,26 +37,28 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     protected final SimpleMotorFeedforward feedforward;
     private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
-    private final Dimensionless maxPercentage;
+    private final Dimensionless maxDutyCycle;
 
     protected SparkMaxMotorBase(
             String name,
             CanId canId,
-            MotorType motorType,
             SimpleMotorFeedforward feedforward,
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
-            Dimensionless maxPercentage) {
+            Dimensionless maxDutyCycle,
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<AngularVelocity> angularVelocitySetter,
+            Consumer<Voltage> voltageSetter) {
         SendableRegistry.addLW(this, name);
-        motor = new SparkMax(canId.Id(), motorType);
+        motor = new SparkMax(canId.Id(), MotorType.kBrushless);
         motor.configure(configuration, resetMode, persistMode);
         this.feedforward = feedforward;
         this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
-        this.maxPercentage = maxPercentage;
+        this.maxDutyCycle = maxDutyCycle;
     }
 
     @Override
@@ -86,9 +88,10 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     @Override
     public void setDutyCycle(Dimensionless percentage) {
         Dimensionless clampedPercentage = Percent
-                .of(MathUtil.clamp(percentage.in(Percent), maxPercentage.unaryMinus().in(Percent),
-                        maxPercentage.in(Percent)));
-        motor.set(clampedPercentage.in(Percent));
+                .of(MathUtil.clamp(percentage.in(Percent), maxDutyCycle.unaryMinus().in(Percent),
+                        maxDutyCycle.in(Percent)));
+
+        motor.set(clampedPercentage.in(Value));
     }
 
     @Override
@@ -106,8 +109,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
 
         setVoltage(
                 Volts.of(
-                        feedforward.calculate(
-                                clampedVelocity.in(RotationsPerSecond))));
+                        feedforward.calculateWithVelocities(getVelocity().in(RotationsPerSecond), clampedVelocity.in(RotationsPerSecond))));
     }
 
     @Override
@@ -153,7 +155,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
+        builder.addDoubleProperty("Encoder Value", () -> getAngle().in(Rotations), null);
         builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent), null);
         builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);

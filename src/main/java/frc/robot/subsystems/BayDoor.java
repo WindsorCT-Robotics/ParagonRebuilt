@@ -4,6 +4,9 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
+import java.util.function.Supplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -16,13 +19,18 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
@@ -35,13 +43,18 @@ public class BayDoor extends SubsystemBase {
     private final DigitalInput rightHardLimit;
     private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
     private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
-    private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(0.1);
-    private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
     private static final boolean INVERTED = true;
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
     private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1);
     private static final TrapezoidProfile.Constraints MOTION_CONSTRAINTS = new Constraints(
             MAX_ANGULAR_VELOCITY.in(RotationsPerSecond), MAX_ANGULAR_ACCELERATION.in(RotationsPerSecondPerSecond));
+    public static final Angle OPEN_ANGLE = Rotations.of(21.5);
+    public static final Angle CLOSE_ANGLE = Rotations.of(0);
+
+    public final Trigger isAtRightLimit;
+    public final Trigger isAtLeftLimit;
+    public final Trigger isIntakeClosed;
+    public final Trigger isIntakeOpen;
 
     public BayDoor(
             String name,
@@ -49,10 +62,10 @@ public class BayDoor extends SubsystemBase {
             CanId rightMotorId,
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
-        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId);
-        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId);
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
+        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit);
+        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit);
 
         // TODO: Be able to apply configuration and keep the same ResetMode and
         // PersisMode without hard coding.
@@ -65,7 +78,16 @@ public class BayDoor extends SubsystemBase {
             motor.configure(new SparkMaxConfig().inverted(!INVERTED), ResetMode.kNoResetSafeParameters,
                     PersistMode.kPersistParameters);
         });
-        SendableRegistry.add(leftHardLimit, name, name);
+
+        isAtLeftLimit = new Trigger(leftHardLimit::get);
+        isAtRightLimit = new Trigger(rightHardLimit::get);
+
+        isIntakeClosed = new Trigger(
+                () -> leftMotor.getAngle().lte(CLOSE_ANGLE) && rightMotor.getAngle().lte(CLOSE_ANGLE));
+        isIntakeOpen = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE) && rightMotor.getAngle().gte(OPEN_ANGLE));
+
+        SendableRegistry.addChild(this, leftHardLimit);
+        SendableRegistry.addChild(this, rightHardLimit);
         SendableRegistry.addChild(this, leftMotor);
         SendableRegistry.addChild(this, rightMotor);
     }
@@ -73,11 +95,39 @@ public class BayDoor extends SubsystemBase {
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Left Motor Velocity (RPS)", () -> leftMotor.getVelocity().in(RotationsPerSecond),
+                null);
+        builder.addDoubleProperty("Right Motor Velocity (RPS)", () -> rightMotor.getVelocity().in(RotationsPerSecond),
+                null);
+        builder.addDoubleProperty("Left Motor Voltage (V)", () -> leftMotor.getVoltage().in(Volts), this::setVoltage);
+        builder.addDoubleProperty("Right Motor Voltage (V)", () -> rightMotor.getVoltage().in(Volts), this::setVoltage);
+        builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
+        builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
     }
 
     private enum BayDoorAction {
         OPEN,
         CLOSE
+    }
+
+    private void setVoltage(double v) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(Volts.of(v)));
+    }
+
+    public Command overrideMotorVoltage(Voltage v) {
+        return run(() -> {
+            leftMotor.setVoltage(v);
+            rightMotor.setVoltage(v);
+        });
+    }
+
+    public Command home() {
+        return run(() -> {
+            leftMotor.home();
+            rightMotor.home();
+        })
+        .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
     private void moveTowards(
@@ -122,7 +172,7 @@ public class BayDoor extends SubsystemBase {
 
         switch (action) {
             case OPEN:
-                goalPosition = BayDoorMotorBasic.OPEN_ANGLE;
+                goalPosition = OPEN_ANGLE;
                 leftMotor.setBayMotorState(BayDoorState.OPENING);
                 rightMotor.setBayMotorState(BayDoorState.OPENING);
                 tolerance = FORWARD_POSITION_TOLERANCE;
@@ -130,7 +180,7 @@ public class BayDoor extends SubsystemBase {
                 endState = BayDoorState.OPEN;
                 break;
             case CLOSE:
-                goalPosition = BayDoorMotorBasic.CLOSE_ANGLE;
+                goalPosition = CLOSE_ANGLE;
                 leftMotor.setBayMotorState(BayDoorState.CLOSING);
                 rightMotor.setBayMotorState(BayDoorState.CLOSING);
                 tolerance = REVERSE_POSITION_TOLERANCE;
@@ -152,35 +202,6 @@ public class BayDoor extends SubsystemBase {
     }
 
     public Command closeBayDoor() {
-        return moveBayDoorTo(BayDoorAction.CLOSE).andThen(homeBayDoor());
-    }
-
-    private void stop() {
-        leftMotor.stop();
-        rightMotor.stop();
-    }
-
-    private boolean atHardLeft() {
-        return leftHardLimit.get();
-    }
-
-    private boolean atHardRight() {
-        return rightHardLimit.get();
-    }
-
-    private void resetEncoders() {
-        leftMotor.resetRelativeEncoder();
-        rightMotor.resetRelativeEncoder();
-    }
-
-    public Command homeBayDoor() {
-        return runEnd(() -> {
-            leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
-            rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-        }, () -> {
-            stop();
-            resetEncoders();
-            setDefaultCommand(closeBayDoor());
-        }).until(() -> atHardLeft() && atHardRight());
+        return moveBayDoorTo(BayDoorAction.CLOSE);
     }
 }

@@ -3,11 +3,13 @@ package frc.robot.hardware.base_motors;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.hardware.CanId;
 
 public abstract class KrakenMotorBase extends TalonFXMotorBase {
@@ -19,15 +21,18 @@ public abstract class KrakenMotorBase extends TalonFXMotorBase {
     protected KrakenMotorBase(
             String name,
             CanId canId,
-            NeutralModeValue neutralMode,
-            InvertedValue inverted,
-            Current currentLimit) {
+            TalonFXConfiguration configuration,
+            SimpleMotorFeedforward feedforward,
+            AngularVelocity maxAngularVelocity,
+            Voltage maxVoltage,
+            Dimensionless maxPercentage) {
         super(
                 name,
                 canId,
-                neutralMode,
-                inverted,
-                currentLimit,
-                MAX_ANGULAR_VELOCITY);
+                configuration,
+                feedforward,
+                maxAngularVelocity,
+                maxVoltage,
+                maxPercentage);
     }
 }

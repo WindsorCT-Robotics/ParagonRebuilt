@@ -8,8 +8,11 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.hardware.CanId;
 
 public abstract class NeoMotorBase extends SparkMaxMotorBase {
@@ -19,19 +22,40 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
     protected static final Current DEFAULT_CURRENT = Amps.of(60);
     private static final MotorType MOTOR_TYPE = MotorType.kBrushless;
 
+    /**
+     * 
+     * @param name
+     * @param canId
+     * @param motorType
+     * @param feedforward
+     * @param configuration
+     * @param resetMode          Don't reset safe parameters if intending to update
+     *                           configuration after initalization.
+     * @param persistMode
+     * @param maxAngularVelocity
+     * @param maxVoltage
+     * @param maxPercentage
+     */
     protected NeoMotorBase(
             String name,
             CanId canId,
-            SparkBaseConfig motorConfiguration,
+            SimpleMotorFeedforward feedforward,
+            SparkBaseConfig configuration,
             ResetMode resetMode,
-            PersistMode persistMode) {
+            PersistMode persistMode,
+            AngularVelocity maxAngularVelocity,
+            Voltage maxVoltage,
+            Dimensionless maxPercentage) {
         super(
                 name,
                 canId,
                 MOTOR_TYPE,
-                MAX_ANGULAR_VELOCITY,
-                motorConfiguration,
+                feedforward,
+                configuration,
                 resetMode,
-                persistMode);
+                persistMode,
+                maxAngularVelocity,
+                maxVoltage,
+                maxPercentage);
     }
 }

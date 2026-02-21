@@ -21,7 +21,7 @@ import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 import frc.robot.interfaces.IAngularPositionMotor;
 
-public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionMotor {
+public class BayDoorMotorBasic extends NeoMotorBase {
     private static final IdleMode IDLE_MODE = IdleMode.kBrake;
     private static final boolean INVERTED = false;
     private static final Current CURRENT_LIMIT = DEFAULT_CURRENT;
@@ -47,19 +47,6 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IAngularPositionM
                         .smartCurrentLimit((int) CURRENT_LIMIT.in(Amps)),
                 RESET_MODE,
                 PERSIST_MODE);
-    }
-
-    
-
-    @Override
-    public void setAngularPosition(Angle angle) {
-        if (angle.gt(getRotation())) {
-            setRPS(POSITION_ANGULAR_VELOCITY);
-        }
-
-        if (angle.lte(getRotation())) {
-            setRPS(POSITION_ANGULAR_VELOCITY);
-        }
     }
 
     public Dimensionless getDutyCycle() {

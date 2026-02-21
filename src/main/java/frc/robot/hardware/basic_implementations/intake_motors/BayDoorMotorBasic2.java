@@ -1,0 +1,76 @@
+package frc.robot.hardware.basic_implementations.intake_motors;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import frc.robot.hardware.CanId;
+import frc.robot.hardware.base_motors.NeoMotorBase;
+
+public class BayDoorMotorBasic2 extends NeoMotorBase {
+    private static final Current STRUGGLE_CURRENT = Amps.of(40);
+    private static final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure
+                                                                                                  // velocity (kV)
+
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1); // TODO: Figure good speed.
+    // These are zero because the Bay Door should only be controlled by setting the
+    // rotations per second.
+    private static final Voltage MAX_VOLTAGE = Volts.of(0);
+    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0);
+
+    public static final Angle OPEN_ANGLE = Rotations.of(21.5);
+    public static final Angle CLOSE_ANGLE = Rotations.of(0);
+
+    private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
+
+    public BayDoorMotorBasic2(String name, CanId canId) {
+        super(name, canId, feedforward,
+                new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
+                        (int) NeoMotorBase.DEFAULT_CURRENT.in(Amps)),
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kPersistParameters, MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addStringProperty("Bay Motor State", () -> getBayMotorState().toString(), null);
+        builder.addBooleanProperty("Soft Forward Limit", this::atSoftForwardLimit, null);
+        builder.addBooleanProperty("Soft Reverse Limit", this::atSoftReverseLimit, null);
+        builder.addBooleanProperty("Is Moving", this::isMoving, null);
+        builder.addBooleanProperty("Is Struggling", this::isStruggling, null);
+    }
+
+    public boolean atSoftForwardLimit() {
+        return getAngle().gte(OPEN_ANGLE);
+    }
+
+    public boolean atSoftReverseLimit() {
+        return getAngle().lte(CLOSE_ANGLE);
+    }
+
+    public BayDoorState getBayMotorState() {
+        return motorBayDoorState;
+    }
+
+    public void setBayMotorState(BayDoorState state) {
+        motorBayDoorState = state;
+    }
+
+    public boolean isStruggling() {
+        return getCurrent().gt(STRUGGLE_CURRENT);
+    }
+}

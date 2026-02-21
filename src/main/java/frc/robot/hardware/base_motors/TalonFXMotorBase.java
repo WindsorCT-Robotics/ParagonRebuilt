@@ -29,10 +29,10 @@ import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
 public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, Sendable {
-    private final TalonFX motor;
+    protected final TalonFX motor;
     private final TalonFXConfigurator configurator;
     private final TalonFXConfiguration configuration;
-    private final SimpleMotorFeedforward feedforward;
+    protected final SimpleMotorFeedforward feedforward;
     private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxPercentage;

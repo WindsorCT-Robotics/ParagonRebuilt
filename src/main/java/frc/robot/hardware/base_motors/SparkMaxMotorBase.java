@@ -33,8 +33,8 @@ import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IMotor;
 
 public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
-    private final SparkMax motor;
-    private final SimpleMotorFeedforward feedforward;
+    protected final SparkMax motor;
+    protected final SimpleMotorFeedforward feedforward;
     private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxPercentage;

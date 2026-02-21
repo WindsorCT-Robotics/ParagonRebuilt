@@ -12,8 +12,8 @@ import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 public class Intake extends SubsystemBase {
     private final IntakeRollerMotor motor;
 
-    private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(100);
-    private static final Dimensionless SHUTTLE_FUEL_DUTY_CYCLE = Percent.of(-100);
+    private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(20);
+    private static final Dimensionless SHUTTLE_FUEL_DUTY_CYCLE = Percent.of(-20);
 
     public Intake(String name, CanId motorCanId) {
         SendableRegistry.add(this, name);

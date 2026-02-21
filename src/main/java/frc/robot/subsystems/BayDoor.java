@@ -68,17 +68,7 @@ public class BayDoor extends SubsystemBase {
 
     @Override
     public void initSendable(SendableBuilder builder) {
-
-    }
-
-    @Override
-    public void periodic() {
-        SmartDashboard.putString("Left Bay Motor State", leftMotor.getBayMotorState().toString());
-        SmartDashboard.putString("Right Bay Motor State", rightMotor.getBayMotorState().toString());
-        SmartDashboard.putNumber("Left Motor Rotation", leftMotor.getAngle().in(Rotations));
-        SmartDashboard.putNumber("Right Motor Rotation", rightMotor.getAngle().in(Rotations));
-        SmartDashboard.putNumber("Left Bay Motor Velocity (RPS)", leftMotor.getVelocity().in(RotationsPerSecond));
-        SmartDashboard.putNumber("Right Bay Motor Velocity (RPS)", rightMotor.getVelocity().in(RotationsPerSecond));
+        super.initSendable(builder);
     }
 
     private enum BayDoorAction {

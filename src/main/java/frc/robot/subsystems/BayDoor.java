@@ -17,6 +17,7 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -64,6 +65,9 @@ public class BayDoor extends SubsystemBase {
             motor.configure(new SparkMaxConfig().inverted(!INVERTED), ResetMode.kNoResetSafeParameters,
                     PersistMode.kPersistParameters);
         });
+        SendableRegistry.add(leftHardLimit, name, name);
+        SendableRegistry.addChild(this, leftMotor);
+        SendableRegistry.addChild(this, rightMotor);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage) {
-        SendableRegistry.add(this, name);
+        SendableRegistry.addLW(this, name);
         motor = new SparkMax(canId.Id(), motorType);
         motor.configure(configuration, resetMode, persistMode);
         this.feedforward = feedforward;

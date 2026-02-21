@@ -19,7 +19,7 @@ public class Spindexer extends SubsystemBase {
     public Spindexer(
             String name,
             CanId motorCanId) {
-        SendableRegistry.add(this, name);
+        SendableRegistry.addLW(this, name);
         motor = new SpindexterMotor(name, motorCanId);
     }
 

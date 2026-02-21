@@ -45,7 +45,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage) {
-        SendableRegistry.add(this, name);
+        SendableRegistry.addLW(this, name);
         motor = new TalonFX(canId.Id());
         configurator = motor.getConfigurator();
         this.configuration = configuration;

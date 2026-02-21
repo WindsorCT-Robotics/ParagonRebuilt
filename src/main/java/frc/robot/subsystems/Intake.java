@@ -16,7 +16,7 @@ public class Intake extends SubsystemBase {
     private static final Dimensionless SHUTTLE_FUEL_DUTY_CYCLE = Percent.of(-20);
 
     public Intake(String name, CanId motorCanId) {
-        SendableRegistry.add(this, name);
+        SendableRegistry.addLW(this, name);
         motor = new IntakeRollerMotor(name, motorCanId);
     }
 

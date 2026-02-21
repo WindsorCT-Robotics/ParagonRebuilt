@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
@@ -69,6 +70,9 @@ public class RobotContainer implements Sendable {
   private static final Dimensionless TRIGGER_THRESHOLD = Percent.of(10);
   private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
+  private final Supplier<Dimensionless> driverLeftAxisX;
+  private final Supplier<Dimensionless> driverLeftAxisY;
+  private final Supplier<Dimensionless> driverRightAxisX;
 
   private RelativeReference relativeReference;
 
@@ -99,6 +103,12 @@ public class RobotContainer implements Sendable {
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
+    driverLeftAxisX = () -> Percent.of(driver.getLeftX())
+        .times(maxDriverLeftJoyStickSpeedX);
+    driverLeftAxisY = () -> Percent.of(driver.getLeftY())
+        .times(maxDriverLeftJoyStickSpeedY);
+    driverRightAxisX = () -> Percent.of(driver.getRightX());
+
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putData("Autonomous", autonomousChooser);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
@@ -127,21 +137,26 @@ public class RobotContainer implements Sendable {
   }
 
   private void configureControllerBindings() {
-    Supplier<Dimensionless> driverLeftAxisX = () -> Percent.of(driver.getLeftX())
-        .times(maxDriverLeftJoyStickSpeedX);
-    Supplier<Dimensionless> driverLeftAxisY = () -> Percent.of(driver.getLeftY())
-        .times(maxDriverLeftJoyStickSpeedY);
-    Supplier<Dimensionless> driverRightAxisX = () -> Percent.of(driver.getRightX());
+    bindDrive();
+    bindBayDoor();
+    bindIntake();
+    bindSpindexer();
+    bindKicker();
+    bindShooter();
 
+    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
+    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
+
+    driver.leftBumper()
+        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
+  }
+
+  private void bindDrive() {
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(() -> getBoundsOfAxis(driverLeftAxisX.get(), maxDriverLeftJoyStickSpeedX), MOVE_ROBOT_CURVE),
         curveAxis(() -> getBoundsOfAxis(driverLeftAxisY.get(), maxDriverLeftJoyStickSpeedY), MOVE_ROBOT_CURVE),
         curveAxis(() -> getBoundsOfAxis(driverRightAxisX.get(), maxDriverRightJoyStickSpeedX), TURN_ROBOT_CURVE),
         this::getRelativeReference));
-
-    intake.setDefaultCommand(intake.stopIntake());
-
-    bayDoor.setDefaultCommand(bayDoor.homeBayDoor());
 
     driver.b().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
@@ -176,26 +191,40 @@ public class RobotContainer implements Sendable {
             curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
-    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
-
-    driver.leftBumper()
-        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
-
     driver.povDown().onTrue(drive.resetGyro());
+  }
 
+  private void bindBayDoor() {
+    bayDoor.setDefaultCommand(bayDoor.homeBayDoor());
+    operator.y().whileTrue(bayDoor.openBayDoor());
+  }
+
+  private void bindIntake() {
+    intake.setDefaultCommand(intake.stopIntake());
+  }
+
+  private void bindSpindexer() {
+
+  }
+
+  private void bindKicker() {
+
+  }
+
+  private void bindShooter() {
+
+  }
+
+  private void bindPIDTuning() {
     /*
      * Note that each routine should be run exactly once in a single log.
      * TODO: After PID Tuning with sysIdDynamics these are no longer needed until
      * tuning PID again.
      */
-    // driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    // driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
-    // driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    // driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
-
-    // Operator
-    operator.y().whileTrue(bayDoor.openBayDoor());
+    driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {

@@ -85,6 +85,7 @@ public class RobotContainer implements Sendable {
   public RobotContainer() {
     try {
       drive = new Drive(
+          Drive.class.getSimpleName(),
           TunerConstants.DrivetrainConstants,
           TunerConstants.FrontLeft,
           TunerConstants.FrontRight,

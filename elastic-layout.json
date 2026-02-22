@@ -3,7 +3,14 @@
   "grid_size": 16,
   "tabs": [
     {
-      "name": "Detailed",
+      "name": "Competition",
+      "grid_layout": {
+        "layouts": [],
+        "containers": []
+      }
+    },
+    {
+      "name": "General Details",
       "grid_layout": {
         "layouts": [],
         "containers": [
@@ -68,7 +75,601 @@
       }
     },
     {
-      "name": "Competition",
+      "name": "Score Details",
+      "grid_layout": {
+        "layouts": [
+          {
+            "title": "Left ShooterMotorBasic",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 352.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Angle (Rotations)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Angle (Rotations)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "Right ShooterMotorBasic",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 352.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Angle (Rotations)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Angle (Rotations)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Shooter/Right ShooterMotorBasic/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "KickerMotor",
+            "x": 512.0,
+            "y": 128.0,
+            "width": 512.0,
+            "height": 352.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Angle (Rotations)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Angle (Rotations)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "SpindexterMotor",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 512.0,
+            "height": 352.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Angle (Rotations)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Angle (Rotations)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "Shooter",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Subsystem",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Shooter",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Kicker",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Subsystem",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Kicker",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Spindexer",
+            "x": 1024.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Subsystem",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Spindexer",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Shooter Duty Cycle (%)",
+            "x": 0.0,
+            "y": 480.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "divisions": 5,
+              "update_continuously": true
+            }
+          },
+          {
+            "title": "Kicker Duty Cycle (%)",
+            "x": 512.0,
+            "y": 480.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -1.0,
+              "max_value": 1.0,
+              "divisions": 5,
+              "update_continuously": false
+            }
+          },
+          {
+            "title": "Spindexer Duty Cycle (%)",
+            "x": 1024.0,
+            "y": 480.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "divisions": 5,
+              "update_continuously": false
+            }
+          },
+          {
+            "title": "Shooter Duty Cycle (%)",
+            "x": 0.0,
+            "y": 624.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Shooter/Left ShooterMotorBasic/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": true
+            }
+          },
+          {
+            "title": "Kicker Duty Cycle (%)",
+            "x": 512.0,
+            "y": 624.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Kicker/KickerMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": true
+            }
+          },
+          {
+            "title": "Spindexer Duty Cycle (%)",
+            "x": 1024.0,
+            "y": 624.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Spindexer/SpindexterMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Intake Details",
       "grid_layout": {
         "layouts": [],
         "containers": []

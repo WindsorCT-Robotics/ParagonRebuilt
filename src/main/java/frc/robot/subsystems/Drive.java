@@ -42,14 +42,17 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.TunerConstants;
 
-public class Drive extends GeneratedDrive {
+public class Drive extends GeneratedDrive implements Sendable {
     // TODO: Max velocities should be properly tested.
     private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
@@ -63,9 +66,9 @@ public class Drive extends GeneratedDrive {
     private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
 
     public Drive(
+            String name,
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
-
         super(drivetrainConstants, modules);
 
         // TODO: Properly set GUI Settings in PathPlanner
@@ -88,6 +91,46 @@ public class Drive extends GeneratedDrive {
                     return false;
                 },
                 this);
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData("Subsystems/" + getName(), this);
+        SmartDashboard.putData("Subsystems/" + getName() + "/" + getPigeon2().getClass().getSimpleName(), getPigeon2());
+        // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
+        // TODO: See if these values are correct.
+        SmartDashboard.putData("Subsystems/" + getName() + "/SwerveDrive", new Sendable() {
+            @Override
+            public void initSendable(SendableBuilder builder) {
+                builder.setSmartDashboardType("SwerveDrive");
+
+                builder.addDoubleProperty("Front Left Angle", () -> getState().ModulePositions[0].angle.getRadians(),
+                        null);
+                builder.addDoubleProperty("Front Left Velocity", () -> getState().ModuleTargets[0].speedMetersPerSecond,
+                        null);
+
+                builder.addDoubleProperty("Front Right Angle", () -> getState().ModulePositions[1].angle.getRadians(),
+                        null);
+                builder.addDoubleProperty("Front Right Velocity",
+                        () -> getState().ModuleTargets[1].speedMetersPerSecond, null);
+
+                builder.addDoubleProperty("Back Left Angle", () -> getState().ModulePositions[2].angle.getRadians(),
+                        null);
+                builder.addDoubleProperty("Back Left Velocity", () -> getState().ModuleTargets[2].speedMetersPerSecond,
+                        null);
+
+                builder.addDoubleProperty("Back Right Angle", () -> getState().ModulePositions[3].angle.getRadians(),
+                        null);
+                builder.addDoubleProperty("Back Right Velocity", () -> getState().ModuleTargets[3].speedMetersPerSecond,
+                        null);
+            }
+        });
+
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+
     }
 
     private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {

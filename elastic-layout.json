@@ -75,6 +75,41 @@
       }
     },
     {
+      "name": "Drivetrain Details",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Pigeon2",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Gyro",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Drive/Pigeon2",
+              "period": 0.06,
+              "counter_clockwise_positive": false
+            }
+          },
+          {
+            "title": "SwerveDrive",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "SwerveDrive",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Drive/SwerveDrive",
+              "period": 0.06,
+              "show_robot_rotation": true,
+              "rotation_unit": "Radians"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Score Details",
       "grid_layout": {
         "layouts": [
@@ -671,8 +706,568 @@
     {
       "name": "Intake Details",
       "grid_layout": {
-        "layouts": [],
-        "containers": []
+        "layouts": [
+          {
+            "title": "Left BayDoorMotorBasic",
+            "x": 0.0,
+            "y": 320.0,
+            "width": 256.0,
+            "height": 432.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Bay Motor State",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Bay Motor State",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Encoder Value",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Encoder Value",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Is Struggling",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Is Struggling",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "Right BayDoorMotorBasic",
+            "x": 256.0,
+            "y": 320.0,
+            "width": 256.0,
+            "height": 432.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Bay Motor State",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Bay Motor State",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Encoder Value",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Encoder Value",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Is Struggling",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Is Struggling",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/BayDoor/Right BayDoorMotorBasic/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "IntakeRollerMotor",
+            "x": 1184.0,
+            "y": 112.0,
+            "width": 512.0,
+            "height": 352.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "Current (Amps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Current (Amps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Duty Cycle (%)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Duty Cycle (%)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Encoder Value",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Encoder Value",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Is Moving",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Is Moving",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Temperature (C)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Temperature (C)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velocity (RPS)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Velocity (RPS)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Voltage (V)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Voltage (V)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "BayDoor",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 112.0,
+            "type": "Subsystem",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Retracted",
+            "x": 0.0,
+            "y": 176.0,
+            "width": 512.0,
+            "height": 64.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Is Intake Closed?",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Unretracted",
+            "x": 0.0,
+            "y": 112.0,
+            "width": 512.0,
+            "height": 64.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Is Intake Open?",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Right Retract Limit",
+            "x": 256.0,
+            "y": 240.0,
+            "width": 256.0,
+            "height": 80.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Right Bay Door Limit Switch/Value",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Left Retract Limit",
+            "x": 0.0,
+            "y": 240.0,
+            "width": 256.0,
+            "height": 80.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Left Bay Door Limit Switch/Value",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Intake",
+            "x": 1184.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 112.0,
+            "type": "Subsystem",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Intake",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Intake Duty Cycle (%)",
+            "x": 1184.0,
+            "y": 464.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "divisions": 5,
+              "update_continuously": true
+            }
+          },
+          {
+            "title": "Intake Duty Cycle (%)",
+            "x": 1184.0,
+            "y": 608.0,
+            "width": 512.0,
+            "height": 144.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/Intake/IntakeRollerMotor/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": true
+            }
+          },
+          {
+            "title": "Bay Door Duty Cycle (%)",
+            "x": 512.0,
+            "y": 608.0,
+            "width": 672.0,
+            "height": 144.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": true
+            }
+          },
+          {
+            "title": "Bay Door Duty Cycle (%)",
+            "x": 512.0,
+            "y": 464.0,
+            "width": 672.0,
+            "height": 144.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/SmartDashboard/Subsystems/BayDoor/Left BayDoorMotorBasic/Duty Cycle (%)",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "divisions": 5,
+              "update_continuously": true
+            }
+          }
+        ]
       }
     }
   ]

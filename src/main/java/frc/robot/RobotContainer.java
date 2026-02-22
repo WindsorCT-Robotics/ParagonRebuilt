@@ -64,8 +64,8 @@ public class RobotContainer implements Sendable {
 
   private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
-  private final CommandXboxController driver;
-  private final CommandXboxController operator;
+  private final SendableCommandXboxController driver;
+  private final SendableCommandXboxController operator;
   private Dimensionless maxDriverLeftJoyStickSpeedX = Percent.of(100);
   private Dimensionless maxDriverLeftJoyStickSpeedY = Percent.of(100);
   private Dimensionless maxDriverRightJoyStickSpeedX = Percent.of(100);
@@ -81,6 +81,36 @@ public class RobotContainer implements Sendable {
 
   private final SendableChooser<Command> autonomousChooser;
   private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
+
+  private class SendableCommandXboxController extends CommandXboxController implements Sendable {
+    public SendableCommandXboxController(int port) {
+      super(port);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+      builder.addDoubleProperty("Left X Axis", this::getLeftX, null);
+      builder.addDoubleProperty("Left Y Axis", this::getLeftY, null);
+      builder.addDoubleProperty("Right X Axis", this::getRightX, null);
+      builder.addDoubleProperty("Right Y Axis", this::getRightY, null);
+      builder.addDoubleProperty("Left Trigger Axis", this::getLeftTriggerAxis, null);
+      builder.addDoubleProperty("Right Trigger Axis", this::getRightTriggerAxis, null);
+
+      builder.addBooleanProperty("Button A", () -> a().getAsBoolean(), null);
+      builder.addBooleanProperty("Button B", () -> b().getAsBoolean(), null);
+      builder.addBooleanProperty("Button X", () -> x().getAsBoolean(), null);
+      builder.addBooleanProperty("Button Y", () -> y().getAsBoolean(), null);
+      builder.addBooleanProperty("Left Bumper", () -> leftBumper().getAsBoolean(), null);
+      builder.addBooleanProperty("Right Bumper", () -> rightBumper().getAsBoolean(), null);
+      builder.addBooleanProperty("Back Button", () -> back().getAsBoolean(), null);
+      builder.addBooleanProperty("Start Button", () -> start().getAsBoolean(), null);
+      builder.addBooleanProperty("Left Stick Button", () -> leftStick().getAsBoolean(), null);
+      builder.addBooleanProperty("Right Stick Button", () -> rightStick().getAsBoolean(), null);
+
+      builder.addBooleanProperty("Left Trigger Pressed", () -> leftTrigger().getAsBoolean(), null);
+      builder.addBooleanProperty("Right Trigger Pressed", () -> rightTrigger().getAsBoolean(), null);
+    }
+  }
 
   public RobotContainer() {
     try {
@@ -103,19 +133,13 @@ public class RobotContainer implements Sendable {
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
-    SmartDashboard.putData(intake);
-    SmartDashboard.putData(bayDoor);
-    SmartDashboard.putData(spindexer);
-    SmartDashboard.putData(shooter);
-    SmartDashboard.putData(kicker);
-
     // Home Motors
     CommandScheduler.getInstance().schedule(bayDoor.home().withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
-    driver = new CommandXboxController(0);
-    operator = new CommandXboxController(1);
+    driver = new SendableCommandXboxController(0);
+    operator = new SendableCommandXboxController(1);
 
     driverLeftAxisX = () -> Percent.of(driver.getLeftX())
         .times(maxDriverLeftJoyStickSpeedX);
@@ -124,12 +148,24 @@ public class RobotContainer implements Sendable {
     driverRightAxisX = () -> Percent.of(driver.getRightX());
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
-    SmartDashboard.putData("Autonomous", autonomousChooser);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
     drive.registerTelemetry(logger::telemeterize);
+
+    initSmartDashboard();
+  }
+
+  private void initSmartDashboard() {
+    SmartDashboard.putData(intake);
+    SmartDashboard.putData(bayDoor);
+    SmartDashboard.putData(spindexer);
+    SmartDashboard.putData(shooter);
+    SmartDashboard.putData(kicker);
+    SmartDashboard.putData("Controllers/Driver", driver);
+    SmartDashboard.putData("Controllers/Operator", operator);
+    SmartDashboard.putData("Autonomous", autonomousChooser);
   }
 
   @Override

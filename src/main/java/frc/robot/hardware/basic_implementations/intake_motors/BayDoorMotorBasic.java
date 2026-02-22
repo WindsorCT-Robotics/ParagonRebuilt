@@ -22,7 +22,6 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 import frc.robot.interfaces.IHomingMotor;

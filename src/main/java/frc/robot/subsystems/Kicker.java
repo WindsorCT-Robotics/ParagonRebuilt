@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -17,10 +19,23 @@ public class Kicker extends SubsystemBase {
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
     public Kicker(String name, CanId motorId) {
+        super("Subsystems/" + name);
         motor = new KickerMotor("Kicker Motor", motorId);
         motor.configure(motor -> {
             motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
         });
+        addChild(motor.getClass().getName(), motor);
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
     }
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle

@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Percent;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,8 +20,20 @@ public class Intake extends SubsystemBase {
     private static final Dimensionless SHUTTLE_FUEL_DUTY_CYCLE = Percent.of(-20);
 
     public Intake(String name, CanId motorCanId) {
-        super(name);
+        super("Subsystems/" + name);
         motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVelocity, this::setVoltage);
+        addChild(motor.getClass().getName(), motor);
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
     }
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle

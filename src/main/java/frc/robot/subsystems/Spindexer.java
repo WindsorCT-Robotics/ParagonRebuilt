@@ -4,7 +4,7 @@ import static edu.wpi.first.units.Units.Percent;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.util.sendable.SendableRegistry;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,13 +19,20 @@ public class Spindexer extends SubsystemBase {
     public Spindexer(
             String name,
             CanId motorCanId) {
-        SendableRegistry.addLW(this, name);
+        super("Subsystems/" + name);
         motor = new SpindexterMotor(name, motorCanId);
+        addChild(this.getName(), motor);
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
-
+        super.initSendable(builder);
     }
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle

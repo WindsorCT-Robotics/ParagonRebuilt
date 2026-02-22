@@ -12,16 +12,12 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -62,7 +58,7 @@ public class BayDoor extends SubsystemBase {
             CanId rightMotorId,
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
-        super(name);
+        super("Subsystems/" + name);
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
@@ -91,12 +87,12 @@ public class BayDoor extends SubsystemBase {
                 () -> leftMotor.getAngle().lte(CLOSE_ANGLE) && rightMotor.getAngle().lte(CLOSE_ANGLE));
         isIntakeOpen = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE) && rightMotor.getAngle().gte(OPEN_ANGLE));
 
-        ff = new ArmFeedforward(1.3/100, 0.5/100, ((1.3/100)/0.6));
+        ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6));
 
-        SendableRegistry.addChild(this, leftHardLimit);
-        SendableRegistry.addChild(this, rightHardLimit);
-        SendableRegistry.addChild(this, leftMotor);
-        SendableRegistry.addChild(this, rightMotor);
+        addChild(this.getName(), leftHardLimit);
+        addChild(this.getName(), rightHardLimit);
+        addChild(this.getName(), leftMotor);
+        addChild(this.getName(), rightMotor);
 
         initSmartDashboard();
     }
@@ -105,8 +101,8 @@ public class BayDoor extends SubsystemBase {
         SmartDashboard.putData(getName(), this);
         SmartDashboard.putData(getName() + "/Left Bay Door Limit Switch", leftHardLimit);
         SmartDashboard.putData(getName() + "/Right Bay Door Limit Switch", rightHardLimit);
-        SmartDashboard.putData(getName() + "/Left Bay Door Motor", leftMotor);
-        SmartDashboard.putData(getName() + "/Right Bay Door Motor", rightMotor);
+        SmartDashboard.putData(getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
+        SmartDashboard.putData(getName() + "/Right " + rightMotor.getClass().getSimpleName(), rightMotor);
     }
 
     @Override

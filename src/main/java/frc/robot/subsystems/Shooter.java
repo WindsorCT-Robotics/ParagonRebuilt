@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.basic_implementations.shooter_motors.ShooterMotorBasic;
@@ -18,11 +20,28 @@ public class Shooter extends SubsystemBase {
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
+        super("Subsystems/" + name);
         leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId);
         rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId);
 
         setInverted(leftMotor, INVERTED);
         setInverted(rightMotor, !INVERTED);
+
+        addChild(this.getName(), leftMotor);
+        addChild(this.getName(), rightMotor);
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData("Subsystems/" + getName(), this);
+        SmartDashboard.putData("Subsystems/" + getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
+        SmartDashboard.putData("Subsystems/" + getName() + "/Right " + rightMotor.getClass().getSimpleName(),
+                rightMotor);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
     }
 
     private void setInverted(ShooterMotorBasic motor, boolean isInverted) {

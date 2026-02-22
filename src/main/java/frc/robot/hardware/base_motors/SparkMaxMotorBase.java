@@ -39,6 +39,10 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     private final Voltage maxVoltage;
     private final Dimensionless maxDutyCycle;
 
+    private final Consumer<Dimensionless> dutyCycleSetter;
+    private final Consumer<AngularVelocity> angularVelocitySetter;
+    private final Consumer<Voltage> voltageSetter;
+
     protected SparkMaxMotorBase(
             String name,
             CanId canId,
@@ -59,6 +63,9 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
         this.maxDutyCycle = maxDutyCycle;
+        this.dutyCycleSetter = dutyCycleSetter;
+        this.angularVelocitySetter = angularVelocitySetter;
+        this.voltageSetter = voltageSetter;
     }
 
     @Override
@@ -100,7 +107,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     }
 
     @Override
-    public void setRPS(AngularVelocity velocity) {
+    public void setVelocity(AngularVelocity velocity) {
         AngularVelocity clampedVelocity = RotationsPerSecond.of(
                 MathUtil.clamp(
                         velocity.in(RotationsPerSecond),
@@ -109,7 +116,8 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
 
         setVoltage(
                 Volts.of(
-                        feedforward.calculateWithVelocities(getVelocity().in(RotationsPerSecond), clampedVelocity.in(RotationsPerSecond))));
+                        feedforward.calculateWithVelocities(getVelocity().in(RotationsPerSecond),
+                                clampedVelocity.in(RotationsPerSecond))));
     }
 
     @Override
@@ -156,10 +164,13 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         builder.setSafeState(this::stop);
 
         builder.addDoubleProperty("Encoder Value", () -> getAngle().in(Rotations), null);
-        builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent), null);
-        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
+        builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
+                val -> dutyCycleSetter.accept(Percent.of(val)));
+        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond),
+                val -> angularVelocitySetter.accept(RotationsPerSecond.of(val)));
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
+        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
+                val -> voltageSetter.accept(Volts.of(val)));
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperarure().in(Celsius), null);
     }

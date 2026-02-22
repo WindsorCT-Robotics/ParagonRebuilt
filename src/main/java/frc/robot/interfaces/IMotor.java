@@ -23,7 +23,7 @@ public interface IMotor<Motor, Config> {
 
     public Voltage getVoltage();
 
-    public void setRPS(AngularVelocity velocity);
+    public void setVelocity(AngularVelocity velocity);
 
     public AngularVelocity getVelocity();
 

@@ -3,9 +3,10 @@ package frc.robot.hardware.base_motors;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 
+import java.util.function.Consumer;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -20,7 +21,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
     public static final AngularVelocity MAX_ANGULAR_VELOCITY = RPM.of(5676);
     // https://docs.revrobotics.com/brushless/spark-max/gs/make-it-spin#limiting-current
     protected static final Current DEFAULT_CURRENT = Amps.of(60);
-    private static final MotorType MOTOR_TYPE = MotorType.kBrushless;
 
     /**
      * 
@@ -45,17 +45,22 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
             PersistMode persistMode,
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
-            Dimensionless maxPercentage) {
+            Dimensionless maxPercentage,
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<AngularVelocity> angularVelocitySetter,
+            Consumer<Voltage> voltageSetter) {
         super(
                 name,
                 canId,
-                MOTOR_TYPE,
                 feedforward,
                 configuration,
                 resetMode,
                 persistMode,
                 maxAngularVelocity,
                 maxVoltage,
-                maxPercentage);
+                maxPercentage,
+                dutyCycleSetter,
+                angularVelocitySetter,
+                voltageSetter);
     }
 }

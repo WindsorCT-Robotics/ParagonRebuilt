@@ -1,12 +1,8 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Volts;
-
-import java.util.function.Supplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -15,6 +11,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -27,7 +26,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -62,10 +60,15 @@ public class BayDoor extends SubsystemBase {
             CanId rightMotorId,
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
+        super(name);
+
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit);
-        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit);
+        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit, this::setDutyCycle,
+                this::setVelocity,
+                this::setVoltage);
+        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit, this::setDutyCycle,
+                this::setVelocity, this::setVoltage);
 
         // TODO: Be able to apply configuration and keep the same ResetMode and
         // PersisMode without hard coding.
@@ -90,17 +93,21 @@ public class BayDoor extends SubsystemBase {
         SendableRegistry.addChild(this, rightHardLimit);
         SendableRegistry.addChild(this, leftMotor);
         SendableRegistry.addChild(this, rightMotor);
+
+        initSmartDashboard();
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/Left Bay Door Limit Switch", leftHardLimit);
+        SmartDashboard.putData(getName() + "/Right Bay Door Limit Switch", rightHardLimit);
+        SmartDashboard.putData(getName() + "/Left Bay Door Motor", leftMotor);
+        SmartDashboard.putData(getName() + "/Right Bay Door Motor", rightMotor);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Left Motor Velocity (RPS)", () -> leftMotor.getVelocity().in(RotationsPerSecond),
-                null);
-        builder.addDoubleProperty("Right Motor Velocity (RPS)", () -> rightMotor.getVelocity().in(RotationsPerSecond),
-                null);
-        builder.addDoubleProperty("Left Motor Voltage (V)", () -> leftMotor.getVoltage().in(Volts), this::setVoltage);
-        builder.addDoubleProperty("Right Motor Voltage (V)", () -> rightMotor.getVoltage().in(Volts), this::setVoltage);
         builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
         builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
     }
@@ -110,8 +117,30 @@ public class BayDoor extends SubsystemBase {
         CLOSE
     }
 
-    private void setVoltage(double v) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(Volts.of(v)));
+    private void setDutyCycle(Dimensionless dutyCycle) {
+        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
+    }
+
+    private void setVelocity(AngularVelocity velocity) {
+        CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
+    }
+
+    private void setVoltage(Voltage v) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(v));
+    }
+
+    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
+        return run(() -> {
+            leftMotor.setDutyCycle(dutyCycle);
+            rightMotor.setDutyCycle(dutyCycle);
+        });
+    }
+
+    public Command overrideMotorVelocity(AngularVelocity velocity) {
+        return run(() -> {
+            leftMotor.setVelocity(velocity);
+            rightMotor.setVelocity(velocity);
+        });
     }
 
     public Command overrideMotorVoltage(Voltage v) {
@@ -126,8 +155,8 @@ public class BayDoor extends SubsystemBase {
             leftMotor.home();
             rightMotor.home();
         })
-        .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+                .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
     private void moveTowards(
@@ -143,7 +172,7 @@ public class BayDoor extends SubsystemBase {
         AngularVelocity velocity = RotationsPerSecond
                 .of(motionProfile.calculate(TimedRobot.kDefaultPeriod, currentState, goalState).velocity);
 
-        motor.setRPS(velocity);
+        motor.setVelocity(velocity);
         SmartDashboard.putNumber("Desired Position", goalState.position);
         SmartDashboard.putNumber("Velocity", velocity.in(RotationsPerSecond));
     }

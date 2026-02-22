@@ -6,7 +6,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -22,8 +22,8 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.base_motors.NeoMotorBase;
 import frc.robot.interfaces.IHomingMotor;
 
@@ -35,21 +35,30 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1); // TODO: Figure good speed.
     // These are zero because the Bay Door should only be controlled by setting the
     // rotations per second.
-    private static final Voltage MAX_VOLTAGE = Volts.of(0);
-    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0.05);
+    private static final Voltage MAX_VOLTAGE = Volts.of(12);
+    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0.1);
     private static final Dimensionless HOMING_DUTY_CYCLE = Percent.of(-0.1);
     private final DigitalInput limit;
     private boolean homingComplete = false;
 
     private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
 
-    public BayDoorMotorBasic(String name, CanId canId, DigitalInput limit) {
+    public BayDoorMotorBasic(
+            String name,
+            CanId canId,
+            DigitalInput limit,
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<AngularVelocity> angularVelocitySetter,
+            Consumer<Voltage> voltageSetter) {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) DEFAULT_CURRENT.in(Amps)),
                 // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
-                MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
+                MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE,
+                dutyCycleSetter,
+                angularVelocitySetter,
+                voltageSetter);
 
         this.limit = limit;
     }
@@ -83,8 +92,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     public void home() {
         if (!limit.get()) {
             motor.set(HOMING_DUTY_CYCLE.in(Value));
-        }
-        else {
+        } else {
             motor.stopMotor();
             resetRelativeEncoder();
             homingComplete = true;

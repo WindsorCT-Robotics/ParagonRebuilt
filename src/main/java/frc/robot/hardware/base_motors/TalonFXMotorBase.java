@@ -92,7 +92,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
     }
 
     @Override
-    public void setRPS(AngularVelocity velocity) {
+    public void setVelocity(AngularVelocity velocity) {
         AngularVelocity clampedVelocity = RotationsPerSecond.of(
                 MathUtil.clamp(
                         velocity.in(RotationsPerSecond),

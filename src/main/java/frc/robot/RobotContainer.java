@@ -15,6 +15,7 @@ import org.json.simple.parser.ParseException;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
@@ -94,11 +95,17 @@ public class RobotContainer implements Sendable {
     }
 
     intake = new Intake("Intake", INTAKE_ROLLER_MOTOR_CAN_ID);
-    bayDoor = new BayDoor("Spindexer", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
+    bayDoor = new BayDoor("Bay Door", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
         INTAKE_LEFT_BAYDOOR_DIO);
     spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
     shooter = new Shooter("Shooter", SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker("Kicker", KICKER_MOTOR_CAN_ID);
+
+    SmartDashboard.putData(intake);
+    SmartDashboard.putData(bayDoor);
+    SmartDashboard.putData(spindexer);
+    SmartDashboard.putData(shooter);
+    SmartDashboard.putData(kicker);
 
     // Home Motors
     CommandScheduler.getInstance().schedule(bayDoor.home().withInterruptBehavior(InterruptionBehavior.kCancelIncoming));

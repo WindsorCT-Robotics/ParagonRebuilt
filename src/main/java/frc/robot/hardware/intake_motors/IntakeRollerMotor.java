@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.Consumer;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -25,11 +27,19 @@ public class IntakeRollerMotor extends NeoMotorBase {
     private static final Voltage MAX_VOLTAGE = Volts.of(0);
     private static final Dimensionless MAX_PERCENTAGE = Percent.of(0);
 
-    public IntakeRollerMotor(String name, CanId canId) {
+    public IntakeRollerMotor(
+            String name,
+            CanId canId,
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<AngularVelocity> angularVelocitySetter,
+            Consumer<Voltage> voltageSetter) {
         super(name, canId, feedforward,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) DEFAULT_CURRENT.in(Amps)),
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
-                MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE);
+                MAX_ANGULAR_VELOCITY, MAX_VOLTAGE, MAX_PERCENTAGE,
+                dutyCycleSetter,
+                angularVelocitySetter,
+                voltageSetter);
     }
 }

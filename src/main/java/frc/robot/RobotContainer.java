@@ -94,12 +94,13 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    intake = new Intake("Intake", INTAKE_ROLLER_MOTOR_CAN_ID);
-    bayDoor = new BayDoor("Bay Door", BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID, INTAKE_RIGHT_BAYDOOR_DIO,
+    intake = new Intake(Intake.class.getSimpleName(), INTAKE_ROLLER_MOTOR_CAN_ID);
+    bayDoor = new BayDoor(BayDoor.class.getSimpleName(), BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID,
+        INTAKE_RIGHT_BAYDOOR_DIO,
         INTAKE_LEFT_BAYDOOR_DIO);
-    spindexer = new Spindexer("Spindexer", SPINDEXER_MOTOR_CAN_ID);
-    shooter = new Shooter("Shooter", SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
-    kicker = new Kicker("Kicker", KICKER_MOTOR_CAN_ID);
+    spindexer = new Spindexer(Spindexer.class.getSimpleName(), SPINDEXER_MOTOR_CAN_ID);
+    shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
+    kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
     SmartDashboard.putData(intake);
     SmartDashboard.putData(bayDoor);

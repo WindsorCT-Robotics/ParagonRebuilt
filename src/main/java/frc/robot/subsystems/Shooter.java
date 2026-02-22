@@ -33,9 +33,9 @@ public class Shooter extends SubsystemBase {
     }
 
     private void initSmartDashboard() {
-        SmartDashboard.putData("Subsystems/" + getName(), this);
-        SmartDashboard.putData("Subsystems/" + getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
-        SmartDashboard.putData("Subsystems/" + getName() + "/Right " + rightMotor.getClass().getSimpleName(),
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
+        SmartDashboard.putData(getName() + "/Right " + rightMotor.getClass().getSimpleName(),
                 rightMotor);
     }
 

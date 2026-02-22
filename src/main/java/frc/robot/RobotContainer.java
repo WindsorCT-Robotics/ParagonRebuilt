@@ -122,7 +122,7 @@ public class RobotContainer implements Sendable {
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    drive.registerTelemetry(logger::telemeterize);
+    drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
 
     initSmartDashboard();
   }

@@ -137,21 +137,21 @@ public class BayDoor extends SubsystemBase {
         return run(() -> {
             leftMotor.setDutyCycle(dutyCycle);
             rightMotor.setDutyCycle(dutyCycle);
-        });
+        }).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     public Command overrideMotorVelocity(AngularVelocity velocity) {
         return run(() -> {
             leftMotor.setVelocity(velocity);
             rightMotor.setVelocity(velocity);
-        });
+        }).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
     public Command overrideMotorVoltage(Voltage v) {
         return run(() -> {
             leftMotor.setVoltage(v);
             rightMotor.setVoltage(v);
-        });
+        }).withName(getSubsystem() + "/overrideMotorVoltage");
     }
 
     public Command home() {
@@ -160,7 +160,8 @@ public class BayDoor extends SubsystemBase {
             rightMotor.home();
         })
                 .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .withName(getSubsystem() + "/home");
     }
 
     private void moveTowards(
@@ -177,6 +178,7 @@ public class BayDoor extends SubsystemBase {
                 .of(motionProfile.calculate(TimedRobot.kDefaultPeriod, currentState, goalState).velocity);
 
         motor.setVelocity(velocity);
+        // TODO: Remove these or put them somewhere else after testing.
         SmartDashboard.putNumber("Desired Position", goalState.position);
         SmartDashboard.putNumber("Velocity", velocity.in(RotationsPerSecond));
     }
@@ -227,7 +229,7 @@ public class BayDoor extends SubsystemBase {
         return run(() -> {
             moveToPosition(leftMotor, leftMotor.getAngle(), goalPosition, tolerance, medianState, endState);
             moveToPosition(rightMotor, rightMotor.getAngle(), goalPosition, tolerance, medianState, endState);
-        });
+        }).withName(getSubsystem() + "/moveBayDoorTo");
     }
 
     public Command openBayDoor() {

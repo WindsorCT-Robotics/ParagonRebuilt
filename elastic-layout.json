@@ -18,18 +18,18 @@
             "title": "Autonomous",
             "x": 0.0,
             "y": 0.0,
-            "width": 128.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
               "topic": "/SmartDashboard/Autonomous",
               "period": 0.06,
-              "sort_options": false
+              "sort_options": true
             }
           },
           {
             "title": "Relative Reference",
-            "x": 128.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 160.0,
             "height": 128.0,
@@ -39,23 +39,6 @@
               "period": 0.06,
               "data_type": "string",
               "show_submit_button": false
-            }
-          },
-          {
-            "title": "Alliance",
-            "x": 288.0,
-            "y": 0.0,
-            "width": 128.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/FMSInfo/IsRedAlliance",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4294920007,
-              "false_color": 4282754047,
-              "true_icon": "None",
-              "false_icon": "None"
             }
           },
           {
@@ -70,6 +53,30 @@
               "period": 0.06,
               "data_type": "int"
             }
+          },
+          {
+            "title": "Scheduler",
+            "x": 1312.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 384.0,
+            "type": "Scheduler",
+            "properties": {
+              "topic": "/SmartDashboard/Scheduler",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "FMSInfo",
+            "x": 576.0,
+            "y": 0.0,
+            "width": 496.0,
+            "height": 128.0,
+            "type": "FMSInfo",
+            "properties": {
+              "topic": "/FMSInfo",
+              "period": 0.06
+            }
           }
         ]
       }
@@ -77,14 +84,320 @@
     {
       "name": "Drivetrain Details",
       "grid_layout": {
-        "layouts": [],
+        "layouts": [
+          {
+            "title": "Driver",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 544.0,
+            "height": 496.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "LEFT"
+            },
+            "children": [
+              {
+                "title": "ControllerType",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/ControllerType",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "LeftX",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/LeftX",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": -1.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "LeftY",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/LeftY",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": -1.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "RightX",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/RightX",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": -1.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "RightY",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/RightY",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": -1.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "LeftTrigger Axis",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/LeftTrigger Axis",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": 0.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "RightTrigger Axis",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Bar",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/RightTrigger Axis",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": 0.0,
+                  "max_value": 1.0,
+                  "divisions": 5,
+                  "inverted": false,
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "title": "A",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/A",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "B",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/B",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "X",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/X",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Y",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/Y",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "LeftStick",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/LeftStick",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "RightStick",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/RightStick",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "LeftBumper",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/LeftBumper",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "RightBumper",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/RightBumper",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Start",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/Start",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Back",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/SmartDashboard/Controllers/Driver/Back",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              }
+            ]
+          }
+        ],
         "containers": [
           {
             "title": "Pigeon2",
-            "x": 0.0,
+            "x": 1184.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 512.0,
+            "height": 496.0,
             "type": "Gyro",
             "properties": {
               "topic": "/SmartDashboard/Subsystems/Drive/Pigeon2",
@@ -94,10 +407,10 @@
           },
           {
             "title": "SwerveDrive",
-            "x": 256.0,
+            "x": 544.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 640.0,
+            "height": 496.0,
             "type": "SwerveDrive",
             "properties": {
               "topic": "/SmartDashboard/Subsystems/Drive/SwerveDrive",

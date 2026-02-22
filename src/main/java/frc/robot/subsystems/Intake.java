@@ -38,16 +38,18 @@ public class Intake extends SubsystemBase {
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command intakeFuel() {
-        return runEnd(() -> motor.setDutyCycle(INTAKE_FUEL_DUTY_CYCLE), () -> motor.stop());
+        return runEnd(() -> motor.setDutyCycle(INTAKE_FUEL_DUTY_CYCLE), () -> motor.stop())
+                .withName(getSubsystem() + "/intakeFuel");
     }
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command shuttleFuel() {
-        return runEnd(() -> motor.setDutyCycle(SHUTTLE_FUEL_DUTY_CYCLE), () -> motor.stop());
+        return runEnd(() -> motor.setDutyCycle(SHUTTLE_FUEL_DUTY_CYCLE), () -> motor.stop())
+                .withName(getSubsystem() + "/shuttleFuel");
     }
 
     public Command stopIntake() {
-        return run(() -> motor.stop());
+        return run(() -> motor.stop()).withName(getSubsystem() + "/stopIntake");
     }
 
     private void setDutyCycle(Dimensionless dutyCycle) {
@@ -65,18 +67,18 @@ public class Intake extends SubsystemBase {
     public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
         return run(() -> {
             motor.setDutyCycle(dutyCycle);
-        });
+        }).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     public Command overrideMotorVelocity(AngularVelocity velocity) {
         return run(() -> {
             motor.setVelocity(velocity);
-        });
+        }).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
     public Command overrideMotorVoltage(Voltage v) {
         return run(() -> {
             motor.setVoltage(v);
-        });
+        }).withName(getSubsystem() + "/overrideMotorVoltage");
     }
 }

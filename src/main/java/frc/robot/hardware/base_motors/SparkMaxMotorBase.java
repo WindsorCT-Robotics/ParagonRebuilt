@@ -94,11 +94,11 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
      */
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        Dimensionless clampedPercentage = Percent
-                .of(MathUtil.clamp(percentage.in(Percent), maxDutyCycle.unaryMinus().in(Percent),
-                        maxDutyCycle.in(Percent)));
+        // Dimensionless clampedPercentage = Percent
+        //         .of(MathUtil.clamp(percentage.in(Percent), maxDutyCycle.unaryMinus().in(Percent),
+        //                 maxDutyCycle.in(Percent)));
 
-        motor.set(clampedPercentage.in(Value));
+        motor.set(percentage.in(Value));
     }
 
     @Override

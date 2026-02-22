@@ -8,6 +8,7 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
@@ -39,6 +40,7 @@ public class BayDoor extends SubsystemBase {
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
+    private final ArmFeedforward ff;
     private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
     private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
     private static final boolean INVERTED = true;
@@ -89,6 +91,8 @@ public class BayDoor extends SubsystemBase {
                 () -> leftMotor.getAngle().lte(CLOSE_ANGLE) && rightMotor.getAngle().lte(CLOSE_ANGLE));
         isIntakeOpen = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE) && rightMotor.getAngle().gte(OPEN_ANGLE));
 
+        ff = new ArmFeedforward(1.3/100, 0.5/100, ((1.3/100)/0.6));
+
         SendableRegistry.addChild(this, leftHardLimit);
         SendableRegistry.addChild(this, rightHardLimit);
         SendableRegistry.addChild(this, leftMotor);
@@ -108,6 +112,10 @@ public class BayDoor extends SubsystemBase {
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Feed Forward Static Gain (V)", ff::getKs, ff::setKs);
+        builder.addDoubleProperty("Feed Forward Gravity Gain (V)", ff::getKg, ff::setKg);
+        builder.addDoubleProperty("Feed Forward Velocity Gain (V/(rad/s))", ff::getKv, ff::setKv);
+        builder.addDoubleProperty("Feed Forward Acceleration Gain (V/(rad/s^2))", ff::getKa, ff::setKa);
         builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
         builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
     }

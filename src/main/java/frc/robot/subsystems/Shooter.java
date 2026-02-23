@@ -11,9 +11,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.basic_implementations.shooter_motors.ShooterMotorBasic;
+import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends SubsystemBase implements ISystemDynamics {
     private final ShooterMotorBasic leftMotor;
     private final ShooterMotorBasic rightMotor;
     private static final boolean INVERTED = false;

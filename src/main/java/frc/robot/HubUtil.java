@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 // Reference: https://github.com/Mechanical-Advantage/RobotCode2026Public/blob/main/src%2Fmain%2Fjava%2Forg%2Flittletonrobotics%2Ffrc2026%2Futil%2FHubShiftUtil.java
 public class HubUtil {

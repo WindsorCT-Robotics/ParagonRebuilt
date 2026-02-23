@@ -21,17 +21,23 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorState;
+import frc.robot.interfaces.ISystemDynamics;
 
-public class BayDoor extends SubsystemBase {
+public class BayDoor extends SubsystemBase implements ISystemDynamics {
     private final BayDoorMotorBasic leftMotor;
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
@@ -51,6 +57,8 @@ public class BayDoor extends SubsystemBase {
     public final Trigger isAtLeftLimit;
     public final Trigger isIntakeClosed;
     public final Trigger isIntakeOpen;
+
+    private final SysIdRoutine routine;
 
     public BayDoor(
             String name,
@@ -89,12 +97,36 @@ public class BayDoor extends SubsystemBase {
 
         ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6));
 
-        addChild(this.getName(), leftHardLimit);
-        addChild(this.getName(), rightHardLimit);
-        addChild(this.getName(), leftMotor);
-        addChild(this.getName(), rightMotor);
+        // TODO: Determine how fast the sysIdDynamic and sysIdQuasistatic test should
+        // be.
+        routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
+            logMotor(log, leftMotor, "Left Motor");
+            logMotor(log, rightMotor, name);
+        }, this));
+
+        addChild(getName(), leftHardLimit);
+        addChild(getName(), rightHardLimit);
+        addChild(getName(), leftMotor);
+        addChild(getName(), rightMotor);
 
         initSmartDashboard();
+    }
+
+    private void logMotor(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
+        log.motor(
+                name)
+                .angularPosition(motor.getAngle())
+                .angularVelocity(motor.getVelocity());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction);
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction);
     }
 
     private void initSmartDashboard() {

@@ -10,10 +10,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.intake_motors.IntakeRollerMotor;
+import frc.robot.interfaces.ISystemDynamics;
 
-public class Intake extends SubsystemBase {
+public class Intake extends SubsystemBase implements ISystemDynamics {
     private final IntakeRollerMotor motor;
 
     private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(20);
@@ -24,6 +26,18 @@ public class Intake extends SubsystemBase {
         motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVelocity, this::setVoltage);
         addChild(motor.getClass().getName(), motor);
         initSmartDashboard();
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private void initSmartDashboard() {

@@ -12,9 +12,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.shooter_motors.KickerMotor;
+import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
 
-public class Kicker extends SubsystemBase {
+public class Kicker extends SubsystemBase implements ISystemDynamics {
     private final KickerMotor motor;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 

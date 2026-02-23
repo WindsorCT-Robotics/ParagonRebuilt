@@ -10,8 +10,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.spindexer_motor.SpindexterMotor;
+import frc.robot.interfaces.ISystemDynamics;
 
-public class Spindexer extends SubsystemBase {
+public class Spindexer extends SubsystemBase implements ISystemDynamics {
     private final SpindexterMotor motor;
 
     private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(100);

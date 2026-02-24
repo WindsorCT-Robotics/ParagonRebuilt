@@ -37,31 +37,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         initSmartDashboard();
     }
 
-    @Override
-    public void log(SysIdRoutineLog log, IntakeRollerMotor motor, String name) {
-        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction);
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction);
-    }
-
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-    }
-
     // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command intakeFuel() {
         return runEnd(() -> motor.setDutyCycle(INTAKE_FUEL_DUTY_CYCLE), () -> motor.stop())
@@ -78,6 +53,16 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         return run(() -> motor.stop()).withName(getSubsystem() + "/stopIntake");
     }
 
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+    }
+
     private void setDutyCycle(Dimensionless dutyCycle) {
         CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
     }
@@ -91,20 +76,35 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
-        return run(() -> {
+        return runEnd(() -> {
             motor.setDutyCycle(dutyCycle);
-        }).withName(getSubsystem() + "/overrideMotorDutyCycle");
+        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     public Command overrideMotorVelocity(AngularVelocity velocity) {
-        return run(() -> {
+        return runEnd(() -> {
             motor.setVelocity(velocity);
-        }).withName(getSubsystem() + "/overrideMotorVelocity");
+        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
     public Command overrideMotorVoltage(Voltage v) {
-        return run(() -> {
+        return runEnd(() -> {
             motor.setVoltage(v);
-        }).withName(getSubsystem() + "/overrideMotorVoltage");
+        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorVoltage");
+    }
+
+    @Override
+    public void log(SysIdRoutineLog log, IntakeRollerMotor motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
 }

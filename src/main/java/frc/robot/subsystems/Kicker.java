@@ -39,27 +39,9 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         initSmartDashboard();
     }
 
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    @Override
-    public void log(SysIdRoutineLog log, KickerMotor motor, String name) {
-        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return run(() -> motor.setVoltage(voltage));
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction);
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction);
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
+    public Command kickStartFuel() {
+        return Commands.runEnd(() -> motor.setDutyCycle(DEFAULT_DUTY_CYCLE), () -> motor.stop());
     }
 
     private void initSmartDashboard() {
@@ -72,8 +54,26 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         super.initSendable(builder);
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
-    public Command kickStartFuel() {
-        return Commands.runEnd(() -> motor.setDutyCycle(DEFAULT_DUTY_CYCLE), () -> motor.stop());
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
+    }
+
+    @Override
+    public void log(SysIdRoutineLog log, KickerMotor motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
 }

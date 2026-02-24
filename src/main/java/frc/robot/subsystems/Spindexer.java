@@ -36,27 +36,14 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         initSmartDashboard();
     }
 
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
+    public Command indexFuel() {
+        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE), () -> motor.stop());
     }
 
-    @Override
-    public void log(SysIdRoutineLog log, SpindexterMotor motor, String name) {
-        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return run(() -> motor.setVoltage(voltage));
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction);
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction);
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
+    public Command releaseFuel() {
+        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE.times(-1)), () -> motor.stop());
     }
 
     private void initSmartDashboard() {
@@ -69,13 +56,26 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         super.initSendable(builder);
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
-    public Command indexFuel() {
-        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE), () -> motor.stop());
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
-    public Command releaseFuel() {
-        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE.times(-1)), () -> motor.stop());
+    @Override
+    public void log(SysIdRoutineLog log, SpindexterMotor motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
 }

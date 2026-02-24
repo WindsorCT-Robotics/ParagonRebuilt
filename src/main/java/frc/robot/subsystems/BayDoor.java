@@ -112,79 +112,9 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         initSmartDashboard();
     }
 
-    @Override
-    public void log(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
-        log.motor(
-                name)
-                .angularPosition(motor.getAngle())
-                .angularVelocity(motor.getVelocity());
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction);
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction);
-    }
-
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/Left Bay Door Limit Switch", leftHardLimit);
-        SmartDashboard.putData(getName() + "/Right Bay Door Limit Switch", rightHardLimit);
-        SmartDashboard.putData(getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
-        SmartDashboard.putData(getName() + "/Right " + rightMotor.getClass().getSimpleName(), rightMotor);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty("Feed Forward Static Gain (V)", ff::getKs, ff::setKs);
-        builder.addDoubleProperty("Feed Forward Gravity Gain (V)", ff::getKg, ff::setKg);
-        builder.addDoubleProperty("Feed Forward Velocity Gain (V/(rad/s))", ff::getKv, ff::setKv);
-        builder.addDoubleProperty("Feed Forward Acceleration Gain (V/(rad/s^2))", ff::getKa, ff::setKa);
-        builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
-        builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
-    }
-
     private enum BayDoorAction {
         OPEN,
         CLOSE
-    }
-
-    private void setDutyCycle(Dimensionless dutyCycle) {
-        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
-    }
-
-    private void setVelocity(AngularVelocity velocity) {
-        CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
-    }
-
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
-        return run(() -> {
-            leftMotor.setDutyCycle(dutyCycle);
-            rightMotor.setDutyCycle(dutyCycle);
-        }).withName(getSubsystem() + "/overrideMotorDutyCycle");
-    }
-
-    public Command overrideMotorVelocity(AngularVelocity velocity) {
-        return run(() -> {
-            leftMotor.setVelocity(velocity);
-            rightMotor.setVelocity(velocity);
-        }).withName(getSubsystem() + "/overrideMotorVelocity");
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return run(() -> {
-            leftMotor.setVoltage(voltage);
-            rightMotor.setVoltage(voltage);
-        }).withName(getSubsystem() + "/overrideMotorVoltage");
     }
 
     public Command home() {
@@ -195,6 +125,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                 .withName(getSubsystem() + "/home");
+    }
+
+    public Command openBayDoor() {
+        return moveBayDoorTo(BayDoorAction.OPEN);
+    }
+
+    public Command closeBayDoor() {
+        return moveBayDoorTo(BayDoorAction.CLOSE);
     }
 
     private void moveTowards(
@@ -265,11 +203,78 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }).withName(getSubsystem() + "/moveBayDoorTo");
     }
 
-    public Command openBayDoor() {
-        return moveBayDoorTo(BayDoorAction.OPEN);
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/Left Bay Door Limit Switch", leftHardLimit);
+        SmartDashboard.putData(getName() + "/Right Bay Door Limit Switch", rightHardLimit);
+        SmartDashboard.putData(getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
+        SmartDashboard.putData(getName() + "/Right " + rightMotor.getClass().getSimpleName(), rightMotor);
     }
 
-    public Command closeBayDoor() {
-        return moveBayDoorTo(BayDoorAction.CLOSE);
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty("Feed Forward Static Gain (V)", ff::getKs, ff::setKs);
+        builder.addDoubleProperty("Feed Forward Gravity Gain (V)", ff::getKg, ff::setKg);
+        builder.addDoubleProperty("Feed Forward Velocity Gain (V/(rad/s))", ff::getKv, ff::setKv);
+        builder.addDoubleProperty("Feed Forward Acceleration Gain (V/(rad/s^2))", ff::getKa, ff::setKa);
+        builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
+        builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
+    }
+
+    private void setDutyCycle(Dimensionless dutyCycle) {
+        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
+    }
+
+    private void setVelocity(AngularVelocity velocity) {
+        CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
+    }
+
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    private void stop() {
+        leftMotor.stop();
+        rightMotor.stop();
+    }
+
+    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
+        return runEnd(() -> {
+            leftMotor.setDutyCycle(dutyCycle);
+            rightMotor.setDutyCycle(dutyCycle);
+        }, this::stop).withName(getSubsystem() + "/overrideMotorDutyCycle");
+    }
+
+    public Command overrideMotorVelocity(AngularVelocity velocity) {
+        return runEnd(() -> {
+            leftMotor.setVelocity(velocity);
+            rightMotor.setVelocity(velocity);
+        }, this::stop).withName(getSubsystem() + "/overrideMotorVelocity");
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> {
+            leftMotor.setVoltage(voltage);
+            rightMotor.setVoltage(voltage);
+        }, this::stop).withName(getSubsystem() + "/overrideMotorVoltage");
+    }
+
+    @Override
+    public void log(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
+        log.motor(
+                name)
+                .angularPosition(motor.getAngle())
+                .angularVelocity(motor.getVelocity());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
 }

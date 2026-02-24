@@ -46,30 +46,12 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         initSmartDashboard();
     }
 
-    @Override
-    public void log(SysIdRoutineLog log, ShooterMotorBasic motor, String name) {
-        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return run(() -> {
-            leftMotor.setVoltage(voltage);
-            rightMotor.setVoltage(voltage);
-        });
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction);
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction);
+    // TODO: Make this a target Rotation Per Second instead of a duty cycle
+    public Command shootFuel() {
+        return runEnd(() -> {
+            leftMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
+            rightMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
+        }, this::stop);
     }
 
     private void initSmartDashboard() {
@@ -105,11 +87,29 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         rightMotor.stop();
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
-    public Command shootFuel() {
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
         return runEnd(() -> {
-            leftMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
-            rightMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
-        }, () -> stop());
+            leftMotor.setVoltage(voltage);
+            rightMotor.setVoltage(voltage);
+        }, this::stop);
+    }
+
+    @Override
+    public void log(SysIdRoutineLog log, ShooterMotorBasic motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
 }

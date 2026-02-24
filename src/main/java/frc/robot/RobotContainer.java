@@ -234,7 +234,8 @@ public class RobotContainer implements Sendable {
 
   }
 
-  private void bindPIDTuning() {
+  @SuppressWarnings("unused")
+  private void bindDriveSystemDynamics() {
     /*
      * Note that each routine should be run exactly once in a single log.
      */
@@ -242,6 +243,46 @@ public class RobotContainer implements Sendable {
     driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
     driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
     driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
+  }
+
+  @SuppressWarnings("unused")
+  private void bindBayDoorSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(bayDoor.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(bayDoor.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(bayDoor.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(bayDoor.sysIdQuasistatic(Direction.kReverse));
+  }
+
+  @SuppressWarnings("unused")
+  private void bindIntakeSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(intake.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
+  }
+
+  @SuppressWarnings("unused")
+  private void bindSpindexerSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(spindexer.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(spindexer.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(spindexer.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(spindexer.sysIdQuasistatic(Direction.kReverse));
+  }
+
+  @SuppressWarnings("unused")
+  private void bindShooterSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(shooter.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(shooter.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
+  }
+
+  @SuppressWarnings("unused")
+  private void bindKickerSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(kicker.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(kicker.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(kicker.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(kicker.sysIdQuasistatic(Direction.kReverse));
   }
 
   public Command getAutonomousCommand() {

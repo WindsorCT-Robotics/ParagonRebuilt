@@ -31,6 +31,8 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         super("Subsystems/" + name);
         motor = new SpindexterMotor(name, motorCanId);
         addChild(this.getName(), motor);
+        // TODO: Consider customizing new Config(). Should be customized if motor has
+        // physical limitations.
         routine = new SysIdRoutine(new Config(),
                 new Mechanism(this::setVoltage, log -> log(log, motor, "Spindexer Motor"), this));
         initSmartDashboard();

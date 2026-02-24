@@ -34,6 +34,8 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
             motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
         });
         addChild(motor.getClass().getName(), motor);
+        // TODO: Consider customizing new Config(). Should be customized if motor has
+        // physical limitations.
         routine = new SysIdRoutine(new Config(),
                 new Mechanism(this::setVoltage, log -> log(log, motor, "Kicker Motor"), this));
         initSmartDashboard();

@@ -38,7 +38,8 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
         addChild(this.getName(), leftMotor);
         addChild(this.getName(), rightMotor);
-
+        // TODO: Consider customizing new Config(). Should be customized if motor has
+        // physical limitations.
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
             log(log, leftMotor, "Left Shooter Motor");
             log(log, rightMotor, "Right Shooter Motor");

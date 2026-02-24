@@ -97,8 +97,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6));
 
-        // TODO: Determine how fast the sysIdDynamic and sysIdQuasistatic test should
-        // be.
+        // TODO: Consider customizing new Config(). Should be customized if motor has
+        // physical limitations.
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
             log(log, leftMotor, "Left Motor");
             log(log, rightMotor, name);

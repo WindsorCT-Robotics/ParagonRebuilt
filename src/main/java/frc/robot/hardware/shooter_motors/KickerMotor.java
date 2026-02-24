@@ -18,16 +18,13 @@ import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.KrakenMotorBase;
 
 public class KickerMotor extends KrakenMotorBase {
-    private static final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure
-                                                                                                  // velocity (kV)
-
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1); // TODO: Figure good speed.
     // These are zero because the Bay Door should only be controlled by setting the
     // rotations per second.
     private static final Voltage MAX_VOLTAGE = Volts.of(0);
     private static final Dimensionless MAX_PERCENTAGE = Percent.of(0);
 
-    public KickerMotor(String name, CanId canId) {
+    public KickerMotor(String name, CanId canId, SimpleMotorFeedforward ff) {
         super(
                 name,
                 canId,
@@ -35,7 +32,7 @@ public class KickerMotor extends KrakenMotorBase {
                         .withNeutralMode(NeutralModeValue.Brake).withInverted(InvertedValue.Clockwise_Positive))
                         .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(DEFAULT_CURRENT)
                                 .withStatorCurrentLimitEnable(true)),
-                feedforward,
+                (angle, velocity, goalVelocity) -> Volts.of(ff.calculateWithVelocities(velocity, goalVelocity)),
                 MAX_ANGULAR_VELOCITY,
                 MAX_VOLTAGE,
                 MAX_PERCENTAGE);

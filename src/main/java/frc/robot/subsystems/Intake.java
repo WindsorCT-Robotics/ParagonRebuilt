@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
@@ -21,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 
 public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRollerMotor> {
     private final IntakeRollerMotor motor;
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+                                                                                             // SysId Routines.
     private final SysIdRoutine routine;
 
     private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(20);
@@ -28,7 +31,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVelocity, this::setVoltage);
+        motor = new IntakeRollerMotor(name, motorCanId, ff, this::setDutyCycle, this::setVelocity, this::setVoltage);
         addChild(motor.getClass().getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.

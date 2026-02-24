@@ -15,7 +15,6 @@ import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -31,7 +30,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
     protected final TalonFX motor;
     private final TalonFXConfigurator configurator;
     private final TalonFXConfiguration configuration;
-    protected final SimpleMotorFeedforward feedforward;
+    private final FunctionalFeedForward ff;
     private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxPercentage;
@@ -40,7 +39,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
             String name,
             CanId canId,
             TalonFXConfiguration configuration,
-            SimpleMotorFeedforward feedforward,
+            FunctionalFeedForward ff,
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage) {
@@ -48,7 +47,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
         configurator = motor.getConfigurator();
         this.configuration = configuration;
         configurator.apply(configuration);
-        this.feedforward = feedforward;
+        this.ff = ff;
         this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
         this.maxPercentage = maxPercentage;
@@ -64,7 +63,6 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
         return motor.getPosition().getValue();
     }
 
-    // TODO: Possibly add this to telemetry?
     @Override
     public TalonFXConfiguration getConfiguration() {
         return configuration;
@@ -99,10 +97,10 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
                         maxAngularVelocity.unaryMinus().in(RotationsPerSecond),
                         maxAngularVelocity.in(RotationsPerSecond)));
 
-        setVoltage(
-                Volts.of(
-                        feedforward.calculate(
-                                clampedVelocity.in(RotationsPerSecond))));
+        setVoltage(ff.calculateWithVelocities(
+                getAngle().in(Rotations),
+                getVelocity().in(RotationsPerSecond),
+                clampedVelocity.in(RotationsPerSecond)));
     }
 
     @Override

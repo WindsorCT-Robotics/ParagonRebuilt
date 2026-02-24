@@ -42,7 +42,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
-    private final ArmFeedforward ff;
+    private static final ArmFeedforward ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6)); // TODO:
+                                                                                                            // Configure
+                                                                                                            // with
+                                                                                                            // SysId
+                                                                                                            // Routines.
     private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
     private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
     private static final boolean INVERTED = true;
@@ -70,10 +74,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit, this::setDutyCycle,
+        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, ff, leftHardLimit, this::setDutyCycle,
                 this::setVelocity,
                 this::setVoltage);
-        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit, this::setDutyCycle,
+        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, ff, rightHardLimit, this::setDutyCycle,
                 this::setVelocity, this::setVoltage);
 
         // TODO: Be able to apply configuration and keep the same ResetMode and
@@ -95,13 +99,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 () -> leftMotor.getAngle().lte(CLOSE_ANGLE) && rightMotor.getAngle().lte(CLOSE_ANGLE));
         isIntakeOpen = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE) && rightMotor.getAngle().gte(OPEN_ANGLE));
 
-        ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6));
-
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
             log(log, leftMotor, "Left Motor");
-            log(log, rightMotor, name);
+            log(log, rightMotor, "Right Motor");
         }, this));
 
         addChild(getName(), leftHardLimit);

@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -22,7 +21,7 @@ public abstract class KrakenMotorBase extends TalonFXMotorBase {
             String name,
             CanId canId,
             TalonFXConfiguration configuration,
-            SimpleMotorFeedforward feedforward,
+            FunctionalFeedForward feedforward,
             AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage) {

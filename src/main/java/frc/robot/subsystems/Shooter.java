@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Percent;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -24,14 +25,16 @@ import frc.robot.hardware.CanId;
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leftMotor;
     private final ShooterMotorBasic rightMotor;
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+                                                                                             // SysId Routines.
     private final SysIdRoutine routine;
     private static final boolean INVERTED = false;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId);
-        rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId);
+        leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId, ff);
+        rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId, ff);
 
         setInverted(leftMotor, INVERTED);
         setInverted(rightMotor, !INVERTED);

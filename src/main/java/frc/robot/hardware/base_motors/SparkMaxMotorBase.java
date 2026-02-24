@@ -19,7 +19,6 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfigAccessor;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -34,7 +33,7 @@ import frc.robot.interfaces.IMotor;
 
 public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
     protected final SparkMax motor;
-    protected final SimpleMotorFeedforward feedforward;
+    private final FunctionalFeedForward ff;
     private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxDutyCycle;
@@ -46,7 +45,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     protected SparkMaxMotorBase(
             String name,
             CanId canId,
-            SimpleMotorFeedforward feedforward,
+            FunctionalFeedForward ff,
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
@@ -59,7 +58,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         SendableRegistry.addLW(this, name);
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
         motor.configure(configuration, resetMode, persistMode);
-        this.feedforward = feedforward;
+        this.ff = ff;
         this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
         this.maxDutyCycle = maxDutyCycle;
@@ -78,7 +77,6 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         return Rotations.of(motor.getEncoder().getPosition());
     }
 
-    // TODO: Possibly add this to telemetry?
     @Override
     public SparkMaxConfigAccessor getConfiguration() {
         return motor.configAccessor;
@@ -116,9 +114,10 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
                         maxAngularVelocity.in(RotationsPerSecond)));
 
         setVoltage(
-                Volts.of(
-                        feedforward.calculateWithVelocities(getVelocity().in(RotationsPerSecond),
-                                clampedVelocity.in(RotationsPerSecond))));
+                ff.calculateWithVelocities(
+                        getAngle().in(Rotations),
+                        getVelocity().in(RotationsPerSecond),
+                        clampedVelocity.in(RotationsPerSecond)));
     }
 
     @Override
@@ -128,8 +127,11 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
 
     @Override
     public void setVoltage(Voltage voltage) {
-        Voltage clampedVoltage = Volts
-                .of(MathUtil.clamp(voltage.in(Volts), maxVoltage.unaryMinus().in(Volts), maxVoltage.in(Volts)));
+        Voltage clampedVoltage = Volts.of(
+                MathUtil.clamp(
+                        voltage.in(Volts),
+                        maxVoltage.unaryMinus().in(Volts),
+                        maxVoltage.in(Volts)));
         motor.setVoltage(clampedVoltage.in(Volts));
     }
 

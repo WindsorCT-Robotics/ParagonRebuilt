@@ -9,7 +9,6 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -39,7 +38,7 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
     protected NeoMotorBase(
             String name,
             CanId canId,
-            SimpleMotorFeedforward feedforward,
+            FunctionalFeedForward feedforward,
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,

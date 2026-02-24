@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -21,6 +22,8 @@ import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+                                                                                             // SysId Routines.
     private final SysIdRoutine routine;
 
     private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(100);
@@ -29,7 +32,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor(name, motorCanId);
+        motor = new SpindexterMotor(name, motorCanId, ff);
         addChild(this.getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.

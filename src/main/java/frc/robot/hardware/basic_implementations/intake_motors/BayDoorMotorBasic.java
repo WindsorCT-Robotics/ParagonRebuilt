@@ -15,7 +15,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkMaxConfigAccessor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -28,8 +28,6 @@ import frc.robot.interfaces.IHomingMotor;
 
 public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<SparkMax, SparkMaxConfigAccessor> {
     private static final Current STRUGGLE_THRESHOLD = Amps.of(40); // TODO: Test value
-    private static final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(0.1, 0); // TODO: Figure
-                                                                                                  // velocity (kV)
 
     private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1); // TODO: Figure good speed.
     // These are zero because the Bay Door should only be controlled by setting the
@@ -45,11 +43,14 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     public BayDoorMotorBasic(
             String name,
             CanId canId,
+            ArmFeedforward feedforward,
             DigitalInput limit,
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<AngularVelocity> angularVelocitySetter,
             Consumer<Voltage> voltageSetter) {
-        super(name, canId, feedforward,
+        super(name, canId,
+                (angle, velocity, goalVelocity) -> Volts
+                        .of(feedforward.calculateWithVelocities(angle, velocity, goalVelocity)),
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) DEFAULT_CURRENT.in(Amps)),
                 // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring

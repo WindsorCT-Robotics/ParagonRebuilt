@@ -7,16 +7,21 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.intake_motors.IntakeRollerMotor;
 import frc.robot.interfaces.ISystemDynamics;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 
-public class Intake extends SubsystemBase implements ISystemDynamics {
+public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRollerMotor> {
     private final IntakeRollerMotor motor;
+    private final SysIdRoutine routine;
 
     private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(20);
     private static final Dimensionless SHUTTLE_FUEL_DUTY_CYCLE = Percent.of(-20);
@@ -25,19 +30,26 @@ public class Intake extends SubsystemBase implements ISystemDynamics {
         super("Subsystems/" + name);
         motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVelocity, this::setVoltage);
         addChild(motor.getClass().getName(), motor);
+        routine = new SysIdRoutine(
+                new Config(),
+                new Mechanism(voltage -> overrideMotorVoltage(voltage),
+                        log -> log(log, motor, "IntakeRollerMotor"), this));
         initSmartDashboard();
     }
 
     @Override
+    public void log(SysIdRoutineLog log, IntakeRollerMotor motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    @Override
     public Command sysIdDynamic(Direction direction) {
-        // TODO Auto-generated method stub
-        return null;
+        return routine.dynamic(direction);
     }
 
     @Override
     public Command sysIdQuasistatic(Direction direction) {
-        // TODO Auto-generated method stub
-        return null;
+        return routine.quasistatic(direction);
     }
 
     private void initSmartDashboard() {

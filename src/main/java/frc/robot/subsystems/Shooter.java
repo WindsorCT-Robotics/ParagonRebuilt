@@ -6,17 +6,25 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.hardware.basic_implementations.shooter_motors.ShooterMotorBasic;
 import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
 
-public class Shooter extends SubsystemBase implements ISystemDynamics {
+public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leftMotor;
     private final ShooterMotorBasic rightMotor;
+    private final SysIdRoutine routine;
     private static final boolean INVERTED = false;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
@@ -30,7 +38,38 @@ public class Shooter extends SubsystemBase implements ISystemDynamics {
 
         addChild(this.getName(), leftMotor);
         addChild(this.getName(), rightMotor);
+
+        routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
+            log(log, leftMotor, "Left Shooter Motor");
+            log(log, rightMotor, "Right Shooter Motor");
+        }, this));
         initSmartDashboard();
+    }
+
+    @Override
+    public void log(SysIdRoutineLog log, ShooterMotorBasic motor, String name) {
+        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
+    }
+
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return run(() -> {
+            leftMotor.setVoltage(voltage);
+            rightMotor.setVoltage(voltage);
+        });
+    }
+
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return routine.dynamic(direction);
+    }
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return routine.quasistatic(direction);
     }
 
     private void initSmartDashboard() {

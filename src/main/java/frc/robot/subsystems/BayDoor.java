@@ -37,7 +37,7 @@ import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorState;
 import frc.robot.interfaces.ISystemDynamics;
 
-public class BayDoor extends SubsystemBase implements ISystemDynamics {
+public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
     private final BayDoorMotorBasic leftMotor;
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
@@ -100,8 +100,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics {
         // TODO: Determine how fast the sysIdDynamic and sysIdQuasistatic test should
         // be.
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
-            logMotor(log, leftMotor, "Left Motor");
-            logMotor(log, rightMotor, name);
+            log(log, leftMotor, "Left Motor");
+            log(log, rightMotor, name);
         }, this));
 
         addChild(getName(), leftHardLimit);
@@ -112,7 +112,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics {
         initSmartDashboard();
     }
 
-    private void logMotor(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
+    @Override
+    public void log(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
         log.motor(
                 name)
                 .angularPosition(motor.getAngle())
@@ -161,8 +162,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics {
         CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
     }
 
-    private void setVoltage(Voltage v) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(v));
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
 
     public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
@@ -179,10 +180,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics {
         }).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
-    public Command overrideMotorVoltage(Voltage v) {
+    public Command overrideMotorVoltage(Voltage voltage) {
         return run(() -> {
-            leftMotor.setVoltage(v);
-            rightMotor.setVoltage(v);
+            leftMotor.setVoltage(voltage);
+            rightMotor.setVoltage(voltage);
         }).withName(getSubsystem() + "/overrideMotorVoltage");
     }
 

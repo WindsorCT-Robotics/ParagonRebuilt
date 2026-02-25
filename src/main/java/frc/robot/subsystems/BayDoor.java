@@ -45,7 +45,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
-    private static final ArmFeedforward ff = new ArmFeedforward(0.1, 0.5 / 100, 0.1, 0.0, TimedRobot.kDefaultPeriod); // TODO:
+    private static final ArmFeedforward ff = new ArmFeedforward(0.1, 0.5 / 100, 0.2, 0.0, TimedRobot.kDefaultPeriod); // TODO:
                                                                                                             // Configure
                                                                                                             // with
                                                                                                             // SysId

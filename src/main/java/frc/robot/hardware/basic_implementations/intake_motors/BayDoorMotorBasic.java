@@ -95,6 +95,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
         } else {
             stop();
             resetRelativeEncoder();
+            setBayMotorState(BayDoorState.CLOSE);
             homingComplete = true;
         }
     }

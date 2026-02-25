@@ -33,7 +33,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     // These are zero because the Bay Door should only be controlled by setting the
     // rotations per second.
     private static final Voltage MAX_VOLTAGE = Volts.of(12);
-    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0.1);
+    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0.2);
     private static final Dimensionless HOMING_DUTY_CYCLE = Percent.of(-0.1);
     private final DigitalInput limit;
     private boolean homingComplete = false;
@@ -91,9 +91,9 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     @Override
     public void home() {
         if (!limit.get()) {
-            motor.set(HOMING_DUTY_CYCLE.in(Value));
+            setDutyCycle(HOMING_DUTY_CYCLE);
         } else {
-            motor.stopMotor();
+            stop();
             resetRelativeEncoder();
             homingComplete = true;
         }

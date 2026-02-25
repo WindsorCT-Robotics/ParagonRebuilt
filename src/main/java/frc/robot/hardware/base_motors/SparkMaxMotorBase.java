@@ -97,7 +97,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         // maxDutyCycle.unaryMinus().in(Percent),
         // maxDutyCycle.in(Percent)));
 
-        motor.set(percentage.in(Value));
+        motor.set(percentage.in(Percent));
     }
 
     @Override

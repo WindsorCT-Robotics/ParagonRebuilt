@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -44,7 +45,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
-    private static final ArmFeedforward ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6), 0.0, TimedRobot.kDefaultPeriod); // TODO:
+    private static final ArmFeedforward ff = new ArmFeedforward(0.1, 0.5 / 100, 0.1, 0.0, TimedRobot.kDefaultPeriod); // TODO:
                                                                                                             // Configure
                                                                                                             // with
                                                                                                             // SysId
@@ -52,8 +53,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
     private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
     private static final boolean INVERTED = true;
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
-    private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1);
+    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(2);
+    private static final AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(2);
     private static final TrapezoidProfile.Constraints MOTION_CONSTRAINTS = new Constraints(
             MAX_ANGULAR_VELOCITY.in(RotationsPerSecond), MAX_ANGULAR_ACCELERATION.in(RotationsPerSecondPerSecond));
     public static final Angle OPEN_ANGLE = Rotations.of(21.5);
@@ -127,13 +128,12 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     public Command home() {
-        return run(() -> {
+        return runEnd(() -> {
             leftMotor.home();
             rightMotor.home();
-        })
-                .until(() -> leftMotor.isHomed() && rightMotor.isHomed())
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .withName(getSubsystem() + "/home");
+        }, () -> removeDefaultCommand())
+                .withName(getSubsystem() + "/home")
+                .until(() -> leftMotor.isHomed() && rightMotor.isHomed());
     }
 
     public Command openBayDoor() {
@@ -160,7 +160,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         motor.setVelocity(velocity);
         // TODO: Remove these or put them somewhere else after testing.
         SmartDashboard.putNumber("Desired Position", goalState.position);
-        SmartDashboard.putNumber("Velocity", velocity.in(RotationsPerSecond));
+        SmartDashboard.putNumber("Velocity (RPS)", velocity.in(RotationsPerSecond));
     }
 
     private void moveToPosition(
@@ -229,6 +229,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addDoubleProperty("Feed Forward Acceleration Gain (V/(rad/s^2))", ff::getKa, ff::setKa);
         builder.addBooleanProperty("Is Intake Closed?", isIntakeClosed, null);
         builder.addBooleanProperty("Is Intake Open?", isIntakeOpen, null);
+        builder.addBooleanProperty("Is Left Pressed", () -> leftMotor.isHomed(), null);
+        builder.addBooleanProperty("Is Right Pressed", () -> rightMotor.isHomed(), null);
     }
 
     private void setDutyCycle(Dimensionless dutyCycle) {

@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.Telemetry;
@@ -45,7 +44,7 @@ public class RobotContainer implements Sendable {
 
   private final Drive drive;
   private final Intake intake;
-  private final BayDoor bayDoor;
+  public final BayDoor bayDoor;
   private final Spindexer spindexer;
   private final Shooter shooter;
   private final Kicker kicker;
@@ -53,8 +52,8 @@ public class RobotContainer implements Sendable {
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
   private static final CanId BAYDOOR_MOTOR_RIGHT_CAN_ID = new CanId((byte) 15);
-  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
-  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
+  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
+  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
@@ -101,9 +100,6 @@ public class RobotContainer implements Sendable {
     spindexer = new Spindexer(Spindexer.class.getSimpleName(), SPINDEXER_MOTOR_CAN_ID);
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
-
-    // Home Motors
-    CommandScheduler.getInstance().schedule(bayDoor.home().withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -157,19 +153,18 @@ public class RobotContainer implements Sendable {
   }
 
   private void configureControllerBindings() {
-    // bindDrive();
-    // bindBayDoor();
-    bindBayDoorSystemDynamics();
-    // bindIntake();
-    // bindSpindexer();
-    // bindKicker();
-    // bindShooter();
+    bindDrive();
+    bindBayDoor();
+    bindIntake();
+    bindSpindexer();
+    bindKicker();
+    bindShooter();
 
-    // driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
-    // driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
+    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
+    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
 
-    // driver.leftBumper()
-    //     .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
+    driver.leftBumper()
+        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
   }
 
   private void bindDrive() {
@@ -216,6 +211,7 @@ public class RobotContainer implements Sendable {
   }
 
   private void bindBayDoor() {
+    bayDoor.setDefaultCommand(bayDoor.home());
     operator.y().whileTrue(bayDoor.openBayDoor());
   }
 

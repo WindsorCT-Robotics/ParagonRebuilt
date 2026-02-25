@@ -22,44 +22,36 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
     protected static final Current DEFAULT_CURRENT = Amps.of(60);
 
     /**
-     * 
      * @param name
      * @param canId
-     * @param motorType
-     * @param feedforward
      * @param configuration
-     * @param resetMode          Don't reset safe parameters if intending to update
-     *                           configuration after initalization.
+     * @param resetMode       Don't reset safe parameters if intending to update
+     *                        configuration after initalization.
      * @param persistMode
-     * @param maxAngularVelocity
      * @param maxVoltage
      * @param maxPercentage
+     * @param dutyCycleSetter
+     * @param voltageSetter
      */
     protected NeoMotorBase(
             String name,
             CanId canId,
-            FunctionalFeedForward feedforward,
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
-            AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxPercentage,
             Consumer<Dimensionless> dutyCycleSetter,
-            Consumer<AngularVelocity> angularVelocitySetter,
             Consumer<Voltage> voltageSetter) {
         super(
                 name,
                 canId,
-                feedforward,
                 configuration,
                 resetMode,
                 persistMode,
-                maxAngularVelocity,
                 maxVoltage,
                 maxPercentage,
                 dutyCycleSetter,
-                angularVelocitySetter,
                 voltageSetter);
     }
 }

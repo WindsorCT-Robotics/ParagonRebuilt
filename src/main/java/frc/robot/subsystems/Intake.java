@@ -23,8 +23,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 
 public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRollerMotor> {
     private final IntakeRollerMotor motor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
-                                                                                             // SysId Routines.
+    // SysId Routines.
     private final SysIdRoutine routine;
 
     private static final Dimensionless INTAKE_FUEL_DUTY_CYCLE = Percent.of(20);
@@ -32,7 +31,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new IntakeRollerMotor(name, motorCanId, ff, this::setDutyCycle, this::setVelocity, this::setVoltage);
+        motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVoltage);
         addChild(motor.getClass().getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
@@ -73,10 +72,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
     }
 
-    private void setVelocity(AngularVelocity velocity) {
-        CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
-    }
-
     private void setVoltage(Voltage v) {
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(v));
     }
@@ -89,12 +84,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         return runEnd(() -> {
             motor.setDutyCycle(dutyCycle);
         }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
-    }
-
-    public Command overrideMotorVelocity(AngularVelocity velocity) {
-        return runEnd(() -> {
-            motor.setVelocity(velocity);
-        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
     public Command overrideMotorVoltage(Voltage v) {

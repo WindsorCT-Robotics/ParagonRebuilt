@@ -33,37 +33,28 @@ import frc.robot.interfaces.IMotor;
 
 public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
     protected final SparkMax motor;
-    private final FunctionalFeedForward ff;
-    private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxDutyCycle;
 
     private final Consumer<Dimensionless> dutyCycleSetter;
-    private final Consumer<AngularVelocity> angularVelocitySetter;
     private final Consumer<Voltage> voltageSetter;
 
     protected SparkMaxMotorBase(
             String name,
             CanId canId,
-            FunctionalFeedForward ff,
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
-            AngularVelocity maxAngularVelocity,
             Voltage maxVoltage,
             Dimensionless maxDutyCycle,
             Consumer<Dimensionless> dutyCycleSetter,
-            Consumer<AngularVelocity> angularVelocitySetter,
             Consumer<Voltage> voltageSetter) {
         SendableRegistry.addLW(this, name);
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
         motor.configure(configuration, resetMode, persistMode);
-        this.ff = ff;
-        this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
         this.maxDutyCycle = maxDutyCycle;
         this.dutyCycleSetter = dutyCycleSetter;
-        this.angularVelocitySetter = angularVelocitySetter;
         this.voltageSetter = voltageSetter;
     }
 
@@ -92,10 +83,10 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
      */
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        // Dimensionless clampedPercentage = Percent
-        // .of(MathUtil.clamp(percentage.in(Percent),
-        // maxDutyCycle.unaryMinus().in(Percent),
-        // maxDutyCycle.in(Percent)));
+        Dimensionless clampedPercentage = Percent
+                .of(MathUtil.clamp(percentage.in(Percent),
+                        maxDutyCycle.unaryMinus().in(Percent),
+                        maxDutyCycle.in(Percent)));
 
         motor.set(percentage.in(Percent));
     }
@@ -103,21 +94,6 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
     @Override
     public AngularVelocity getVelocity() {
         return RPM.of(motor.getEncoder().getVelocity());
-    }
-
-    @Override
-    public void setVelocity(AngularVelocity velocity) {
-        AngularVelocity clampedVelocity = RotationsPerSecond.of(
-                MathUtil.clamp(
-                        velocity.in(RotationsPerSecond),
-                        maxAngularVelocity.unaryMinus().in(RotationsPerSecond),
-                        maxAngularVelocity.in(RotationsPerSecond)));
-
-        setVoltage(
-                ff.calculateWithVelocities(
-                        getAngle().in(Rotations),
-                        getVelocity().in(RotationsPerSecond),
-                        clampedVelocity.in(RotationsPerSecond)));
     }
 
     @Override
@@ -161,6 +137,8 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         motor.stopMotor();
     }
 
+    // TODO: Add a way to set a setpoint. Possibly add as a interface?
+
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.setActuator(true);
@@ -169,8 +147,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
         builder.addDoubleProperty("Encoder Value", () -> getAngle().in(Rotations), null);
         builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
                 val -> dutyCycleSetter.accept(Percent.of(val)));
-        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond),
-                val -> angularVelocitySetter.accept(RotationsPerSecond.of(val)));
+        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
                 val -> voltageSetter.accept(Volts.of(val)));

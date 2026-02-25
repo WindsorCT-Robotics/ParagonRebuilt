@@ -26,9 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -45,11 +43,12 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
+    private TrapezoidProfile.State currentLeftArmState;
+    private TrapezoidProfile.State currentRightArmState;
     private static final ArmFeedforward ff = new ArmFeedforward(0.1, 0.5 / 100, 0.2, 0.0, TimedRobot.kDefaultPeriod); // TODO:
-                                                                                                            // Configure
-                                                                                                            // with
-                                                                                                            // SysId
-                                                                                                            // Routines.
+                                                                                                                      // Configure
+                                                                                                                      // with
+                                                                                                                      // SysIdRoutines.
     private static final Angle FORWARD_POSITION_TOLERANCE = Rotations.of(1);
     private static final Angle REVERSE_POSITION_TOLERANCE = Rotations.of(1);
     private static final boolean INVERTED = true;
@@ -77,11 +76,13 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, ff, leftHardLimit, this::setDutyCycle,
-                this::setVelocity,
+        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit, this::setDutyCycle,
                 this::setVoltage);
-        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, ff, rightHardLimit, this::setDutyCycle,
-                this::setVelocity, this::setVoltage);
+        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit, this::setDutyCycle,
+                this::setVoltage);
+
+        currentLeftArmState = new State();
+        currentRightArmState = new State();
 
         // TODO: Be able to apply configuration and keep the same ResetMode and
         // PersisMode without hard coding.
@@ -105,14 +106,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
         routine = new SysIdRoutine(
-            new Config(
-                Volts.of(1).per(Second), 
-                Volts.of(1), 
-                null), 
-            new Mechanism(this::setSysIdVoltage, log -> {
-                log(log, leftMotor, "Left Motor");
-                log(log, rightMotor, "Right Motor");
-        }, this));
+                new Config(
+                        Volts.of(1).per(Second),
+                        Volts.of(1),
+                        null),
+                new Mechanism(this::setSysIdVoltage, log -> {
+                    log(log, leftMotor, "Left Motor");
+                    log(log, rightMotor, "Right Motor");
+                }, this));
 
         addChild(getName(), leftHardLimit);
         addChild(getName(), rightHardLimit);
@@ -144,38 +145,40 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         return moveBayDoorTo(BayDoorAction.CLOSE);
     }
 
-    private void moveTowards(
+    private TrapezoidProfile.State moveTowards(
             BayDoorMotorBasic motor,
             Angle position,
+            TrapezoidProfile.State currentArmState,
             TrapezoidProfile.Constraints constraints) {
-        TrapezoidProfile.State currentState = new State(motor.getAngle().in(Rotations),
-                motor.getVelocity().in(RotationsPerSecond));
-        TrapezoidProfile.State goalState = new State(position.in(Rotations),
+        TrapezoidProfile.State goalArmState = new State(position.in(Rotations),
                 RotationsPerSecond.zero().in(RotationsPerSecond));
         TrapezoidProfile motionProfile = new TrapezoidProfile(constraints);
 
-        AngularVelocity velocity = RotationsPerSecond
-                .of(motionProfile.calculate(TimedRobot.kDefaultPeriod, currentState, goalState).velocity);
+        currentArmState = motionProfile.calculate(TimedRobot.kDefaultPeriod, currentArmState, goalArmState);
 
-        motor.setVelocity(velocity);
+        motor.setVelocity(RotationsPerSecond.of(currentArmState.velocity));
         // TODO: Remove these or put them somewhere else after testing.
-        SmartDashboard.putNumber("Desired Position", goalState.position);
-        SmartDashboard.putNumber("Velocity (RPS)", velocity.in(RotationsPerSecond));
+        SmartDashboard.putNumber("Desired Position", goalArmState.position);
+        SmartDashboard.putNumber("Velocity (RPS)", currentArmState.velocity);
+
+        return currentArmState;
     }
 
-    private void moveToPosition(
+    private TrapezoidProfile.State moveToPosition(
             BayDoorMotorBasic motor,
             Angle position,
             Angle goalPosition,
             Angle tolerance,
+            TrapezoidProfile.State currentArmState,
             BayDoorState medianState,
             BayDoorState endState) {
         if (!position.isNear(goalPosition, tolerance)) {
-            moveTowards(motor, goalPosition, MOTION_CONSTRAINTS);
             motor.setBayMotorState(medianState);
+            return moveTowards(motor, goalPosition, currentArmState, MOTION_CONSTRAINTS);
         } else {
             motor.stop();
             motor.setBayMotorState(endState);
+            return currentArmState;
         }
     }
 
@@ -207,9 +210,18 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         return run(() -> {
-            moveToPosition(leftMotor, leftMotor.getAngle(), goalPosition, tolerance, medianState, endState);
-            moveToPosition(rightMotor, rightMotor.getAngle(), goalPosition, tolerance, medianState, endState);
-        }).withName(getSubsystem() + "/moveBayDoorTo");
+            currentLeftArmState = moveToPosition(leftMotor, leftMotor.getAngle(), goalPosition,
+                    tolerance, currentLeftArmState, medianState, endState);
+            currentRightArmState = moveToPosition(rightMotor, rightMotor.getAngle(), goalPosition, tolerance,
+                    currentRightArmState, medianState, endState);
+        })
+                .beforeStarting(() -> {
+                    currentLeftArmState = new TrapezoidProfile.State(leftMotor.getAngle().in(Rotations),
+                            leftMotor.getVelocity().in(RotationsPerSecond));
+                    currentRightArmState = new TrapezoidProfile.State(rightMotor.getAngle().in(Rotations),
+                            rightMotor.getVelocity().in(RotationsPerSecond));
+                })
+                .withName(getSubsystem() + "/moveBayDoorTo");
     }
 
     private void initSmartDashboard() {
@@ -237,10 +249,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
     }
 
-    private void setVelocity(AngularVelocity velocity) {
-        CommandScheduler.getInstance().schedule(overrideMotorVelocity(velocity));
-    }
-
     private void setVoltage(Voltage voltage) {
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
@@ -260,13 +268,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             leftMotor.setDutyCycle(dutyCycle);
             rightMotor.setDutyCycle(dutyCycle);
         }, this::stop).withName(getSubsystem() + "/overrideMotorDutyCycle");
-    }
-
-    public Command overrideMotorVelocity(AngularVelocity velocity) {
-        return runEnd(() -> {
-            leftMotor.setVelocity(velocity);
-            rightMotor.setVelocity(velocity);
-        }, this::stop).withName(getSubsystem() + "/overrideMotorVelocity");
     }
 
     public Command overrideMotorVoltage(Voltage voltage) {

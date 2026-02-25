@@ -23,8 +23,6 @@ public interface IMotor<Motor, Config> {
 
     public Voltage getVoltage();
 
-    public void setVelocity(AngularVelocity velocity);
-
     public AngularVelocity getVelocity();
 
     public boolean isMoving();

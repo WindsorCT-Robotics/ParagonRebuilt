@@ -30,8 +30,6 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
     protected final TalonFX motor;
     private final TalonFXConfigurator configurator;
     private final TalonFXConfiguration configuration;
-    private final FunctionalFeedForward ff;
-    private final AngularVelocity maxAngularVelocity;
     private final Voltage maxVoltage;
     private final Dimensionless maxPercentage;
 
@@ -47,8 +45,6 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
         configurator = motor.getConfigurator();
         this.configuration = configuration;
         configurator.apply(configuration);
-        this.ff = ff;
-        this.maxAngularVelocity = maxAngularVelocity;
         this.maxVoltage = maxVoltage;
         this.maxPercentage = maxPercentage;
     }
@@ -87,20 +83,6 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
     @Override
     public AngularVelocity getVelocity() {
         return motor.getVelocity().getValue();
-    }
-
-    @Override
-    public void setVelocity(AngularVelocity velocity) {
-        AngularVelocity clampedVelocity = RotationsPerSecond.of(
-                MathUtil.clamp(
-                        velocity.in(RotationsPerSecond),
-                        maxAngularVelocity.unaryMinus().in(RotationsPerSecond),
-                        maxAngularVelocity.in(RotationsPerSecond)));
-
-        setVoltage(ff.calculateWithVelocities(
-                getAngle().in(Rotations),
-                getVelocity().in(RotationsPerSecond),
-                clampedVelocity.in(RotationsPerSecond)));
     }
 
     @Override

@@ -121,7 +121,7 @@ public class RobotContainer implements Sendable {
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
+    // drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
 
     initSmartDashboard();
   }
@@ -157,18 +157,19 @@ public class RobotContainer implements Sendable {
   }
 
   private void configureControllerBindings() {
-    bindDrive();
-    bindBayDoor();
-    bindIntake();
-    bindSpindexer();
-    bindKicker();
-    bindShooter();
+    // bindDrive();
+    // bindBayDoor();
+    bindBayDoorSystemDynamics();
+    // bindIntake();
+    // bindSpindexer();
+    // bindKicker();
+    // bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
-    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
+    // driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
+    // driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
 
-    driver.leftBumper()
-        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
+    // driver.leftBumper()
+    //     .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
   }
 
   private void bindDrive() {

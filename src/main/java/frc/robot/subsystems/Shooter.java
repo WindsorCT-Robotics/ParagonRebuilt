@@ -9,10 +9,10 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -25,7 +25,7 @@ import frc.robot.hardware.CanId;
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leftMotor;
     private final ShooterMotorBasic rightMotor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
                                                                                              // SysId Routines.
     private final SysIdRoutine routine;
     private static final boolean INVERTED = false;
@@ -43,7 +43,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         addChild(this.getName(), rightMotor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
-        routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
+        routine = new SysIdRoutine(new Config(), new Mechanism(this::setSysIdVoltage, log -> {
             log(log, leftMotor, "Left Shooter Motor");
             log(log, rightMotor, "Right Shooter Motor");
         }, this));
@@ -91,15 +91,9 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         rightMotor.stop();
     }
 
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> {
-            leftMotor.setVoltage(voltage);
-            rightMotor.setVoltage(voltage);
-        }, this::stop);
+    private void setSysIdVoltage(Voltage voltage) {
+        leftMotor.setVoltage(voltage);
+        rightMotor.setVoltage(voltage);
     }
 
     @Override

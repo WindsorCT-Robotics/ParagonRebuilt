@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,7 +26,7 @@ import frc.robot.hardware.CanId;
 
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
                                                                                              // SysId Routines.
     private final SysIdRoutine routine;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
@@ -40,7 +41,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
         routine = new SysIdRoutine(new Config(),
-                new Mechanism(this::setVoltage, log -> log(log, motor, "Kicker Motor"), this));
+                new Mechanism(this::setSysIdVoltage, log -> log(log, motor, "Kicker Motor"), this));
         initSmartDashboard();
     }
 
@@ -61,6 +62,10 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
 
     private void setVoltage(Voltage voltage) {
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    private void setSysIdVoltage(Voltage voltage) {
+        motor.setVoltage(voltage);
     }
 
     public Command overrideMotorVoltage(Voltage voltage) {

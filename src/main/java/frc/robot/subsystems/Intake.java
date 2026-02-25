@@ -7,6 +7,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,7 +23,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 
 public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRollerMotor> {
     private final IntakeRollerMotor motor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, 0); // TODO: Configure with
+    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
                                                                                              // SysId Routines.
     private final SysIdRoutine routine;
 
@@ -37,7 +38,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         // physical limitations.
         routine = new SysIdRoutine(
                 new Config(),
-                new Mechanism(voltage -> overrideMotorVoltage(voltage),
+                new Mechanism(this::setSysIdVoltage,
                         log -> log(log, motor, "IntakeRollerMotor"), this));
         initSmartDashboard();
     }
@@ -78,6 +79,10 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     private void setVoltage(Voltage v) {
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(v));
+    }
+
+    private void setSysIdVoltage(Voltage voltage) {
+        motor.setVoltage(voltage);
     }
 
     public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {

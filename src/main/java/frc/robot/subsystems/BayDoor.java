@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -42,7 +44,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final BayDoorMotorBasic rightMotor;
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
-    private static final ArmFeedforward ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6)); // TODO:
+    private static final ArmFeedforward ff = new ArmFeedforward(1.3 / 100, 0.5 / 100, ((1.3 / 100) / 0.6), 0.0, TimedRobot.kDefaultPeriod); // TODO:
                                                                                                             // Configure
                                                                                                             // with
                                                                                                             // SysId
@@ -101,9 +103,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
-        routine = new SysIdRoutine(new Config(), new Mechanism(this::setVoltage, log -> {
-            log(log, leftMotor, "Left Motor");
-            log(log, rightMotor, "Right Motor");
+        routine = new SysIdRoutine(
+            new Config(
+                Volts.of(1).per(Second), 
+                Volts.of(1), 
+                null), 
+            new Mechanism(this::setSysIdVoltage, log -> {
+                log(log, leftMotor, "Left Motor");
+                log(log, rightMotor, "Right Motor");
         }, this));
 
         addChild(getName(), leftHardLimit);
@@ -236,6 +243,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
 
+    private void setSysIdVoltage(Voltage voltage) {
+        leftMotor.setVoltage(voltage);
+        rightMotor.setVoltage(voltage);
+    }
+
     private void stop() {
         leftMotor.stop();
         rightMotor.stop();
@@ -267,7 +279,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         log.motor(
                 name)
                 .angularPosition(motor.getAngle())
-                .angularVelocity(motor.getVelocity());
+                .angularVelocity(motor.getVelocity())
+                .voltage(motor.getVoltage());
     }
 
     @Override

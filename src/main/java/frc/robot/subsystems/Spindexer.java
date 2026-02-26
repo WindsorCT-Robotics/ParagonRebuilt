@@ -2,11 +2,9 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,8 +21,8 @@ import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
-                                                                                             // SysId Routines.
+
+    // SysId Routines.
     private final SysIdRoutine routine;
 
     private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(100);
@@ -33,7 +31,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor(name, motorCanId, ff);
+        motor = new SpindexterMotor(name, motorCanId, this::setDutyCycle, this::setVoltage);
         addChild(this.getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.
@@ -66,6 +64,22 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
 
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> {
+            motor.setVoltage(voltage);
+        }, () -> motor.stop());
+    }
+
+    private void setDutyCycle(Dimensionless dutyCycle) {
+        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
+    }
+
+    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
+        return runEnd(() -> {
+            motor.setDutyCycle(dutyCycle);
+        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
+    }
+
     private void setSysIdVoltage(Voltage voltage) {
         motor.setVoltage(voltage);
     }
@@ -73,10 +87,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     @Override
     public void log(SysIdRoutineLog log, SpindexterMotor motor, String name) {
         log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
     }
 
     @Override

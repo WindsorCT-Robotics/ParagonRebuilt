@@ -160,8 +160,8 @@ public class RobotContainer implements Sendable {
     bindKicker();
     bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.intakeFuel()));
-    driver.b().toggleOnTrue(bayDoor.openBayDoor().alongWith(intake.shuttleFuel()));
+    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()));
+    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()));
 
     driver.leftBumper()
         .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
@@ -212,7 +212,10 @@ public class RobotContainer implements Sendable {
 
   private void bindBayDoor() {
     bayDoor.setDefaultCommand(bayDoor.home());
-    operator.y().whileTrue(bayDoor.openBayDoor());
+    operator.y().onTrue(bayDoor.open());
+    operator.b().onTrue(bayDoor.middle());
+    operator.a().onTrue(bayDoor.close());
+    operator.x().onTrue(bayDoor.home());
   }
 
   private void bindIntake() {

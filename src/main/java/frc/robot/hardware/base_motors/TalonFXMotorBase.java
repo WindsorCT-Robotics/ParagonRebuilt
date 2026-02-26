@@ -12,9 +12,10 @@ import java.util.function.Consumer;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -24,29 +25,37 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
-import frc.robot.interfaces.IMotor;
+import frc.robot.interfaces.IClosedLoopMotor;
 
-public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, Sendable {
+public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfiguration>, Sendable {
     protected final TalonFX motor;
     private final TalonFXConfigurator configurator;
     private final TalonFXConfiguration configuration;
-    private final Voltage maxVoltage;
-    private final Dimensionless maxPercentage;
+    private final Consumer<Dimensionless> dutyCycleSetter;
+    private final Consumer<Voltage> voltageSetter;
 
     public TalonFXMotorBase(
             String name,
             CanId canId,
             TalonFXConfiguration configuration,
-            FunctionalFeedForward ff,
-            AngularVelocity maxAngularVelocity,
-            Voltage maxVoltage,
-            Dimensionless maxPercentage) {
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<Voltage> voltageSetter) {
         motor = new TalonFX(canId.Id());
         configurator = motor.getConfigurator();
         this.configuration = configuration;
         configurator.apply(configuration);
-        this.maxVoltage = maxVoltage;
-        this.maxPercentage = maxPercentage;
+        this.dutyCycleSetter = dutyCycleSetter;
+        this.voltageSetter = voltageSetter;
+    }
+
+    @Override
+    public void setPointPosition(Angle angle) {
+        motor.setControl(new MotionMagicVoltage(angle));
+    }
+
+    @Override
+    public void setPointVelocity(AngularVelocity angularVelocity) {
+        motor.setControl(new MotionMagicVelocityVoltage(angularVelocity));
     }
 
     @Override
@@ -74,10 +83,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
      */
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        Dimensionless clampedPercentage = Percent
-                .of(MathUtil.clamp(percentage.in(Percent), maxPercentage.unaryMinus().in(Percent),
-                        maxPercentage.in(Percent)));
-        motor.set(clampedPercentage.in(Percent));
+        motor.set(percentage.in(Percent));
     }
 
     @Override
@@ -92,9 +98,7 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
 
     @Override
     public void setVoltage(Voltage voltage) {
-        Voltage clampedVoltage = Volts
-                .of(MathUtil.clamp(voltage.in(Volts), maxVoltage.unaryMinus().in(Volts), maxVoltage.in(Volts)));
-        motor.setVoltage(clampedVoltage.in(Volts));
+        motor.setVoltage(voltage.in(Volts));
     }
 
     @Override
@@ -128,10 +132,12 @@ public class TalonFXMotorBase implements IMotor<TalonFX, TalonFXConfiguration>, 
         builder.setSafeState(this::stop);
 
         builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
-        builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent), null);
+        builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
+                dutyCycle -> dutyCycleSetter.accept(Percent.of(dutyCycle)));
         builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts), null);
+        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
+                voltage -> voltageSetter.accept(Volts.of(voltage)));
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperarure().in(Celsius), null);
     }

@@ -5,11 +5,9 @@ import static edu.wpi.first.units.Units.Percent;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,14 +24,12 @@ import frc.robot.hardware.CanId;
 
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
-                                                                                             // SysId Routines.
     private final SysIdRoutine routine;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
     public Kicker(String name, CanId motorId) {
         super("Subsystems/" + name);
-        motor = new KickerMotor("Kicker Motor", motorId, ff);
+        motor = new KickerMotor("Kicker Motor", motorId, this::setDutyCycle, this::setVoltage);
         motor.configure(motor -> {
             motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
         });
@@ -64,12 +60,22 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
 
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
+    }
+
     private void setSysIdVoltage(Voltage voltage) {
         motor.setVoltage(voltage);
     }
 
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
+    private void setDutyCycle(Dimensionless dutyCycle) {
+        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
+    }
+
+    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
+        return runEnd(() -> {
+            motor.setDutyCycle(dutyCycle);
+        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     @Override

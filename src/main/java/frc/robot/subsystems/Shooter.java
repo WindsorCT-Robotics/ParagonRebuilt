@@ -5,14 +5,13 @@ import static edu.wpi.first.units.Units.Percent;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -25,16 +24,16 @@ import frc.robot.hardware.CanId;
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leftMotor;
     private final ShooterMotorBasic rightMotor;
-    private static final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0, 0, 0, TimedRobot.kDefaultPeriod); // TODO: Configure with
-                                                                                             // SysId Routines.
+
+    // SysId Routines.
     private final SysIdRoutine routine;
     private static final boolean INVERTED = false;
     private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId, ff);
-        rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId, ff);
+        leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId, this::setDutyCycle, this::setVoltage);
+        rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId, this::setDutyCycle, this::setVoltage);
 
         setInverted(leftMotor, INVERTED);
         setInverted(rightMotor, !INVERTED);
@@ -94,6 +93,28 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private void setSysIdVoltage(Voltage voltage) {
         leftMotor.setVoltage(voltage);
         rightMotor.setVoltage(voltage);
+    }
+
+    private void setVoltage(Voltage voltage) {
+        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
+    }
+
+    public Command overrideMotorVoltage(Voltage voltage) {
+        return runEnd(() -> {
+            leftMotor.setVoltage(voltage);
+            rightMotor.setVoltage(voltage);
+        }, this::stop);
+    }
+
+    private void setDutyCycle(Dimensionless dutyCycle) {
+        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
+    }
+
+    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
+        return runEnd(() -> {
+            leftMotor.setDutyCycle(dutyCycle);
+            rightMotor.setDutyCycle(dutyCycle);
+        }, this::stop).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     @Override

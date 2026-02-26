@@ -1,8 +1,6 @@
 package frc.robot.hardware.spindexer_motor;
 
-import static edu.wpi.first.units.Units.Percent;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import java.util.function.Consumer;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -10,21 +8,17 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.KrakenMotorBase;
 
 public class SpindexterMotor extends KrakenMotorBase {
-    private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1); // TODO: Figure good speed.
-    // These are zero because the Bay Door should only be controlled by setting the
-    // rotations per second.
-    private static final Voltage MAX_VOLTAGE = Volts.of(0);
-    private static final Dimensionless MAX_PERCENTAGE = Percent.of(0);
-
-    public SpindexterMotor(String name, CanId canId, SimpleMotorFeedforward ff) {
+    public SpindexterMotor(
+            String name,
+            CanId canId,
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<Voltage> voltageSetter) {
         super(
                 name,
                 canId,
@@ -32,9 +26,7 @@ public class SpindexterMotor extends KrakenMotorBase {
                         .withNeutralMode(NeutralModeValue.Brake).withInverted(InvertedValue.Clockwise_Positive))
                         .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(DEFAULT_CURRENT)
                                 .withStatorCurrentLimitEnable(true)),
-                (angle, velocity, goalVelocity) -> Volts.of(ff.calculateWithVelocities(velocity, goalVelocity)),
-                MAX_ANGULAR_VELOCITY,
-                MAX_VOLTAGE,
-                MAX_PERCENTAGE);
+                dutyCycleSetter,
+                voltageSetter);
     }
 }

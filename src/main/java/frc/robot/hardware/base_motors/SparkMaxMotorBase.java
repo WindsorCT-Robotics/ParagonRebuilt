@@ -14,11 +14,11 @@ import java.util.function.Consumer;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfigAccessor;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -29,12 +29,10 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import frc.robot.hardware.CanId;
-import frc.robot.interfaces.IMotor;
+import frc.robot.interfaces.IClosedLoopMotor;
 
-public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
+public class SparkMaxMotorBase implements IClosedLoopMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
     protected final SparkMax motor;
-    private final Voltage maxVoltage;
-    private final Dimensionless maxDutyCycle;
 
     private final Consumer<Dimensionless> dutyCycleSetter;
     private final Consumer<Voltage> voltageSetter;
@@ -45,17 +43,24 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
-            Voltage maxVoltage,
-            Dimensionless maxDutyCycle,
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
         SendableRegistry.addLW(this, name);
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
         motor.configure(configuration, resetMode, persistMode);
-        this.maxVoltage = maxVoltage;
-        this.maxDutyCycle = maxDutyCycle;
         this.dutyCycleSetter = dutyCycleSetter;
         this.voltageSetter = voltageSetter;
+    }
+
+    @Override
+    public void setPointPosition(Angle angle) {
+        motor.getClosedLoopController().setSetpoint(angle.in(Rotations), ControlType.kMAXMotionPositionControl);
+    }
+
+    @Override
+    public void setPointVelocity(AngularVelocity angularVelocity) {
+        motor.getClosedLoopController().setSetpoint(angularVelocity.in(RPM),
+                ControlType.kMAXMotionVelocityControl);
     }
 
     @Override
@@ -83,11 +88,6 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
      */
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        Dimensionless clampedPercentage = Percent
-                .of(MathUtil.clamp(percentage.in(Percent),
-                        maxDutyCycle.unaryMinus().in(Percent),
-                        maxDutyCycle.in(Percent)));
-
         motor.set(percentage.in(Percent));
     }
 
@@ -103,12 +103,7 @@ public class SparkMaxMotorBase implements IMotor<SparkMax, SparkMaxConfigAccesso
 
     @Override
     public void setVoltage(Voltage voltage) {
-        Voltage clampedVoltage = Volts.of(
-                MathUtil.clamp(
-                        voltage.in(Volts),
-                        maxVoltage.unaryMinus().in(Volts),
-                        maxVoltage.in(Volts)));
-        motor.setVoltage(clampedVoltage.in(Volts));
+        motor.setVoltage(voltage.in(Volts));
     }
 
     @Override

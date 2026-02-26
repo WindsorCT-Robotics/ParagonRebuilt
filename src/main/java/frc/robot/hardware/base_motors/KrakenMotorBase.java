@@ -3,6 +3,8 @@ package frc.robot.hardware.base_motors;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 
+import java.util.function.Consumer;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -21,17 +23,13 @@ public abstract class KrakenMotorBase extends TalonFXMotorBase {
             String name,
             CanId canId,
             TalonFXConfiguration configuration,
-            FunctionalFeedForward feedforward,
-            AngularVelocity maxAngularVelocity,
-            Voltage maxVoltage,
-            Dimensionless maxPercentage) {
+            Consumer<Dimensionless> dutyCycleSetter,
+            Consumer<Voltage> voltageSetter) {
         super(
                 name,
                 canId,
                 configuration,
-                feedforward,
-                maxAngularVelocity,
-                maxVoltage,
-                maxPercentage);
+                dutyCycleSetter,
+                voltageSetter);
     }
 }

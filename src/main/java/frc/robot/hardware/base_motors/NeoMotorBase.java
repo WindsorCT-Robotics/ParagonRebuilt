@@ -25,13 +25,9 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
      * @param name
      * @param canId
      * @param configuration
-     * @param resetMode       Don't reset safe parameters if intending to update
-     *                        configuration after initalization.
+     * @param resetMode     Don't reset safe parameters if intending to update
+     *                      configuration after initalization.
      * @param persistMode
-     * @param maxVoltage
-     * @param maxPercentage
-     * @param dutyCycleSetter
-     * @param voltageSetter
      */
     protected NeoMotorBase(
             String name,
@@ -39,8 +35,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
             SparkBaseConfig configuration,
             ResetMode resetMode,
             PersistMode persistMode,
-            Voltage maxVoltage,
-            Dimensionless maxPercentage,
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
         super(
@@ -49,8 +43,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
                 configuration,
                 resetMode,
                 persistMode,
-                maxVoltage,
-                maxPercentage,
                 dutyCycleSetter,
                 voltageSetter);
     }

@@ -31,7 +31,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor(name, motorCanId, this::setDutyCycle, this::setVoltage);
+        motor = new SpindexterMotor(motorCanId, this::setDutyCycle, this::setVoltage);
         addChild(this.getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.

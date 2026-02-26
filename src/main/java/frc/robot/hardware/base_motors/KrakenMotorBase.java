@@ -20,13 +20,11 @@ public abstract class KrakenMotorBase extends TalonFXMotorBase {
     protected static final Current DEFAULT_CURRENT = Amps.of(80);
 
     protected KrakenMotorBase(
-            String name,
             CanId canId,
             TalonFXConfiguration configuration,
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
         super(
-                name,
                 canId,
                 configuration,
                 dutyCycleSetter,

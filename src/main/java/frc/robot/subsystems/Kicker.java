@@ -29,7 +29,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
 
     public Kicker(String name, CanId motorId) {
         super("Subsystems/" + name);
-        motor = new KickerMotor("Kicker Motor", motorId, this::setDutyCycle, this::setVoltage);
+        motor = new KickerMotor(motorId, this::setDutyCycle, this::setVoltage);
         motor.configure(motor -> {
             motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
         });

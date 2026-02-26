@@ -32,8 +32,8 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leftMotor = new ShooterMotorBasic("Left Shooter Motor", leftMotorId, this::setDutyCycle, this::setVoltage);
-        rightMotor = new ShooterMotorBasic("Right Shooter Motor", rightMotorId, this::setDutyCycle, this::setVoltage);
+        leftMotor = new ShooterMotorBasic(leftMotorId, this::setDutyCycle, this::setVoltage);
+        rightMotor = new ShooterMotorBasic(rightMotorId, this::setDutyCycle, this::setVoltage);
 
         setInverted(leftMotor, INVERTED);
         setInverted(rightMotor, !INVERTED);

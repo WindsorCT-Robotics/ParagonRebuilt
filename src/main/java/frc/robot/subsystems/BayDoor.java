@@ -8,9 +8,7 @@ import static edu.wpi.first.units.Units.Volts;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
-import com.revrobotics.spark.config.ClosedLoopConfigAccessor;
 import com.revrobotics.spark.config.FeedForwardConfig;
-import com.revrobotics.spark.config.FeedForwardConfigAccessor;
 import com.revrobotics.spark.config.MAXMotionConfig;
 import com.revrobotics.spark.config.SoftLimitConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
@@ -34,7 +32,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
-import frc.robot.hardware.base_motors.SparkMaxMotorBase;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
 import frc.robot.interfaces.ISystemDynamics;
 
@@ -93,9 +90,9 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit, this::setDutyCycle,
+        leftMotor = new BayDoorMotorBasic(leftMotorId, leftHardLimit, this::setDutyCycle,
                 this::setVoltage);
-        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit, this::setDutyCycle,
+        rightMotor = new BayDoorMotorBasic(rightMotorId, rightHardLimit, this::setDutyCycle,
                 this::setVoltage);
 
         routine = new SysIdRoutine(
@@ -118,8 +115,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             config.softLimit.apply(SOFT_LIMIT_CONFIG);
 
             motor.configure(config,
-                    ResetMode.kNoResetSafeParameters,
-                    PersistMode.kPersistParameters);
+                    RESET_MODE,
+                    PERSIST_MODE);
         });
 
         rightMotor.configure(motor -> {
@@ -130,8 +127,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             config.softLimit.apply(SOFT_LIMIT_CONFIG);
 
             motor.configure(config,
-                    ResetMode.kNoResetSafeParameters,
-                    PersistMode.kPersistParameters);
+                    RESET_MODE,
+                    PERSIST_MODE);
         });
 
         atLeftCloseLimit = new Trigger(() -> leftHardLimit.get());
@@ -142,126 +139,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightOpenLimit));
 
         initSmartDashboard();
-    }
-
-    private void setkS(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setkCos(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kCos(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kCos(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setkG(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setkV(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kV(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kV(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setkA(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private FeedForwardConfigAccessor getFeedForward(SparkMaxMotorBase motor) {
-        return motor.getConfiguration().closedLoop.feedForward;
-    }
-
-    private void setP(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.p(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.p(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setI(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.i(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.i(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private void setD(double value) {
-        leftMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.d(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-
-        rightMotor.configure(motor -> {
-            SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.d(value);
-            motor.configure(config, RESET_MODE, PERSIST_MODE);
-        });
-    }
-
-    private ClosedLoopConfigAccessor getPID(SparkMaxMotorBase motor) {
-        return motor.getConfiguration().closedLoop;
     }
 
     private void initSmartDashboard() {
@@ -279,14 +156,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addBooleanProperty("Is Intake Open?", isBayDoorOpen, null);
         builder.addBooleanProperty("Is Left Pressed", () -> leftMotor.isHomed(), null);
         builder.addBooleanProperty("Is Right Pressed", () -> rightMotor.isHomed(), null);
-        builder.addDoubleProperty("Motors/kS", () -> getFeedForward(leftMotor).getkS(), this::setkS);
-        builder.addDoubleProperty("Motors/kCos", () -> getFeedForward(leftMotor).getkCos(), this::setkCos);
-        builder.addDoubleProperty("Motors/kG", () -> getFeedForward(leftMotor).getkG(), this::setkG);
-        builder.addDoubleProperty("Motors/kV", () -> getFeedForward(leftMotor).getkV(), this::setkV);
-        builder.addDoubleProperty("Motors/kA", () -> getFeedForward(leftMotor).getkA(), this::setkA);
-        builder.addDoubleProperty("Motors/P", () -> getPID(leftMotor).getP(), this::setP);
-        builder.addDoubleProperty("Motors/I", () -> getPID(leftMotor).getI(), this::setI);
-        builder.addDoubleProperty("Motors/D", () -> getPID(leftMotor).getD(), this::setD);
     }
 
     public Command home() {

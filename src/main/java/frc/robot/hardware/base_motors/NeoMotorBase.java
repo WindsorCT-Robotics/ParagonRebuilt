@@ -22,7 +22,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
     protected static final Current DEFAULT_CURRENT = Amps.of(60);
 
     /**
-     * @param name
      * @param canId
      * @param configuration
      * @param resetMode     Don't reset safe parameters if intending to update
@@ -30,7 +29,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
      * @param persistMode
      */
     protected NeoMotorBase(
-            String name,
             CanId canId,
             SparkBaseConfig configuration,
             ResetMode resetMode,
@@ -38,7 +36,6 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
         super(
-                name,
                 canId,
                 configuration,
                 resetMode,

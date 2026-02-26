@@ -35,7 +35,6 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
     private final Consumer<Voltage> voltageSetter;
 
     public TalonFXMotorBase(
-            String name,
             CanId canId,
             TalonFXConfiguration configuration,
             Consumer<Dimensionless> dutyCycleSetter,

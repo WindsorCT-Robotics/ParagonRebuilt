@@ -28,7 +28,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new IntakeRollerMotor(name, motorCanId, this::setDutyCycle, this::setVoltage);
+        motor = new IntakeRollerMotor(motorCanId, this::setDutyCycle, this::setVoltage);
         addChild(motor.getClass().getName(), motor);
         // TODO: Consider customizing new Config(). Should be customized if motor has
         // physical limitations.

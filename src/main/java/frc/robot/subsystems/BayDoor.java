@@ -51,7 +51,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     // TODO: Configure these values.
     private static final FeedForwardConfig FEED_FORWARD_CONFIG = new FeedForwardConfig()
             .kS(0)
-            .kG(0)
+            .kCos(0)
             .kV(0) // TODO: What should kV be?
             .kA(0);
 
@@ -112,8 +112,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         // PersisMode without hard coding.
         leftMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig().inverted(INVERTED);
-            config.closedLoop.apply(CLOSED_LOOP_CONFIG);
             config.closedLoop.feedForward.apply(FEED_FORWARD_CONFIG);
+            config.closedLoop.apply(CLOSED_LOOP_CONFIG);
             config.closedLoop.maxMotion.apply(MAX_MOTION_CONFIG);
             config.softLimit.apply(SOFT_LIMIT_CONFIG);
 
@@ -124,8 +124,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         rightMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig().inverted(!INVERTED);
-            config.closedLoop.apply(CLOSED_LOOP_CONFIG);
             config.closedLoop.feedForward.apply(FEED_FORWARD_CONFIG);
+            config.closedLoop.apply(CLOSED_LOOP_CONFIG);
             config.closedLoop.maxMotion.apply(MAX_MOTION_CONFIG);
             config.softLimit.apply(SOFT_LIMIT_CONFIG);
 
@@ -158,6 +158,20 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         });
     }
 
+    private void setkCos(double value) {
+        leftMotor.configure(motor -> {
+            SparkBaseConfig config = new SparkMaxConfig();
+            config.closedLoop.feedForward.kCos(value);
+            motor.configure(config, RESET_MODE, PERSIST_MODE);
+        });
+
+        rightMotor.configure(motor -> {
+            SparkBaseConfig config = new SparkMaxConfig();
+            config.closedLoop.feedForward.kCos(value);
+            motor.configure(config, RESET_MODE, PERSIST_MODE);
+        });
+    }
+
     private void setkG(double value) {
         leftMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig();
@@ -175,13 +189,13 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private void setkV(double value) {
         leftMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
+            config.closedLoop.feedForward.kV(value);
             motor.configure(config, RESET_MODE, PERSIST_MODE);
         });
 
         rightMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig();
-            config.closedLoop.feedForward.kS(value);
+            config.closedLoop.feedForward.kV(value);
             motor.configure(config, RESET_MODE, PERSIST_MODE);
         });
     }
@@ -266,6 +280,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addBooleanProperty("Is Left Pressed", () -> leftMotor.isHomed(), null);
         builder.addBooleanProperty("Is Right Pressed", () -> rightMotor.isHomed(), null);
         builder.addDoubleProperty("Motors/kS", () -> getFeedForward(leftMotor).getkS(), this::setkS);
+        builder.addDoubleProperty("Motors/kCos", () -> getFeedForward(leftMotor).getkCos(), this::setkCos);
         builder.addDoubleProperty("Motors/kG", () -> getFeedForward(leftMotor).getkG(), this::setkG);
         builder.addDoubleProperty("Motors/kV", () -> getFeedForward(leftMotor).getkV(), this::setkV);
         builder.addDoubleProperty("Motors/kA", () -> getFeedForward(leftMotor).getkA(), this::setkA);

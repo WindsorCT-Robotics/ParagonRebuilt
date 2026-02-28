@@ -7,6 +7,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Value;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -18,6 +19,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -112,9 +114,9 @@ public class RobotContainer implements Sendable {
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
     // drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
 
-    driverLeftAxisX = () -> Percent.of(driver.getLeftX());
-    driverLeftAxisY = () -> Percent.of(driver.getLeftY());
-    driverRightAxisX = () -> Percent.of(driver.getRightX());
+    driverLeftAxisX = () -> Value.of(driver.getLeftX());
+    driverLeftAxisY = () -> Value.of(driver.getLeftY());
+    driverRightAxisX = () -> Value.of(driver.getRightX());
 
     initSmartDashboard();
   }
@@ -129,16 +131,25 @@ public class RobotContainer implements Sendable {
     SmartDashboard.putData("Controllers/Operator", operator.getHID());
     SmartDashboard.putData("Autonomous", autonomousChooser);
     SmartDashboard.putData(CommandScheduler.getInstance());
+    SmartDashboard.putData("Robot Container", this);
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
-
+    builder.addDoubleProperty("Curved Percent", () -> curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE).get().in(Percent),
+        null);
+    builder.addDoubleProperty("Percent", () -> driverLeftAxisX.get().in(Percent), null);
   }
 
   private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> Percent
-        .of(Math.abs(Math.pow(percent.get().in(Percent), exponent - 1)) * percent.get().times(-1).in(Percent) * 100);
+    return () -> {
+      double p = percent.get().in(Value);
+
+      return Value
+          .of(
+              Math.abs(
+                  Math.pow(p, exponent - 1)) * -p);
+    };
   }
 
   private RelativeReference getRelativeReference() {
@@ -164,22 +175,22 @@ public class RobotContainer implements Sendable {
 
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(
-            () -> Percent.of(
+            () -> Value.of(
                 MathUtil.applyDeadband(
-                    driverLeftAxisX.get().in(Percent),
-                    DEADBAND.in(Percent))),
+                    driverLeftAxisX.get().in(Value),
+                    DEADBAND.in(Value))),
             MOVE_ROBOT_CURVE),
         curveAxis(
-            () -> Percent.of(
+            () -> Value.of(
                 MathUtil.applyDeadband(
-                    driverLeftAxisY.get().in(Percent),
-                    DEADBAND.in(Percent))),
+                    driverLeftAxisY.get().in(Value),
+                    DEADBAND.in(Value))),
             MOVE_ROBOT_CURVE),
         curveAxis(
-            () -> Percent.of(
+            () -> Value.of(
                 MathUtil.applyDeadband(
-                    driverRightAxisX.get().in(Percent),
-                    DEADBAND.in(Percent))),
+                    driverRightAxisX.get().in(Value),
+                    DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
 

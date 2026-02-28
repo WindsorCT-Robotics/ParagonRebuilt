@@ -13,10 +13,12 @@ import java.util.function.Consumer;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkMaxConfigAccessor;
 
 import edu.wpi.first.units.measure.Angle;
@@ -50,6 +52,23 @@ public class SparkMaxMotorBase implements IClosedLoopMotor<SparkMax, SparkMaxCon
         this.dutyCycleSetter = dutyCycleSetter;
         this.voltageSetter = voltageSetter;
         this.name = name;
+    }
+
+    public void follow(int id, boolean invert) {
+        SparkBaseConfig config = new SparkMaxConfig().follow(id, invert);
+        motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    public void pauseFollower() {
+        motor.pauseFollowerMode();
+    }
+
+    public void resumeFollower() {
+        motor.resumeFollowerMode();
+    }
+
+    public int getId() {
+        return motor.getDeviceId();
     }
 
     @Override

@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.MAXMotionConfig;
@@ -47,20 +48,21 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private static final boolean INVERTED = true;
     // TODO: Configure these values.
     private static final FeedForwardConfig FEED_FORWARD_CONFIG = new FeedForwardConfig()
-            .kS(0)
+            .kS(0.3)
             .kCos(0)
-            .kV(0)
+            .kV(0.00025)
             .kA(0);
 
     private static final ClosedLoopConfig CLOSED_LOOP_CONFIG = new ClosedLoopConfig()
-            .p(0)
+            .p(1)
             .i(0)
-            .d(0);
+            .d(0)
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
     private static final MAXMotionConfig MAX_MOTION_CONFIG = new MAXMotionConfig()
-            .allowedProfileError(0)
-            .cruiseVelocity(0)
-            .maxAcceleration(0)
+            .allowedProfileError(1)
+            .cruiseVelocity(3000)
+            .maxAcceleration(1000)
             .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
     private static final SoftLimitConfig SOFT_LIMIT_CONFIG = new SoftLimitConfig()
             .forwardSoftLimit(OPEN_ANGLE.in(Rotations))
@@ -129,6 +131,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                     PERSIST_MODE);
         });
 
+        rightMotor.follow(leftMotor.getId(), true);
+
         atLeftCloseLimit = new Trigger(() -> leftHardLimit.get());
         atRightCloseLimit = new Trigger(() -> rightHardLimit.get());
         atLeftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE));
@@ -160,30 +164,27 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         return runEnd(
                 () -> {
                     leftMotor.home(HOME_DUTY_CYCLE);
-                    rightMotor.home(HOME_DUTY_CYCLE);
+                    rightMotor.homeAsFollower(HOME_DUTY_CYCLE);
                 }, () -> removeDefaultCommand()).until(isBayDoorClosed)
                 .handleInterrupt(() -> setDefaultCommand(home()));
     }
 
     public Command open() {
-        return runOnce(() -> {
+        return runEnd(() -> {
             leftMotor.setPointPosition(OPEN_ANGLE);
-            rightMotor.setPointPosition(OPEN_ANGLE);
-        });
+        }, this::stop);
     }
 
     public Command middle() {
-        return runOnce(() -> {
+        return runEnd(() -> {
             leftMotor.setPointPosition(OPEN_ANGLE.div(2));
-            rightMotor.setPointPosition(OPEN_ANGLE.div(2));
-        });
+        }, this::stop);
     }
 
     public Command close() {
-        return runOnce(() -> {
+        return runEnd(() -> {
             leftMotor.setPointPosition(CLOSE_ANGLE);
-            rightMotor.setPointPosition(CLOSE_ANGLE);
-        });
+        }, this::home).until(isBayDoorClosed);
     }
 
     // region SysId

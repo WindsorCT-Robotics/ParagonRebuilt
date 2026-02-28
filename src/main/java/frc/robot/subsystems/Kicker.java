@@ -33,15 +33,15 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
     private final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
-            .withMotionMagicExpo_kV(null)
-            .withMotionMagicExpo_kA(null);
+            .withMotionMagicExpo_kV(0.12)
+            .withMotionMagicExpo_kA(0.1);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
             .withKP(0)
             .withKI(0)
             .withKD(0)
-            .withKS(0)
-            .withKV(0)
-            .withKA(0)
+            .withKS(0.25)
+            .withKV(0.1225)
+            .withKA(300)
             .withKG(0)
             .withGravityType(GravityTypeValue.Elevator_Static);
 

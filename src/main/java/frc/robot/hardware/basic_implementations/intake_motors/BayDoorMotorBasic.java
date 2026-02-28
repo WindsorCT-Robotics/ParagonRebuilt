@@ -75,4 +75,17 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
             homingComplete = true;
         }
     }
+
+    public void homeAsFollower(Dimensionless dutyCycle) {
+        if (!limit.get()) {
+            pauseFollower();
+            setDutyCycle(dutyCycle);
+        } else {
+            stop();
+            resetRelativeEncoder();
+            setBayMotorState(BayDoorState.CLOSE);
+            resumeFollower();
+            homingComplete = true;
+        }
+    }
 }

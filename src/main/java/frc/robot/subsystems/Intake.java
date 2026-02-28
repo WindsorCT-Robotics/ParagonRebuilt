@@ -36,18 +36,18 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     // TODO: Configure these values.
     private static final FeedForwardConfig FEED_FORWARD_CONFIG = new FeedForwardConfig()
             .kS(0)
-            .kV(0)
+            .kV(0.0026)
             .kA(0);
 
     private static final ClosedLoopConfig CLOSED_LOOP_CONFIG = new ClosedLoopConfig()
-            .p(0)
-            .i(0)
+            .p(0.0001)
+            .i(0.001)
             .d(0);
 
     private static final MAXMotionConfig MAX_MOTION_CONFIG = new MAXMotionConfig()
             .allowedProfileError(0)
             .cruiseVelocity(0)
-            .maxAcceleration(0)
+            .maxAcceleration(8000)
             .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
 
     private static final ResetMode RESET_MODE = ResetMode.kNoResetSafeParameters;

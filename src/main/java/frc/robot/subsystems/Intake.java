@@ -54,8 +54,8 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
 
     // TODO: Determine RPS.
-    private static final AngularVelocity INTAKE_FUEL_VELOCITY = RotationsPerSecond.of(0);
-    private static final AngularVelocity SHUTTLE_FUEL_VELOCITY = RotationsPerSecond.of(0);
+    private AngularVelocity intakeVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(0);
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
@@ -82,11 +82,13 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     public Command intakeFuel() {
-        return runOnce(() -> motor.setPointVelocity(INTAKE_FUEL_VELOCITY)).withName(getSubsystem() + "/intakeFuel");
+        return runOnce(() -> motor.setPointVelocity(getIntakeTargetVelocity()))
+                .withName(getSubsystem() + "/intakeFuel");
     }
 
     public Command shuttleFuel() {
-        return runOnce(() -> motor.setPointVelocity(SHUTTLE_FUEL_VELOCITY)).withName(getSubsystem() + "/shuttleFuel");
+        return runOnce(() -> motor.setPointVelocity(getShuttleTargetVelocity()))
+                .withName(getSubsystem() + "/shuttleFuel");
     }
 
     public Command stopIntake() {
@@ -98,9 +100,29 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
     }
 
+    private AngularVelocity getIntakeTargetVelocity() {
+        return intakeVelocity;
+    }
+
+    private void setIntakeTargetVelocity(double RPS) {
+        intakeVelocity = RotationsPerSecond.of(RPS);
+    }
+
+    private AngularVelocity getShuttleTargetVelocity() {
+        return shuttleVelocity;
+    }
+
+    private void setShuttleTargetVelocity(double RPS) {
+        shuttleVelocity = RotationsPerSecond.of(RPS);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Intake Target Velocity", () -> getIntakeTargetVelocity().in(RotationsPerSecond),
+                this::setIntakeTargetVelocity);
+        builder.addDoubleProperty("Shuttle Target Velocity", () -> getShuttleTargetVelocity().in(RotationsPerSecond),
+                this::setShuttleTargetVelocity);
     }
 
     // region SysId

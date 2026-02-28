@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -33,8 +34,11 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private final SysIdRoutine routine;
     private static final boolean INVERTED = true;
 
+    private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity retreatVelocity = RotationsPerSecond.of(0);
+
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(KICK_FUEL_VELOCITY)
+            .withMotionMagicCruiseVelocity(0)
             .withMotionMagicExpo_kV(null)
             .withMotionMagicExpo_kA(null);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
@@ -47,10 +51,6 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
             .withKG(0)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
-    // TODO: Determine RPS.
-    private static final AngularVelocity SHOOT_VELOCITY = RotationsPerSecond.of(0);
-    private static final AngularVelocity RETREAT_VELOCITY = RotationsPerSecond.of(0);
-
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
         leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId, this::setDutyCycle, this::setVoltage);
@@ -58,8 +58,11 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                 this::setVoltage);
 
         leadMotor.configure(motor -> {
-            motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(
+            TalonFXConfigurator configurator = motor.getConfigurator();
+            configurator.apply(new MotorOutputConfigs().withInverted(
                     (INVERTED) ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive));
+            configurator.apply(MOTION_MAGIC_CONFIGS);
+            configurator.apply(SLOT0_CONFIGS);
         });
 
         followerMotor.follow(leftMotorId.Id(), MotorAlignmentValue.Opposed);
@@ -76,11 +79,11 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     }
 
     public Command shootFuel() {
-        return runOnce(() -> leadMotor.setPointVelocity(SHOOT_VELOCITY));
+        return runEnd(() -> leadMotor.setPointVelocity(getShootTargetVelocity()), () -> stop());
     }
 
     public Command retreatFuel() {
-        return runOnce(() -> leadMotor.setPointVelocity(RETREAT_VELOCITY));
+        return runEnd(() -> leadMotor.setPointVelocity(getRetreatTargetVelocity()), () -> stop());
     }
 
     private void initSmartDashboard() {
@@ -89,9 +92,31 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
     }
 
+    private AngularVelocity getShootTargetVelocity() {
+        return shootVelocity;
+    }
+
+    private void setShootTargetVelocity(double RPS) {
+        shootVelocity = RotationsPerSecond.of(RPS);
+    }
+
+    private AngularVelocity getRetreatTargetVelocity() {
+        return retreatVelocity;
+    }
+
+    private void setRetreatTargetVelocity(double RPS) {
+        retreatVelocity = RotationsPerSecond.of(RPS);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Motor Shoot Velocity (RPS)",
+                () -> getShootTargetVelocity().in(RotationsPerSecond),
+                this::setShootTargetVelocity);
+        builder.addDoubleProperty("Motor Retreat Velocity (RPS)",
+                () -> getRetreatTargetVelocity().in(RotationsPerSecond),
+                this::setRetreatTargetVelocity);
     }
 
     private void stop() {

@@ -2,14 +2,12 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -32,9 +30,9 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     private final KickerMotor motor;
     private final SysIdRoutine routine;
     // TODO: Determine RPS.
-    private static final AngularVelocity KICK_FUEL_VELOCITY = RotationsPerSecond.of(0);
-    private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(KICK_FUEL_VELOCITY)
+    private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
+    private final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(0)
             .withMotionMagicExpo_kV(null)
             .withMotionMagicExpo_kA(null);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
@@ -55,6 +53,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
             TalonFXConfigurator configurator = motor.getConfigurator();
             configurator.apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
             configurator.apply(MOTION_MAGIC_CONFIGS);
+            configurator.apply(SLOT0_CONFIGS);
         });
 
         addChild(motor.getClass().getName(), motor);
@@ -66,7 +65,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     }
 
     public Command kickStartFuel() {
-        return runOnce(() -> motor.setPointVelocity(KICK_FUEL_VELOCITY));
+        return runEnd(() -> motor.setPointVelocity(getTargetVelocity()), () -> motor.stop());
     }
 
     private void initSmartDashboard() {
@@ -74,9 +73,19 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
     }
 
+    private AngularVelocity getTargetVelocity() {
+        return kickVelocity;
+    }
+
+    private void setTargetVelocity(double RPS) {
+        kickVelocity = RotationsPerSecond.of(RPS);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Motor Velocity (RPS)", () -> getTargetVelocity().in(RotationsPerSecond),
+                this::setTargetVelocity);
     }
 
     // region SysId

@@ -3,8 +3,11 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -28,12 +31,13 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
 
     private final SysIdRoutine routine;
 
+    private static final boolean INVERTED = false;
     // TODO: Determine RPS.
-    private static final AngularVelocity INDEX_VELOCITY = RotationsPerSecond.of(0);
-    private static final AngularVelocity SHUTTLE_VELOCITY = RotationsPerSecond.of(0);
+    private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(0);
 
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(KICK_FUEL_VELOCITY)
+            .withMotionMagicCruiseVelocity(0)
             .withMotionMagicExpo_kV(null)
             .withMotionMagicExpo_kA(null);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
@@ -51,6 +55,14 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             CanId motorCanId) {
         super("Subsystems/" + name);
         motor = new SpindexterMotor("Motor", motorCanId, this::setDutyCycle, this::setVoltage);
+
+        motor.configure(motor -> {
+            TalonFXConfigurator configurator = motor.getConfigurator();
+            configurator.apply(new MotorOutputConfigs().withInverted(
+                    (INVERTED) ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive));
+            configurator.apply(SLOT0_CONFIGS);
+            configurator.apply(MOTION_MAGIC_CONFIGS);
+        });
         addChild(this.getName(), motor);
 
         routine = new SysIdRoutine(new Config(),
@@ -58,24 +70,42 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         initSmartDashboard();
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command indexFuel() {
-        return runOnce(() -> motor.setPointVelocity(INDEX_VELOCITY));
+        return runOnce(() -> motor.setPointVelocity(getIndexTargetVelocity()));
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
-    public Command releaseFuel() {
-        return runOnce(() -> motor.setPointVelocity(SHUTTLE_VELOCITY));
+    public Command shuttleFuel() {
+        return runOnce(() -> motor.setPointVelocity(getShuttleTargetVelocity()));
     }
 
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/" + motor.getClass().getSimpleName(), motor);
+        SmartDashboard.putData(getName() + "/" + motor.getSmartDashboardName(), motor);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
+        builder.addDoubleProperty("Indexing Target Velocity", () -> getIndexTargetVelocity().in(RotationsPerSecond),
+                this::setIndexTargetVelocity);
+        builder.addDoubleProperty("Releasing Target Velocity", () -> getShuttleTargetVelocity().in(RotationsPerSecond),
+                this::setShuttleTargetVelocity);
+    }
+
+    private AngularVelocity getIndexTargetVelocity() {
+        return indexVelocity;
+    }
+
+    private void setIndexTargetVelocity(double RPS) {
+        indexVelocity = RotationsPerSecond.of(RPS);
+    }
+
+    private AngularVelocity getShuttleTargetVelocity() {
+        return shuttleVelocity;
+    }
+
+    private void setShuttleTargetVelocity(double RPS) {
+        shuttleVelocity = RotationsPerSecond.of(RPS);
     }
 
     // region SysId

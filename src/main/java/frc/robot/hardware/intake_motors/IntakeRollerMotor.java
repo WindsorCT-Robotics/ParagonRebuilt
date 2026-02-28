@@ -16,13 +16,17 @@ import frc.robot.hardware.base_motors.NeoMotorBase;
 
 public class IntakeRollerMotor extends NeoMotorBase {
         public IntakeRollerMotor(
+                        String name,
                         CanId canId,
                         Consumer<Dimensionless> dutyCycleSetter,
                         Consumer<Voltage> voltageSetter) {
                 super(
+                                name,
                                 canId,
-                                new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
-                                                (int) DEFAULT_CURRENT.in(Amps)),
+                                new SparkMaxConfig()
+                                                .idleMode(IdleMode.kBrake)
+                                                .inverted(false)
+                                                .smartCurrentLimit((int) DEFAULT_CURRENT.in(Amps)),
                                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
                                 dutyCycleSetter,
                                 voltageSetter);

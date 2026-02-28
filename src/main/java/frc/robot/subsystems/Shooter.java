@@ -1,10 +1,15 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -22,46 +27,66 @@ import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
 
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
-    private final ShooterMotorBasic leftMotor;
-    private final ShooterMotorBasic rightMotor;
+    private final ShooterMotorBasic leadMotor;
+    private final ShooterMotorBasic followerMotor;
 
-    // SysId Routines.
     private final SysIdRoutine routine;
-    private static final boolean INVERTED = false;
-    private static final Dimensionless DEFAULT_DUTY_CYCLE = Percent.of(10);
+    private static final boolean INVERTED = true;
+
+    private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(KICK_FUEL_VELOCITY)
+            .withMotionMagicExpo_kV(null)
+            .withMotionMagicExpo_kA(null);
+    private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
+            .withKP(0)
+            .withKI(0)
+            .withKD(0)
+            .withKS(0)
+            .withKV(0)
+            .withKA(0)
+            .withKG(0)
+            .withGravityType(GravityTypeValue.Elevator_Static);
+
+    // TODO: Determine RPS.
+    private static final AngularVelocity SHOOT_VELOCITY = RotationsPerSecond.of(0);
+    private static final AngularVelocity RETREAT_VELOCITY = RotationsPerSecond.of(0);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leftMotor = new ShooterMotorBasic(leftMotorId, this::setDutyCycle, this::setVoltage);
-        rightMotor = new ShooterMotorBasic(rightMotorId, this::setDutyCycle, this::setVoltage);
+        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId, this::setDutyCycle, this::setVoltage);
+        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId, this::setDutyCycle,
+                this::setVoltage);
 
-        setInverted(leftMotor, INVERTED);
-        setInverted(rightMotor, !INVERTED);
+        leadMotor.configure(motor -> {
+            motor.getConfigurator().apply(new MotorOutputConfigs().withInverted(
+                    (INVERTED) ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive));
+        });
 
-        addChild(this.getName(), leftMotor);
-        addChild(this.getName(), rightMotor);
-        // TODO: Consider customizing new Config(). Should be customized if motor has
-        // physical limitations.
+        followerMotor.follow(leftMotorId.Id(), MotorAlignmentValue.Opposed);
+
+        addChild(getName(), leadMotor);
+        addChild(getName(), followerMotor);
+
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setSysIdVoltage, log -> {
-            log(log, leftMotor, "Left Shooter Motor");
-            log(log, rightMotor, "Right Shooter Motor");
+            log(log, leadMotor, "Left Shooter Motor");
+            log(log, followerMotor, "Right Shooter Motor");
         }, this));
+
         initSmartDashboard();
     }
 
-    // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command shootFuel() {
-        return runEnd(() -> {
-            leftMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
-            rightMotor.setDutyCycle(DEFAULT_DUTY_CYCLE);
-        }, this::stop);
+        return runOnce(() -> leadMotor.setPointVelocity(SHOOT_VELOCITY));
+    }
+
+    public Command retreatFuel() {
+        return runOnce(() -> leadMotor.setPointVelocity(RETREAT_VELOCITY));
     }
 
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/Left " + leftMotor.getClass().getSimpleName(), leftMotor);
-        SmartDashboard.putData(getName() + "/Right " + rightMotor.getClass().getSimpleName(),
-                rightMotor);
+        SmartDashboard.putData(getName() + "/" + leadMotor.getSmartDashboardName(), leadMotor);
+        SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
     }
 
     @Override
@@ -69,30 +94,13 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         super.initSendable(builder);
     }
 
-    private void setInverted(ShooterMotorBasic motor, boolean isInverted) {
-        motor.configure(nativeMotor -> {
-            TalonFXConfiguration config = new TalonFXConfiguration();
-
-            // TODO: What does refresh do? AI says that it prevents overwritting the
-            // configuration. Maybe this helps:
-            // https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/api-usage/status-signals.html
-            nativeMotor.getConfigurator().refresh(config.MotorOutput);
-
-            config.MotorOutput.Inverted = isInverted ? InvertedValue.Clockwise_Positive
-                    : InvertedValue.CounterClockwise_Positive;
-
-            nativeMotor.getConfigurator().apply(config);
-        });
-    }
-
     private void stop() {
-        leftMotor.stop();
-        rightMotor.stop();
+        leadMotor.stop();
     }
 
+    // region SysId
     private void setSysIdVoltage(Voltage voltage) {
-        leftMotor.setVoltage(voltage);
-        rightMotor.setVoltage(voltage);
+        leadMotor.setVoltage(voltage);
     }
 
     private void setVoltage(Voltage voltage) {
@@ -101,8 +109,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     public Command overrideMotorVoltage(Voltage voltage) {
         return runEnd(() -> {
-            leftMotor.setVoltage(voltage);
-            rightMotor.setVoltage(voltage);
+            leadMotor.setVoltage(voltage);
         }, this::stop);
     }
 
@@ -112,8 +119,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
         return runEnd(() -> {
-            leftMotor.setDutyCycle(dutyCycle);
-            rightMotor.setDutyCycle(dutyCycle);
+            leadMotor.setDutyCycle(dutyCycle);
         }, this::stop).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
@@ -131,4 +137,5 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     public Command sysIdQuasistatic(Direction direction) {
         return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
+    // endregion
 }

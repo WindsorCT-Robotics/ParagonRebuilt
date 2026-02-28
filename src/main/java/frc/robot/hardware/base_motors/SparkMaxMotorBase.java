@@ -27,19 +27,18 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.tuners.SparkMaxTuner;
 import frc.robot.interfaces.IClosedLoopMotor;
 
 public class SparkMaxMotorBase implements IClosedLoopMotor<SparkMax, SparkMaxConfigAccessor>, Sendable {
     protected final SparkMax motor;
-    private final SparkMaxTuner motorTuner;
 
+    private final String name;
     private final Consumer<Dimensionless> dutyCycleSetter;
     private final Consumer<Voltage> voltageSetter;
 
     protected SparkMaxMotorBase(
+            String name,
             CanId canId,
             SparkBaseConfig configuration,
             ResetMode resetMode,
@@ -48,14 +47,14 @@ public class SparkMaxMotorBase implements IClosedLoopMotor<SparkMax, SparkMaxCon
             Consumer<Voltage> voltageSetter) {
         motor = new SparkMax(canId.Id(), MotorType.kBrushless);
         motor.configure(configuration, resetMode, persistMode);
-        motorTuner = new SparkMaxTuner(motor, resetMode, persistMode);
         this.dutyCycleSetter = dutyCycleSetter;
         this.voltageSetter = voltageSetter;
-        initSmartDashboard();
+        this.name = name;
     }
 
-    private void initSmartDashboard() {
-        SmartDashboard.putData("Motor Tuner", motorTuner);
+    @Override
+    public String getSmartDashboardName() {
+        return name;
     }
 
     @Override

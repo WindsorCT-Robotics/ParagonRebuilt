@@ -12,9 +12,12 @@ import java.util.function.Consumer;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -29,12 +32,14 @@ import frc.robot.interfaces.IClosedLoopMotor;
 
 public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfiguration>, Sendable {
     protected final TalonFX motor;
+    private final String name;
     private final TalonFXConfigurator configurator;
     private final TalonFXConfiguration configuration;
     private final Consumer<Dimensionless> dutyCycleSetter;
     private final Consumer<Voltage> voltageSetter;
 
     public TalonFXMotorBase(
+            String name,
             CanId canId,
             TalonFXConfiguration configuration,
             Consumer<Dimensionless> dutyCycleSetter,
@@ -45,6 +50,20 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
         configurator.apply(configuration);
         this.dutyCycleSetter = dutyCycleSetter;
         this.voltageSetter = voltageSetter;
+        this.name = name;
+    }
+
+    public void follow(int Id, MotorAlignmentValue alignment) {
+        motor.setControl(new Follower(Id, alignment));
+    }
+
+    public void followAndIgnoreInversion(int Id) {
+        motor.setControl(new StrictFollower(Id));
+    }
+
+    @Override
+    public String getSmartDashboardName() {
+        return name;
     }
 
     @Override

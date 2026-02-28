@@ -26,11 +26,14 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
 
     public BayDoorMotorBasic(
+            String name,
             CanId canId,
             DigitalInput limit,
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
-        super(canId,
+        super(
+                name,
+                canId,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
                         (int) DEFAULT_CURRENT.in(Amps)),
                 // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring

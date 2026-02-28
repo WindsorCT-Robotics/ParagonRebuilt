@@ -8,7 +8,6 @@ import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class BayDoorKraken extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
-
     public BayDoorKraken() {
 
     }

@@ -15,10 +15,12 @@ import frc.robot.hardware.base_motors.KrakenMotorBase;
 
 public class ShooterMotorBasic extends KrakenMotorBase {
         public ShooterMotorBasic(
+                        String name,
                         CanId canId,
                         Consumer<Dimensionless> dutyCycleSetter,
                         Consumer<Voltage> voltageSetter) {
                 super(
+                                name,
                                 canId,
                                 new TalonFXConfiguration().withMotorOutput(new MotorOutputConfigs()
                                                 .withNeutralMode(NeutralModeValue.Brake)

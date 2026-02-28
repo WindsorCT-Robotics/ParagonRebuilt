@@ -29,6 +29,7 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
      * @param persistMode
      */
     protected NeoMotorBase(
+            String name,
             CanId canId,
             SparkBaseConfig configuration,
             ResetMode resetMode,
@@ -36,6 +37,7 @@ public abstract class NeoMotorBase extends SparkMaxMotorBase {
             Consumer<Dimensionless> dutyCycleSetter,
             Consumer<Voltage> voltageSetter) {
         super(
+                name,
                 canId,
                 configuration,
                 resetMode,

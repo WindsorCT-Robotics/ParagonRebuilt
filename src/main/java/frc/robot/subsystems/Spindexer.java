@@ -1,7 +1,12 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -9,7 +14,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -22,19 +26,33 @@ import frc.robot.interfaces.ISystemDynamics;
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
 
-    // SysId Routines.
     private final SysIdRoutine routine;
 
-    private static final Dimensionless INDEX_DUTY_CYCLE = Percent.of(100);
+    // TODO: Determine RPS.
+    private static final AngularVelocity INDEX_VELOCITY = RotationsPerSecond.of(0);
+    private static final AngularVelocity SHUTTLE_VELOCITY = RotationsPerSecond.of(0);
+
+    private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(KICK_FUEL_VELOCITY)
+            .withMotionMagicExpo_kV(null)
+            .withMotionMagicExpo_kA(null);
+    private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
+            .withKP(0)
+            .withKI(0)
+            .withKD(0)
+            .withKS(0)
+            .withKV(0)
+            .withKA(0)
+            .withKG(0)
+            .withGravityType(GravityTypeValue.Elevator_Static);
 
     public Spindexer(
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor(motorCanId, this::setDutyCycle, this::setVoltage);
+        motor = new SpindexterMotor("Motor", motorCanId, this::setDutyCycle, this::setVoltage);
         addChild(this.getName(), motor);
-        // TODO: Consider customizing new Config(). Should be customized if motor has
-        // physical limitations.
+
         routine = new SysIdRoutine(new Config(),
                 new Mechanism(this::setSysIdVoltage, log -> log(log, motor, "Spindexer Motor"), this));
         initSmartDashboard();
@@ -42,12 +60,12 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command indexFuel() {
-        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE), () -> motor.stop());
+        return runOnce(() -> motor.setPointVelocity(INDEX_VELOCITY));
     }
 
     // TODO: Make this a target Rotation Per Second instead of a duty cycle
     public Command releaseFuel() {
-        return Commands.runEnd(() -> motor.setDutyCycle(INDEX_DUTY_CYCLE.times(-1)), () -> motor.stop());
+        return runOnce(() -> motor.setPointVelocity(SHUTTLE_VELOCITY));
     }
 
     private void initSmartDashboard() {
@@ -60,6 +78,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         super.initSendable(builder);
     }
 
+    // region SysId
     private void setVoltage(Voltage voltage) {
         CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
     }
@@ -98,4 +117,5 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     public Command sysIdQuasistatic(Direction direction) {
         return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
     }
+    // endregion
 }

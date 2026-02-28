@@ -49,7 +49,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private static final FeedForwardConfig FEED_FORWARD_CONFIG = new FeedForwardConfig()
             .kS(0)
             .kCos(0)
-            .kV(0) // TODO: What should kV be?
+            .kV(0)
             .kA(0);
 
     private static final ClosedLoopConfig CLOSED_LOOP_CONFIG = new ClosedLoopConfig()
@@ -90,9 +90,9 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-        leftMotor = new BayDoorMotorBasic(leftMotorId, leftHardLimit, this::setDutyCycle,
+        leftMotor = new BayDoorMotorBasic("Left Motor", leftMotorId, leftHardLimit, this::setDutyCycle,
                 this::setVoltage);
-        rightMotor = new BayDoorMotorBasic(rightMotorId, rightHardLimit, this::setDutyCycle,
+        rightMotor = new BayDoorMotorBasic("Right Motor", rightMotorId, rightHardLimit, this::setDutyCycle,
                 this::setVoltage);
 
         routine = new SysIdRoutine(
@@ -105,8 +105,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                     log(log, rightMotor, "Right Motor");
                 }, this));
 
-        // TODO: Be able to apply configuration and keep the same ResetMode and
-        // PersisMode without hard coding.
         leftMotor.configure(motor -> {
             SparkBaseConfig config = new SparkMaxConfig().inverted(INVERTED);
             config.closedLoop.feedForward.apply(FEED_FORWARD_CONFIG);
@@ -143,10 +141,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/Left Bay Door Limit Switch", leftHardLimit);
-        SmartDashboard.putData(getName() + "/Right Bay Door Limit Switch", rightHardLimit);
-        SmartDashboard.putData(getName() + "/Left ", leftMotor);
-        SmartDashboard.putData(getName() + "/Right ", rightMotor);
+        SmartDashboard.putData(getName() + "/Left Limit Switch", leftHardLimit);
+        SmartDashboard.putData(getName() + "/Right Limit Switch", rightHardLimit);
+        SmartDashboard.putData(getName() + "/" + leftMotor.getSmartDashboardName(), leftMotor);
+        SmartDashboard.putData(getName() + "/" + rightMotor.getSmartDashboardName(), rightMotor);
     }
 
     @Override
@@ -188,6 +186,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         });
     }
 
+    // region SysId
     @Override
     public void log(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
         log.motor(
@@ -238,4 +237,5 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             rightMotor.setVoltage(voltage);
         }, this::stop).withName(getSubsystem() + "/overrideMotorVoltage");
     }
+    // endregion
 }

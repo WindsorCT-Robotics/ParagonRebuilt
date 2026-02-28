@@ -15,6 +15,7 @@ import org.json.simple.parser.ParseException;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
@@ -64,21 +65,19 @@ public class RobotContainer implements Sendable {
 
   private final CommandXboxController driver;
   private final CommandXboxController operator;
-  private Dimensionless maxDriverLeftJoyStickSpeedX = Percent.of(100);
-  private Dimensionless maxDriverLeftJoyStickSpeedY = Percent.of(100);
-  private Dimensionless maxDriverRightJoyStickSpeedX = Percent.of(100);
   private static final Dimensionless REDUCE_SPEED = Percent.of(75);
   private static final Dimensionless TRIGGER_THRESHOLD = Percent.of(10);
   private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
-  private final Supplier<Dimensionless> driverLeftAxisX;
-  private final Supplier<Dimensionless> driverLeftAxisY;
-  private final Supplier<Dimensionless> driverRightAxisX;
 
+  private static final Dimensionless DEADBAND = Percent.of(5);
   private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
   private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
+  private final Supplier<Dimensionless> driverLeftAxisX;
+  private final Supplier<Dimensionless> driverLeftAxisY;
+  private final Supplier<Dimensionless> driverRightAxisX;
 
   public RobotContainer() {
     try {
@@ -106,18 +105,16 @@ public class RobotContainer implements Sendable {
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
-    driverLeftAxisX = () -> Percent.of(driver.getLeftX())
-        .times(maxDriverLeftJoyStickSpeedX);
-    driverLeftAxisY = () -> Percent.of(driver.getLeftY())
-        .times(maxDriverLeftJoyStickSpeedY);
-    driverRightAxisX = () -> Percent.of(driver.getRightX());
-
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
     // drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
+
+    driverLeftAxisX = () -> Percent.of(driver.getLeftX());
+    driverLeftAxisY = () -> Percent.of(driver.getLeftY());
+    driverRightAxisX = () -> Percent.of(driver.getRightX());
 
     initSmartDashboard();
   }
@@ -148,10 +145,6 @@ public class RobotContainer implements Sendable {
     return relativeReference;
   }
 
-  private Dimensionless getBoundsOfAxis(Dimensionless percent, Dimensionless bounds) {
-    return percent.times(bounds);
-  }
-
   private void configureControllerBindings() {
     bindDrive();
     bindBayDoor();
@@ -168,10 +161,26 @@ public class RobotContainer implements Sendable {
   }
 
   private void bindDrive() {
+
     drive.setDefaultCommand(drive.moveWithPercentages(
-        curveAxis(() -> getBoundsOfAxis(driverLeftAxisX.get(), maxDriverLeftJoyStickSpeedX), MOVE_ROBOT_CURVE),
-        curveAxis(() -> getBoundsOfAxis(driverLeftAxisY.get(), maxDriverLeftJoyStickSpeedY), MOVE_ROBOT_CURVE),
-        curveAxis(() -> getBoundsOfAxis(driverRightAxisX.get(), maxDriverRightJoyStickSpeedX), TURN_ROBOT_CURVE),
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverLeftAxisX.get().in(Percent),
+                    DEADBAND.in(Percent))),
+            MOVE_ROBOT_CURVE),
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverLeftAxisY.get().in(Percent),
+                    DEADBAND.in(Percent))),
+            MOVE_ROBOT_CURVE),
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverRightAxisX.get().in(Percent),
+                    DEADBAND.in(Percent))),
+            TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
     driver.b().onTrue(Commands.runOnce(() -> {
@@ -184,23 +193,41 @@ public class RobotContainer implements Sendable {
       SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
 
-    driver.rightBumper().whileTrue(Commands.runEnd(() -> {
-      maxDriverLeftJoyStickSpeedX = REDUCE_SPEED;
-      maxDriverLeftJoyStickSpeedY = REDUCE_SPEED;
-    }, () -> {
-      maxDriverLeftJoyStickSpeedX = Percent.of(100);
-      maxDriverLeftJoyStickSpeedY = Percent.of(100);
-    }));
+    driver.rightBumper().whileTrue(drive.moveWithPercentages(
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverLeftAxisX.get().in(Percent),
+                    DEADBAND.in(Percent)))
+                .times(REDUCE_SPEED),
+            MOVE_ROBOT_CURVE),
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverLeftAxisY.get().in(Percent),
+                    DEADBAND.in(Percent)))
+                .times(REDUCE_SPEED),
+            MOVE_ROBOT_CURVE),
+        curveAxis(
+            () -> Percent.of(
+                MathUtil.applyDeadband(
+                    driverRightAxisX.get().in(Percent),
+                    DEADBAND.in(Percent))),
+            TURN_ROBOT_CURVE),
+        this::getRelativeReference));
 
-    driver.rightTrigger(TRIGGER_THRESHOLD.in(Percent)).whileTrue(Commands.runEnd(
-        () -> {
-          Dimensionless limit = Percent.of(100).minus(Percent.of(driver.getRightTriggerAxis()));
-          maxDriverLeftJoyStickSpeedX = limit;
-          maxDriverLeftJoyStickSpeedY = limit;
-        }, () -> {
-          maxDriverLeftJoyStickSpeedX = Percent.of(100);
-          maxDriverLeftJoyStickSpeedY = Percent.of(100);
-        }));
+    // TODO: Make it so that when true the robot can go in only 4 cardinal
+    // directions.
+    // driver.rightTrigger(TRIGGER_THRESHOLD.in(Percent)).whileTrue(Commands.runEnd(
+    // () -> {
+    // Dimensionless limit =
+    // Percent.of(100).minus(Percent.of(driver.getRightTriggerAxis()));
+    // maxDriverLeftJoyStickSpeedX = limit;
+    // maxDriverLeftJoyStickSpeedY = limit;
+    // }, () -> {
+    // maxDriverLeftJoyStickSpeedX = Percent.of(100);
+    // maxDriverLeftJoyStickSpeedY = Percent.of(100);
+    // }));
 
     driver.y().toggleOnTrue(
         drive.angleToOutpost(

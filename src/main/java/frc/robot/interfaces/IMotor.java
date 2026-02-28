@@ -36,4 +36,6 @@ public interface IMotor<Motor, Config> {
     public Current getCurrent();
 
     public Config getConfiguration();
+
+    public String getSmartDashboardName();
 }

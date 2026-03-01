@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -33,6 +34,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
     private final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
             .withMotionMagicExpo_kV(0.12)
             .withMotionMagicExpo_kA(0.1);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()

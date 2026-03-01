@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -31,13 +32,14 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
 
     private final SysIdRoutine routine;
 
-    private static final boolean INVERTED = false;
+    private static final boolean INVERTED = true;
     // TODO: Determine RPS.
     private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
     private AngularVelocity shuttleVelocity = RotationsPerSecond.of(0);
 
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
             .withMotionMagicExpo_kV(0.12)
             .withMotionMagicExpo_kA(0.1);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
@@ -71,11 +73,11 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     public Command indexFuel() {
-        return runOnce(() -> motor.setPointVelocity(getIndexTargetVelocity()));
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
     }
 
     public Command shuttleFuel() {
-        return runOnce(() -> motor.setPointVelocity(getShuttleTargetVelocity()));
+        return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), () -> motor.stop());
     }
 
     private void initSmartDashboard() {

@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
+import frc.robot.hardware.basic_implementations.intake_motors.BayDoorState;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
@@ -42,8 +43,9 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
 
-    private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
-    private static final Angle OPEN_ANGLE = Rotations.of(21.5);
+    private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.3);
+    private static final Dimensionless DUTY_CYCLE = Percent.of(0.5);
+    private static final Angle OPEN_ANGLE = Rotations.of(20);
     private static final Angle CLOSE_ANGLE = Rotations.of(0);
     private static final boolean INVERTED = true;
     // TODO: Configure these values.
@@ -74,13 +76,18 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     public final Trigger atLeftCloseLimit;
     public final Trigger atRightCloseLimit;
+    public final Trigger atLeftSoftCloseLimit;
+    public final Trigger atRightSoftCloseLimit;
     public final Trigger atLeftOpenLimit;
     public final Trigger atRightOpenLimit;
     public final Trigger isBayDoorClosed;
+    public final Trigger isBayDoorSoftClosed;
     public final Trigger isBayDoorOpen;
 
     private static final ResetMode RESET_MODE = ResetMode.kNoResetSafeParameters;
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
+
+    private static final Angle TOLERANCE = Rotations.of(1);
 
     public BayDoor(
             String name,
@@ -131,13 +138,16 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                     PERSIST_MODE);
         });
 
-        rightMotor.follow(leftMotor.getId(), true);
+        // rightMotor.follow(leftMotor.getId(), true);
 
         atLeftCloseLimit = new Trigger(() -> leftHardLimit.get());
         atRightCloseLimit = new Trigger(() -> rightHardLimit.get());
+        atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().isEquivalent(CLOSE_ANGLE));
+        atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().isEquivalent(CLOSE_ANGLE));
         atLeftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE));
         atRightOpenLimit = new Trigger(() -> rightMotor.getAngle().gte(OPEN_ANGLE));
         isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
+        isBayDoorSoftClosed = new Trigger(atLeftSoftCloseLimit.and(atRightSoftCloseLimit));
         isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightOpenLimit));
 
         initSmartDashboard();
@@ -160,31 +170,50 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addBooleanProperty("Is Right Pressed", () -> rightMotor.isHomed(), null);
     }
 
+    private void moveTowards(BayDoorMotorBasic motor, Dimensionless percent, Angle goalAngle, Angle currentAngle) {
+        if (currentAngle.lte(goalAngle))
+            motor.setDutyCycle(percent);
+            motor.setBayMotorState(BayDoorState.OPENING);
+        if (currentAngle.gt(goalAngle))
+            motor.setDutyCycle(percent.unaryMinus());
+            motor.setBayMotorState(BayDoorState.CLOSING);
+    }
+
+    private void moveToPosition(
+        BayDoorMotorBasic motor, 
+        Dimensionless percent, 
+        Angle goalAngle, 
+        Angle currentAngle,
+        BayDoorState endState) {
+            if (!currentAngle.isNear(goalAngle, TOLERANCE)) {
+                moveTowards(motor, percent, goalAngle, currentAngle);
+            } else {
+                motor.stop();
+                motor.setBayMotorState(endState);
+            }
+        }
+
     public Command home() {
         return runEnd(
                 () -> {
                     leftMotor.home(HOME_DUTY_CYCLE);
-                    rightMotor.homeAsFollower(HOME_DUTY_CYCLE);
+                    rightMotor.home(HOME_DUTY_CYCLE);
                 }, () -> removeDefaultCommand()).until(isBayDoorClosed)
-                .handleInterrupt(() -> setDefaultCommand(home()));
+                .handleInterrupt(() -> setDefaultCommand(home())).withName("Home");
     }
 
     public Command open() {
         return runEnd(() -> {
-            leftMotor.setPointPosition(OPEN_ANGLE);
-        }, this::stop);
-    }
-
-    public Command middle() {
-        return runEnd(() -> {
-            leftMotor.setPointPosition(OPEN_ANGLE.div(2));
-        }, this::stop);
+            moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayDoorState.OPEN);
+            moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayDoorState.OPEN);
+        }, this::stop).withName("Open");
     }
 
     public Command close() {
         return runEnd(() -> {
-            leftMotor.setPointPosition(CLOSE_ANGLE);
-        }, this::home).until(isBayDoorClosed);
+            moveToPosition(leftMotor, DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayDoorState.CLOSE);
+            moveToPosition(rightMotor, DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayDoorState.CLOSE);
+        }, this::home).until(isBayDoorClosed.or(isBayDoorSoftClosed)).withName("Close");
     }
 
     // region SysId

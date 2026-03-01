@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SoftLimitConfig;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkMaxConfigAccessor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -35,7 +37,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
                 name,
                 canId,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
-                        (int) DEFAULT_CURRENT.in(Amps)),
+                        (int) Amps.of(40).in(Amps)),
                 // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
                 dutyCycleSetter,
@@ -59,6 +61,11 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
         motorBayDoorState = state;
     }
 
+    private void enableSoftLimits(boolean enable) {
+            SparkBaseConfig config = new SparkMaxConfig().apply(new SoftLimitConfig().forwardSoftLimitEnabled(enable).reverseSoftLimitEnabled(enable));
+            motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
     @Override
     public boolean isHomed() {
         return homingComplete;
@@ -67,9 +74,12 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     @Override
     public void home(Dimensionless dutyCycle) {
         if (!limit.get()) {
+            enableSoftLimits(false);
             setDutyCycle(dutyCycle);
+            setBayMotorState(BayDoorState.CLOSING);
         } else {
             stop();
+            enableSoftLimits(true);
             resetRelativeEncoder();
             setBayMotorState(BayDoorState.CLOSE);
             homingComplete = true;
@@ -79,6 +89,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     public void homeAsFollower(Dimensionless dutyCycle) {
         if (!limit.get()) {
             pauseFollower();
+            setBayMotorState(BayDoorState.CLOSING);
             setDutyCycle(dutyCycle);
         } else {
             stop();

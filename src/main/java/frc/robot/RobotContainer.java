@@ -19,7 +19,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -68,7 +67,6 @@ public class RobotContainer implements Sendable {
   private final CommandXboxController driver;
   private final CommandXboxController operator;
   private static final Dimensionless REDUCE_SPEED = Percent.of(75);
-  private static final Dimensionless TRIGGER_THRESHOLD = Percent.of(10);
   private static final double MOVE_ROBOT_CURVE = 3.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
 
@@ -157,22 +155,21 @@ public class RobotContainer implements Sendable {
   }
 
   private void configureControllerBindings() {
-    bindDrive();
-    bindBayDoor();
-    bindIntake();
+    // bindDrive();
+    // bindBayDoor();
+    // bindIntake();
     bindSpindexer();
     bindKicker();
     bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()));
-    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()));
+    // driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
+    // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
 
     driver.leftBumper()
         .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
   }
 
   private void bindDrive() {
-
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(
             () -> Value.of(
@@ -251,7 +248,6 @@ public class RobotContainer implements Sendable {
   private void bindBayDoor() {
     bayDoor.setDefaultCommand(bayDoor.home());
     operator.y().onTrue(bayDoor.open());
-    operator.b().onTrue(bayDoor.middle());
     operator.a().onTrue(bayDoor.close());
     operator.x().onTrue(bayDoor.home());
   }

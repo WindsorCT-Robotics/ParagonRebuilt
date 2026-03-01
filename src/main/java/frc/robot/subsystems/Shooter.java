@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -39,14 +40,15 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
             .withMotionMagicExpo_kV(0.12)
             .withMotionMagicExpo_kA(0.1);
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
             .withKP(0)
             .withKI(0)
             .withKD(0)
-            .withKS(0)
-            .withKV(0)
+            .withKS(0.35)
+            .withKV(0.1225)
             .withKA(0)
             .withKG(0)
             .withGravityType(GravityTypeValue.Elevator_Static);

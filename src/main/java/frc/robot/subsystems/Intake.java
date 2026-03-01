@@ -32,7 +32,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    private static final boolean INVERTED = true;
+    private static final boolean INVERTED = false;
     // TODO: Configure these values.
     private static final FeedForwardConfig FEED_FORWARD_CONFIG = new FeedForwardConfig()
             .kS(0)
@@ -40,8 +40,8 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
             .kA(0);
 
     private static final ClosedLoopConfig CLOSED_LOOP_CONFIG = new ClosedLoopConfig()
-            .p(0.0001)
-            .i(0.001)
+            .p(0.00001)
+            .i(0.0)
             .d(0);
 
     private static final MAXMotionConfig MAX_MOTION_CONFIG = new MAXMotionConfig()
@@ -54,8 +54,8 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private static final PersistMode PERSIST_MODE = PersistMode.kPersistParameters;
 
     // TODO: Determine RPS.
-    private AngularVelocity intakeVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity intakeVelocity = RotationsPerSecond.of(100);
+    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-100);
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
@@ -82,17 +82,17 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     public Command intakeFuel() {
-        return runOnce(() -> motor.setPointVelocity(getIntakeTargetVelocity()))
+        return runEnd(() -> motor.setPointVelocity(getIntakeTargetVelocity()), this::stopIntake)
                 .withName(getSubsystem() + "/intakeFuel");
     }
 
     public Command shuttleFuel() {
-        return runOnce(() -> motor.setPointVelocity(getShuttleTargetVelocity()))
+        return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), this::stopIntake)
                 .withName(getSubsystem() + "/shuttleFuel");
     }
 
     public Command stopIntake() {
-        return run(() -> motor.stop()).withName(getSubsystem() + "/stopIntake");
+        return runOnce(() -> motor.setPointVelocity(RotationsPerSecond.zero())).withName(getSubsystem() + "/stopIntake");
     }
 
     private void initSmartDashboard() {
@@ -113,7 +113,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     private void setShuttleTargetVelocity(double RPS) {
-        shuttleVelocity = RotationsPerSecond.of(RPS);
+        shuttleVelocity = RotationsPerSecond.of(-RPS);
     }
 
     @Override

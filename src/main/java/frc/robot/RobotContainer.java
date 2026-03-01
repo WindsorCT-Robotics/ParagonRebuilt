@@ -162,8 +162,10 @@ public class RobotContainer implements Sendable {
     bindKicker();
     bindShooter();
 
-    // driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
-    // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    // driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open
+    // Bay Door & Intake Fuel"));
+    // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open
+    // Bay Door & Shuttle Fuel"));
 
     driver.leftBumper()
         .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
@@ -241,7 +243,7 @@ public class RobotContainer implements Sendable {
         drive.angleToOutpost(
             curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
             curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
-
+    //
     driver.povDown().onTrue(drive.resetGyro());
   }
 

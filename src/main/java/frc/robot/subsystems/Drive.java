@@ -15,9 +15,9 @@ import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
@@ -32,6 +32,9 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -50,6 +53,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.GeneratedDrive;
+import frc.robot.generated.LimelightHelpers;
+import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
 
 public class Drive extends GeneratedDrive implements Sendable {
@@ -61,12 +66,15 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
+        private final String limelightName;
+        private final RectanglePoseArea field;
 
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
 
         public Drive(
                         String name,
+                        String limelightName,
                         SwerveDrivetrainConstants drivetrainConstants,
                         SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
                 super(drivetrainConstants, modules);
@@ -91,7 +99,27 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         return false;
                                 },
                                 this);
+                this.limelightName = limelightName;
+                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+                this.field = new RectanglePoseArea(Translation2d.kZero,
+                                new Translation2d(layout.getFieldWidth(), layout.getFieldLength()));
+                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
+
+                LimelightHelpers.SetRobotOrientation(limelightName,
+                                getPigeon2().getYaw().getValue().in(Degrees),
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0);
+
                 initSmartDashboard();
+        }
+
+        @Override
+        public void periodic() {
+                super.periodic();
+                addVisionMeasurements();
         }
 
         private void initSmartDashboard() {
@@ -318,5 +346,18 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command resetGyro() {
                 return Commands.runOnce(() -> getPigeon2().setYaw(Degrees.of(0.0)))
                                 .withName("Subsystems/" + getName() + "/resetGyro");
+        }
+
+        private LimelightHelpers.PoseEstimate getPositionEstimate() {
+                return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+        }
+
+        public void addVisionMeasurements() {
+                LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
+                if (getPositionEstimate().tagCount <= 0)
+                        return;
+                if (!field.isPoseWithinArea(positionEstimate.pose))
+                        return;
+                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds);
         }
 }

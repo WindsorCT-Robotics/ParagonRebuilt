@@ -37,7 +37,7 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
                 name,
                 canId,
                 new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
-                        (int) Amps.of(40).in(Amps)),
+                        (int) Amps.of(10).in(Amps)),
                 // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring
                 ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
                 dutyCycleSetter,
@@ -62,8 +62,9 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     }
 
     private void enableSoftLimits(boolean enable) {
-            SparkBaseConfig config = new SparkMaxConfig().apply(new SoftLimitConfig().forwardSoftLimitEnabled(enable).reverseSoftLimitEnabled(enable));
-            motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        SparkBaseConfig config = new SparkMaxConfig()
+                .apply(new SoftLimitConfig().forwardSoftLimitEnabled(enable).reverseSoftLimitEnabled(enable));
+        motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
@@ -89,9 +90,11 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
     public void homeAsFollower(Dimensionless dutyCycle) {
         if (!limit.get()) {
             pauseFollower();
+            enableSoftLimits(false);
             setBayMotorState(BayDoorState.CLOSING);
             setDutyCycle(dutyCycle);
         } else {
+            enableSoftLimits(true);
             stop();
             resetRelativeEncoder();
             setBayMotorState(BayDoorState.CLOSE);

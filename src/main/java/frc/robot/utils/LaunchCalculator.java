@@ -1,5 +1,6 @@
 package frc.robot.utils;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
@@ -73,14 +74,15 @@ public final class LaunchCalculator {
     }
 
     private void putShooterMap() {
-        shooterMap.put(null, null);
+        shooterMap.put(Inches.of(45).in(Meters), 120.0);
+        shooterMap.put(Inches.of(115).in(Meters), 360.0);
     }
 
     private void putKickerMap() {
-        kickerMap.put(null, null);
+        kickerMap.put(Inches.of(45).in(Meters), 180.0);
+        kickerMap.put(Inches.of(115).in(Meters), 420.0);
     }
 
     private void putTimeOfFlightMap() {
-        timeOfFlightMap.put(null, null);
     }
 }

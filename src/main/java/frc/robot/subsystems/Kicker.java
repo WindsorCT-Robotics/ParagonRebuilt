@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -66,8 +68,16 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         initSmartDashboard();
     }
 
-    public Command kickStartFuel() {
-        return runEnd(() -> motor.setPointVelocity(getTargetVelocity()), () -> motor.stop());
+    private void hardStop() {
+        motor.stop();
+    }
+
+    public Command kickStartFuel(Supplier<AngularVelocity> kickerVelocity) {
+        return runEnd(() -> motor.setPointVelocity(kickerVelocity.get()), this::hardStop);
+    }
+
+    public Command kickStartFuelSmartDashboard() {
+        return runEnd(() -> motor.setPointVelocity(getTargetVelocity()), this::hardStop);
     }
 
     private void initSmartDashboard() {

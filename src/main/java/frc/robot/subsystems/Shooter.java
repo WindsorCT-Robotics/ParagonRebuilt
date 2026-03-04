@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -11,7 +13,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
@@ -81,12 +82,12 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         initSmartDashboard();
     }
 
-    public Command shootFuel() {
-        return runEnd(() -> leadMotor.setPointVelocity(getShootTargetVelocity()), () -> stop());
+    public Command shootFuel(Supplier<AngularVelocity> shootVelocity) {
+        return runEnd(() -> leadMotor.setPointVelocity(shootVelocity.get()), this::stop);
     }
 
-    public Command retreatFuel() {
-        return runEnd(() -> leadMotor.setPointVelocity(getRetreatTargetVelocity()), () -> stop());
+    public Command shootFuelSmartDashboard() {
+        return runEnd(() -> leadMotor.setPointVelocity(getShootTargetVelocity()), this::stop);
     }
 
     private void initSmartDashboard() {
@@ -95,19 +96,23 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
     }
 
-    private AngularVelocity getShootTargetVelocity() {
+    public AngularVelocity getShootTargetVelocity() {
         return shootVelocity;
     }
 
-    private void setShootTargetVelocity(double RPS) {
+    public AngularVelocity getShootVelocity() {
+        return leadMotor.getVelocity();
+    }
+
+    public void setShootTargetVelocity(double RPS) {
         shootVelocity = RotationsPerSecond.of(RPS);
     }
 
-    private AngularVelocity getRetreatTargetVelocity() {
+    public AngularVelocity getRetreatTargetVelocity() {
         return retreatVelocity;
     }
 
-    private void setRetreatTargetVelocity(double RPS) {
+    public void setRetreatTargetVelocity(double RPS) {
         retreatVelocity = RotationsPerSecond.of(RPS);
     }
 

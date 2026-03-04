@@ -1,7 +1,10 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -72,12 +75,33 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         initSmartDashboard();
     }
 
+    private void hardStop() {
+        motor.stop();
+    }
+
+    private void stop() {
+        motor.setPointVelocity(RPM.zero());
+    }
+
     public Command indexFuel() {
         return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
     }
 
     public Command shuttleFuel() {
         return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), () -> motor.stop());
+    }
+
+    public Command indexFuelAtFlyWheelVelocity(
+            Supplier<AngularVelocity> indexTargetVelocity,
+            Supplier<AngularVelocity> flyWheelVelocity,
+            AngularVelocity threshold) {
+        return runEnd(() -> {
+            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold)) {
+                motor.setPointVelocity(indexTargetVelocity.get());
+            } else {
+                hardStop();
+            }
+        }, () -> stop());
     }
 
     private void initSmartDashboard() {

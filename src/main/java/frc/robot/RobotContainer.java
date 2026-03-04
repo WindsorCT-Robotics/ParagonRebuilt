@@ -8,6 +8,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
+import static edu.wpi.first.units.Units.RPM;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.LaunchFuelToTarget;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
@@ -169,7 +171,12 @@ public class RobotContainer implements Sendable {
     // Bay Door & Shuttle Fuel"));
 
     driver.leftBumper()
-        .whileTrue(spindexer.indexFuel().alongWith(kicker.kickStartFuel()).alongWith(shooter.shootFuel()));
+        .whileTrue(new LaunchFuelToTarget(
+            RPM.of(100),
+            () -> drive.getState().Pose,
+            shooter,
+            kicker,
+            spindexer).withName("LaunchFuelToTarget"));
   }
 
   private void bindDrive() {

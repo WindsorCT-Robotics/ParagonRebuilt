@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.LaunchFuelToTarget;
+import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
@@ -171,12 +171,25 @@ public class RobotContainer implements Sendable {
     // Bay Door & Shuttle Fuel"));
 
     driver.leftBumper()
-        .whileTrue(new LaunchFuelToTarget(
+        .whileTrue(new LaunchFuelToTargetDistance(
             RPM.of(100),
             () -> drive.getState().Pose,
             shooter,
             kicker,
-            spindexer).withName("LaunchFuelToTarget"));
+            spindexer).alongWith(
+                drive.angleToHub(curveAxis(
+                    () -> Value.of(
+                        MathUtil.applyDeadband(
+                            driverLeftAxisX.get().in(Value),
+                            DEADBAND.in(Value))),
+                    MOVE_ROBOT_CURVE),
+                    curveAxis(
+                        () -> Value.of(
+                            MathUtil.applyDeadband(
+                                driverLeftAxisY.get().in(Value),
+                                DEADBAND.in(Value))),
+                        MOVE_ROBOT_CURVE)))
+            .withName("LaunchFuelToTarget"));
   }
 
   private void bindDrive() {

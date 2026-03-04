@@ -252,7 +252,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void moveWithLockedAngle(
                         LinearVelocity x,
                         LinearVelocity y,
-                        Angle targetAngle) {
+                        Supplier<Angle> targetAngle) {
                 setControl(
                                 new FieldCentricFacingAngle()
                                                 .withVelocityX(x)
@@ -260,7 +260,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 .withHeadingPID(DEFAULT_TARGET_DIRECTION_PID.kP,
                                                                 DEFAULT_TARGET_DIRECTION_PID.kI,
                                                                 DEFAULT_TARGET_DIRECTION_PID.kD)
-                                                .withTargetDirection(new Rotation2d(targetAngle.in(Degrees))));
+                                                .withTargetDirection(new Rotation2d(targetAngle.get().in(Degrees))));
         }
 
         public Command angleToOutpost(
@@ -281,10 +281,56 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 moveWithLockedAngle(
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                targetAngle);
+                                                () -> targetAngle);
                         });
                 }).withName("Subsystems/" + getName() + "/angleToOutpost")
                                 .unless(DriverStation.getAlliance()::isEmpty);
+        }
+
+        private Pose2d getHubPosition(Alliance alliance) {
+                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+                Pose3d blueHubCloseRight = layout.getTagPose(26).get();
+                Pose3d blueHubFarLeft = layout.getTagPose(26).get();
+                Pose3d redHubCloseRight = layout.getTagPose(10).get();
+                Pose3d redHubFarLeft = layout.getTagPose(4).get();
+
+                Distance xHub;
+                Distance yHub;
+                if (alliance.equals(Alliance.Blue)) {
+                        xHub = blueHubFarLeft.getMeasureX().plus(blueHubCloseRight.getMeasureX())
+                                        .div(2);
+                        yHub = blueHubFarLeft.getMeasureY().plus(blueHubCloseRight.getMeasureY())
+                                        .div(2);
+                } else {
+                        xHub = redHubFarLeft.getMeasureX().plus(blueHubCloseRight.getMeasureX()).div(2);
+                        yHub = redHubCloseRight.getMeasureY().plus(blueHubCloseRight.getMeasureY())
+                                        .div(2);
+                }
+
+                return new Pose2d(xHub, yHub, new Rotation2d());
+        }
+
+        public Command angleToHub(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y) {
+                return run(() -> {
+                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+
+                        maybeAlliance.ifPresent(alliance -> {
+                                Pose2d robotPosition = getState().Pose;
+                                Pose2d hubPosition = getHubPosition(alliance);
+                                Distance xDifference = robotPosition.getMeasureX().minus(hubPosition.getMeasureX());
+                                Distance yDifference = robotPosition.getMeasureY().minus(hubPosition.getMeasureY());
+
+                                Angle targetAngle = Radians
+                                                .of(Math.atan2(xDifference.in(Meters), yDifference.in(Meters)));
+
+                                moveWithLockedAngle(
+                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                                () -> targetAngle);
+                        });
+                });
         }
 
         private PathPlannerPath createPathToPosition(

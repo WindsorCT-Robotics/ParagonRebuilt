@@ -166,9 +166,9 @@ public class RobotContainer implements Sendable {
     bindShooter();
 
     driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
-    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
 
-    driver.leftBumper()
+    driver.b()
         .whileTrue(new LaunchFuelToTargetDistance(
             RPM.of(100),
             () -> drive.getState().Pose,
@@ -212,7 +212,7 @@ public class RobotContainer implements Sendable {
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    driver.b().onTrue(Commands.runOnce(() -> {
+    driver.leftBumper().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = RelativeReference.FIELD_CENTRIC;
       } else {

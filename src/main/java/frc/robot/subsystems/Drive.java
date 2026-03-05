@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -105,6 +106,14 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 new Translation2d(layout.getFieldWidth(), layout.getFieldLength()));
                 setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
 
+                LimelightHelpers.setCameraPose_RobotSpace(
+                                limelightName,
+                                Meters.of(-0.1778).in(Meters),
+                                Meters.of(-0.0635).in(Meters),
+                                Meters.of(0.5588).in(Meters),
+                                Degrees.zero().in(Degrees),
+                                Degrees.of(30).in(Degrees),
+                                Degrees.of(-90).in(Degrees));
                 LimelightHelpers.SetRobotOrientation(limelightName,
                                 getPigeon2().getYaw().getValue().in(Degrees),
                                 0.0,
@@ -116,9 +125,14 @@ public class Drive extends GeneratedDrive implements Sendable {
                 initSmartDashboard();
         }
 
+        private Angle getAngle() {
+                return getPigeon2().getYaw().getValue();
+        }
+
         @Override
         public void periodic() {
                 super.periodic();
+                updateLimelightOrientationToRobot();
                 addVisionMeasurements();
         }
 
@@ -166,7 +180,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         @Override
         public void initSendable(SendableBuilder builder) {
-
+                builder.addDoubleProperty("Mega Tag 1 Orientation (Degrees)", () -> LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName).pose.getRotation().getDegrees(), null);
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -398,12 +412,16 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
         }
 
-        public void addVisionMeasurements() {
+        private void addVisionMeasurements() {
                 LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
                 if (getPositionEstimate().tagCount <= 0)
                         return;
                 if (!field.isPoseWithinArea(positionEstimate.pose))
                         return;
-                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds);
+                addVisionMeasurement(positionEstimate.pose, Utils.fpgaToCurrentTime(positionEstimate.timestampSeconds));
+        }
+
+        private void updateLimelightOrientationToRobot() {
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees), 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

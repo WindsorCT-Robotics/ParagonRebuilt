@@ -29,6 +29,10 @@ public final class LaunchCalculator {
     public LaunchCalculator(Supplier<Pose2d> robotPosition) {
         this.robotPosition = robotPosition;
         AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+
+        // TODO: Double check these tag numbers
+        // TODO: Check for the existence of the tags before calling .get().
+        // The point of optionals is to verify that there is a value before trying to use it.
         Pose3d blueHubCloseRight = layout.getTagPose(26).get();
         Pose3d blueHubFarLeft = layout.getTagPose(26).get();
         Pose3d redHubCloseRight = layout.getTagPose(10).get();
@@ -37,6 +41,7 @@ public final class LaunchCalculator {
         // TODO: Is getMeasureY() the length of the field?
         Distance x;
         Distance y;
+        // Handle the case where there is no alliance.
         if (DriverStation.getAlliance().get().equals(Alliance.Blue)) {
             x = blueHubFarLeft.getMeasureX().plus(blueHubCloseRight.getMeasureX()).div(2);
             y = blueHubFarLeft.getMeasureY().plus(blueHubCloseRight.getMeasureY()).div(2);
@@ -74,11 +79,13 @@ public final class LaunchCalculator {
     }
 
     private void putShooterMap() {
+        // TODO: No magic numbers.
         shooterMap.put(Inches.of(45).in(Meters), 120.0);
         shooterMap.put(Inches.of(115).in(Meters), 360.0);
     }
 
     private void putKickerMap() {
+        // TODO: No magic numbers.
         kickerMap.put(Inches.of(45).in(Meters), 180.0);
         kickerMap.put(Inches.of(115).in(Meters), 420.0);
     }

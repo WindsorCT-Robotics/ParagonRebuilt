@@ -40,6 +40,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -108,8 +109,8 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
-                                Meters.of(-0.1778).in(Meters),
-                                Meters.of(-0.0635).in(Meters),
+                                Meters.of(0.1778).in(Meters),
+                                Meters.of(0.0635).in(Meters),
                                 Meters.of(0.5588).in(Meters),
                                 Degrees.zero().in(Degrees),
                                 Degrees.of(30).in(Degrees),
@@ -180,7 +181,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         @Override
         public void initSendable(SendableBuilder builder) {
-                builder.addDoubleProperty("Mega Tag 1 Orientation (Degrees)", () -> LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName).pose.getRotation().getDegrees(), null);
+
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -413,12 +414,18 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void addVisionMeasurements() {
+                double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
+                                .getDistance(new Translation3d()); // Calculates how far away the april tag is
+                double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
+                Pose2d position = positionEstimate.pose;
+                SmartDashboard.putNumber("Vision Position X", position.getX());
+                SmartDashboard.putNumber("Vision Position Y", position.getY());
                 if (getPositionEstimate().tagCount <= 0)
                         return;
                 if (!field.isPoseWithinArea(positionEstimate.pose))
                         return;
-                addVisionMeasurement(positionEstimate.pose, Utils.fpgaToCurrentTime(positionEstimate.timestampSeconds));
+                addVisionMeasurement(positionEstimate.pose, Utils.fpgaToCurrentTime(positionEstimate.timestampSeconds), VecBuilder.fill(confidence, confidence, 0.1));
         }
 
         private void updateLimelightOrientationToRobot() {

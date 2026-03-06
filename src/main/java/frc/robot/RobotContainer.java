@@ -85,7 +85,7 @@ public class RobotContainer implements Sendable {
     try {
       drive = new Drive(
           Drive.class.getSimpleName(),
-          "Limelight",
+          "limelight",
           TunerConstants.DrivetrainConstants,
           TunerConstants.FrontLeft,
           TunerConstants.FrontRight,
@@ -113,7 +113,7 @@ public class RobotContainer implements Sendable {
     configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    // drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
+    drive.registerTelemetry(logger::telemeterize); // TODO: Remove logger?
 
     driverLeftAxisX = () -> Value.of(driver.getLeftX());
     driverLeftAxisY = () -> Value.of(driver.getLeftY());

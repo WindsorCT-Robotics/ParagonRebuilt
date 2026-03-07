@@ -4,8 +4,8 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Consumer;
@@ -152,7 +152,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
         builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
         builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
                 dutyCycle -> dutyCycleSetter.accept(Percent.of(dutyCycle)));
-        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
+        builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
                 voltage -> voltageSetter.accept(Volts.of(voltage)));

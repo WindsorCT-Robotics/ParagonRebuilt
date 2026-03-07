@@ -36,9 +36,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final SysIdRoutine routine;
 
     private static final boolean INVERTED = true;
-    // TODO: Determine RPS.
     private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(0);
 
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
@@ -83,12 +81,12 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         motor.setPointVelocity(RPM.zero());
     }
 
-    public Command indexFuel() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
-    }
+    // public Command indexFuel() {
+    //     return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
+    // }
 
-    public Command shuttleFuel() {
-        return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), () -> motor.stop());
+    public Command indexFuelSmartDashboard() {
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
     }
 
     public Command indexFuelAtFlyWheelVelocity(
@@ -112,26 +110,16 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Indexing Target Velocity", () -> getIndexTargetVelocity().in(RotationsPerSecond),
+        builder.addDoubleProperty("Indexing Target Velocity (RPM)", () -> getIndexTargetVelocity().in(RPM),
                 this::setIndexTargetVelocity);
-        builder.addDoubleProperty("Releasing Target Velocity", () -> getShuttleTargetVelocity().in(RotationsPerSecond),
-                this::setShuttleTargetVelocity);
     }
 
     private AngularVelocity getIndexTargetVelocity() {
         return indexVelocity;
     }
 
-    private void setIndexTargetVelocity(double RPS) {
-        indexVelocity = RotationsPerSecond.of(RPS);
-    }
-
-    private AngularVelocity getShuttleTargetVelocity() {
-        return shuttleVelocity;
-    }
-
-    private void setShuttleTargetVelocity(double RPS) {
-        shuttleVelocity = RotationsPerSecond.of(RPS);
+    private void setIndexTargetVelocity(double rpm) {
+        indexVelocity = RPM.of(rpm);
     }
 
     // region SysId

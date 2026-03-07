@@ -36,6 +36,7 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -50,10 +51,12 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
@@ -64,11 +67,13 @@ public class Drive extends GeneratedDrive implements Sendable {
         // TODO: Max velocities should be properly tested.
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(0.5, 0, 0);
+        private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(0.5, 0, 0.001);
+        private PIDConstants targetPID = new PIDConstants(0.3, 0.0, 0.0);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
+        private static final Angle SHOOTER_OFFSET = Degrees.of(90);
         private final String limelightName;
         private final RectanglePoseArea field;
 
@@ -81,6 +86,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         SwerveDrivetrainConstants drivetrainConstants,
                         SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
                 super(drivetrainConstants, modules);
+                SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
+                CommandScheduler.getInstance().registerSubsystem(this);
 
                 // TODO: Properly set GUI Settings in PathPlanner
                 robotConfiguration = RobotConfig.fromGUISettings();
@@ -139,12 +146,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void initSmartDashboard() {
-                SmartDashboard.putData("Subsystems/" + getName(), this);
-                SmartDashboard.putData("Subsystems/" + getName() + "/" + getPigeon2().getClass().getSimpleName(),
+                SmartDashboard.putData(getName(), this);
+                SmartDashboard.putData(getName() + "/" + getPigeon2().getClass().getSimpleName(),
                                 getPigeon2());
                 // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
                 // TODO: See if these values are correct.
-                SmartDashboard.putData("Subsystems/" + getName() + "/SwerveDrive", new Sendable() {
+                SmartDashboard.putData(getName() + "/SwerveDrive", new Sendable() {
                         @Override
                         public void initSendable(SendableBuilder builder) {
                                 builder.setSmartDashboardType("SwerveDrive");
@@ -180,9 +187,48 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         }
 
+        private void setP(double p) {
+                targetPID = new PIDConstants(p, targetPID.kI, targetPID.kD);
+        }
+
+        private double getP() {
+                return targetPID.kP;
+        }
+
+        private void setI(double i) {
+                targetPID = new PIDConstants(targetPID.kI, i, targetPID.kD);
+        }
+
+        private double getI() {
+                return targetPID.kI;
+        }
+
+        private void setD(double d) {
+                targetPID = new PIDConstants(targetPID.kP, targetPID.kI, d);
+        }
+
+        private double getD() {
+                return targetPID.kD;
+        }
+
         @Override
         public void initSendable(SendableBuilder builder) {
+                builder.setSmartDashboardType("Subsystem");
 
+                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
+                builder.addStringProperty(
+                                ".default",
+                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
+                builder.addStringProperty(
+                                ".command",
+                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
+                                null);
+
+                builder.addDoubleProperty("Target P", this::getP, this::setP);
+                builder.addDoubleProperty("Target I", this::getI, this::setI);
+                builder.addDoubleProperty("Target D", this::getD, this::setD);
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -271,8 +317,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity y,
                         Angle targetAngle,
                         Angle threshold) {
-                Angle robotHeading = Degrees.of(getAngle().in(Degrees) % 360 - 180);
+                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians) + Math.PI));
 
+                SmartDashboard.putNumber("Robot Heading Wrapped", robotHeading.in(Degrees));
                 SmartDashboard.putBoolean("Should Correct Robot Heading", !robotHeading.isNear(targetAngle, threshold));
 
                 if (!robotHeading.isNear(targetAngle, threshold)) {
@@ -280,9 +327,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         new FieldCentricFacingAngle()
                                                         .withVelocityX(y)
                                                         .withVelocityY(x)
-                                                        .withHeadingPID(DEFAULT_TARGET_DIRECTION_PID.kP,
-                                                                        DEFAULT_TARGET_DIRECTION_PID.kI,
-                                                                        DEFAULT_TARGET_DIRECTION_PID.kD)
+                                                        .withHeadingPID(targetPID.kP,
+                                                                        targetPID.kI,
+                                                                        targetPID.kD)
+                                                        .withDriveRequestType(DriveRequestType.Velocity)
                                                         .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
                 } else {
                         setControl(fieldCentricSwerveRequest(x, y, RPM.zero()));
@@ -310,7 +358,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                                 targetAngle,
-                                                Degrees.of(15));
+                                                Degrees.of(5));
                         });
                 }).withName("Subsystems/" + getName() + "/angleToOutpost")
                                 .unless(DriverStation.getAlliance()::isEmpty);
@@ -349,13 +397,16 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 Distance yDifference = robotPosition.getMeasureY().minus(hubPosition.getMeasureY());
 
                                 Angle targetAngle = Radians
-                                                .of(Math.atan2(xDifference.in(Meters), yDifference.in(Meters)));
-                                
+                                                .of(Math.atan2(yDifference.in(Meters), xDifference.in(Meters)))
+                                                .plus(SHOOTER_OFFSET);
+
+                                Angle wrapTargetAngle = Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
+
                                 moveWithLockedAngle(
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                targetAngle,
-                                                Degrees.of(3));
+                                                wrapTargetAngle,
+                                                Degrees.of(2));
                         });
                 });
         }

@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -165,7 +164,7 @@ public class SparkMaxMotorBase implements IClosedLoopMotor<SparkMax, SparkMaxCon
         builder.addDoubleProperty("Encoder Value", () -> getAngle().in(Rotations), null);
         builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
                 val -> dutyCycleSetter.accept(Percent.of(val)));
-        builder.addDoubleProperty("Velocity (RPS)", () -> getVelocity().in(RotationsPerSecond), null);
+        builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
         builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
                 val -> voltageSetter.accept(Volts.of(val)));

@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
@@ -38,7 +39,6 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private static final boolean INVERTED = true;
 
     private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity retreatVelocity = RotationsPerSecond.of(0);
 
     private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
             .withMotionMagicCruiseVelocity(0)
@@ -104,27 +104,16 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         return leadMotor.getVelocity();
     }
 
-    public void setShootTargetVelocity(double RPS) {
-        shootVelocity = RotationsPerSecond.of(RPS);
-    }
-
-    public AngularVelocity getRetreatTargetVelocity() {
-        return retreatVelocity;
-    }
-
-    public void setRetreatTargetVelocity(double RPS) {
-        retreatVelocity = RotationsPerSecond.of(RPS);
+    public void setShootTargetVelocity(double rpm) {
+        shootVelocity = RPM.of(rpm);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Motor Shoot Velocity (RPS)",
-                () -> getShootTargetVelocity().in(RotationsPerSecond),
+        builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
+                () -> getShootTargetVelocity().in(RPM),
                 this::setShootTargetVelocity);
-        builder.addDoubleProperty("Motor Retreat Velocity (RPS)",
-                () -> getRetreatTargetVelocity().in(RotationsPerSecond),
-                this::setRetreatTargetVelocity);
     }
 
     private void stop() {

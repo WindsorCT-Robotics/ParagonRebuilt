@@ -41,6 +41,7 @@ import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
+import frc.robot.utils.LaunchCalculator;
 
 public class RobotContainer implements Sendable {
   private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
@@ -48,7 +49,7 @@ public class RobotContainer implements Sendable {
 
   private final Drive drive;
   private final Intake intake;
-  public final BayDoor bayDoor;
+  private final BayDoor bayDoor;
   private final Spindexer spindexer;
   private final Shooter shooter;
   private final Kicker kicker;
@@ -74,6 +75,8 @@ public class RobotContainer implements Sendable {
 
   private static final Dimensionless DEADBAND = Percent.of(5);
   private RelativeReference relativeReference;
+
+  private final LaunchCalculator launchCalculator;
 
   private final SendableChooser<Command> autonomousChooser;
   private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
@@ -103,6 +106,8 @@ public class RobotContainer implements Sendable {
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
+    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose);
+
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
     driver = new CommandXboxController(0);
@@ -123,11 +128,13 @@ public class RobotContainer implements Sendable {
   }
 
   private void initSmartDashboard() {
+    SmartDashboard.putData(drive);
     SmartDashboard.putData(intake);
     SmartDashboard.putData(bayDoor);
     SmartDashboard.putData(spindexer);
     SmartDashboard.putData(shooter);
     SmartDashboard.putData(kicker);
+    SmartDashboard.putData("Launch Calculations", launchCalculator);
     SmartDashboard.putData("Controllers/Driver", driver.getHID());
     SmartDashboard.putData("Controllers/Operator", operator.getHID());
     SmartDashboard.putData("Autonomous", autonomousChooser);
@@ -160,29 +167,35 @@ public class RobotContainer implements Sendable {
   private void configureControllerBindings() {
     bindDrive();
     bindDriveSystemDynamics();
-    // bindBayDoor();
-    // bindIntake();
-    // bindSpindexer();
-    // bindKicker();
-    // bindShooter();
+    bindBayDoor();
+    bindIntake();
+    bindSpindexer();
+    bindKicker();
+    bindShooter();
 
-    // driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
-    // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
+    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    operator.leftStick().whileTrue(
+        shooter.shootFuelSmartDashboard()
+            .alongWith(kicker.kickStartFuelSmartDashboard())
+            .alongWith(spindexer.indexFuelSmartDashboard()));
+
     operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
-                    () -> Value.of(
-                        MathUtil.applyDeadband(
-                            driverLeftAxisX.get().in(Value),
-                            DEADBAND.in(Value))),
-                    MOVE_ROBOT_CURVE),
-                    curveAxis(
-                        () -> Value.of(
-                            MathUtil.applyDeadband(
-                                driverLeftAxisY.get().in(Value),
-                                DEADBAND.in(Value))),
-                        MOVE_ROBOT_CURVE)));
+        () -> Value.of(
+            MathUtil.applyDeadband(
+                driverLeftAxisX.get().in(Value),
+                DEADBAND.in(Value))),
+        MOVE_ROBOT_CURVE),
+        curveAxis(
+            () -> Value.of(
+                MathUtil.applyDeadband(
+                    driverLeftAxisY.get().in(Value),
+                    DEADBAND.in(Value))),
+            MOVE_ROBOT_CURVE)));
 
     driver.b()
         .whileTrue(new LaunchFuelToTargetDistance(
+            launchCalculator,
             RPM.of(100),
             () -> drive.getState().Pose,
             shooter,
@@ -274,17 +287,17 @@ public class RobotContainer implements Sendable {
     operator.rightBumper().toggleOnTrue(
         drive.angleToOutpost(
             curveAxis(
-                    () -> Value.of(
-                        MathUtil.applyDeadband(
-                            driverLeftAxisX.get().in(Value),
-                            DEADBAND.in(Value))),
-                    MOVE_ROBOT_CURVE),
-                    curveAxis(
-                        () -> Value.of(
-                            MathUtil.applyDeadband(
-                                driverLeftAxisY.get().in(Value),
-                                DEADBAND.in(Value))),
-                        MOVE_ROBOT_CURVE)));
+                () -> Value.of(
+                    MathUtil.applyDeadband(
+                        driverLeftAxisX.get().in(Value),
+                        DEADBAND.in(Value))),
+                MOVE_ROBOT_CURVE),
+            curveAxis(
+                () -> Value.of(
+                    MathUtil.applyDeadband(
+                        driverLeftAxisY.get().in(Value),
+                        DEADBAND.in(Value))),
+                MOVE_ROBOT_CURVE)));
     //
     driver.povDown().onTrue(drive.resetGyro());
   }

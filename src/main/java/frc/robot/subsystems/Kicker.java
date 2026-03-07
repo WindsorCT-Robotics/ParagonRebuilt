@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
@@ -89,14 +90,14 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         return kickVelocity;
     }
 
-    private void setTargetVelocity(double RPS) {
-        kickVelocity = RotationsPerSecond.of(RPS);
+    private void setTargetVelocity(double rpm) {
+        kickVelocity = RPM.of(rpm);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Motor Velocity (RPS)", () -> getTargetVelocity().in(RotationsPerSecond),
+        builder.addDoubleProperty("Motor Velocity (RPM)", () -> getTargetVelocity().in(RPM),
                 this::setTargetVelocity);
     }
 

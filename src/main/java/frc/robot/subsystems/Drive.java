@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -13,7 +15,6 @@ import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -63,7 +64,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // TODO: Max velocities should be properly tested.
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(7, 0, 0);
+        private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(0.5, 0, 0);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
@@ -227,7 +228,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return run(() -> {
                         switch (reference.get()) {
                                 case ROBOT_CENTRIC:
-                                        setControl(robotCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));
+                                        setControl(robotCentricSwerveRequest(x.get().unaryMinus(), y.get().unaryMinus(),
+                                                        rotateRate.get()));
                                         break;
                                 case FIELD_CENTRIC:
                                         setControl(fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));
@@ -267,15 +269,26 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void moveWithLockedAngle(
                         LinearVelocity x,
                         LinearVelocity y,
-                        Supplier<Angle> targetAngle) {
-                setControl(
-                                new FieldCentricFacingAngle()
-                                                .withVelocityX(x)
-                                                .withVelocityY(y)
-                                                .withHeadingPID(DEFAULT_TARGET_DIRECTION_PID.kP,
-                                                                DEFAULT_TARGET_DIRECTION_PID.kI,
-                                                                DEFAULT_TARGET_DIRECTION_PID.kD)
-                                                .withTargetDirection(new Rotation2d(targetAngle.get().in(Degrees))));
+                        Angle targetAngle,
+                        Angle threshold) {
+                Angle robotHeading = Degrees.of(getAngle().in(Degrees) % 360 - 180);
+
+                SmartDashboard.putBoolean("Should Correct Robot Heading", !robotHeading.isNear(targetAngle, threshold));
+
+                if (!robotHeading.isNear(targetAngle, threshold)) {
+                        setControl(
+                                        new FieldCentricFacingAngle()
+                                                        .withVelocityX(y)
+                                                        .withVelocityY(x)
+                                                        .withHeadingPID(DEFAULT_TARGET_DIRECTION_PID.kP,
+                                                                        DEFAULT_TARGET_DIRECTION_PID.kI,
+                                                                        DEFAULT_TARGET_DIRECTION_PID.kD)
+                                                        .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
+                } else {
+                        setControl(fieldCentricSwerveRequest(x, y, RPM.zero()));
+                }
+
+                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
         }
 
         public Command angleToOutpost(
@@ -296,7 +309,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 moveWithLockedAngle(
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                () -> targetAngle);
+                                                targetAngle,
+                                                Degrees.of(15));
                         });
                 }).withName("Subsystems/" + getName() + "/angleToOutpost")
                                 .unless(DriverStation.getAlliance()::isEmpty);
@@ -304,22 +318,19 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private Pose2d getHubPosition(Alliance alliance) {
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                Pose3d blueHubCloseRight = layout.getTagPose(26).get();
-                Pose3d blueHubFarLeft = layout.getTagPose(26).get();
-                Pose3d redHubCloseRight = layout.getTagPose(10).get();
-                Pose3d redHubFarLeft = layout.getTagPose(4).get();
+                Pose3d blueHubYCenter = layout.getTagPose(26).get();
+                Pose3d blueHubXCenter = layout.getTagPose(21).get();
+                Pose3d redHubYCenter = layout.getTagPose(10).get();
+                Pose3d redHubXCenter = layout.getTagPose(5).get();
 
                 Distance xHub;
                 Distance yHub;
                 if (alliance.equals(Alliance.Blue)) {
-                        xHub = blueHubFarLeft.getMeasureX().plus(blueHubCloseRight.getMeasureX())
-                                        .div(2);
-                        yHub = blueHubFarLeft.getMeasureY().plus(blueHubCloseRight.getMeasureY())
-                                        .div(2);
+                        xHub = blueHubXCenter.getMeasureX();
+                        yHub = blueHubYCenter.getMeasureY();
                 } else {
-                        xHub = redHubFarLeft.getMeasureX().plus(blueHubCloseRight.getMeasureX()).div(2);
-                        yHub = redHubCloseRight.getMeasureY().plus(blueHubCloseRight.getMeasureY())
-                                        .div(2);
+                        xHub = redHubXCenter.getMeasureX();
+                        yHub = redHubYCenter.getMeasureY();
                 }
 
                 return new Pose2d(xHub, yHub, new Rotation2d());
@@ -339,11 +350,12 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                                 Angle targetAngle = Radians
                                                 .of(Math.atan2(xDifference.in(Meters), yDifference.in(Meters)));
-
+                                
                                 moveWithLockedAngle(
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                () -> targetAngle);
+                                                targetAngle,
+                                                Degrees.of(3));
                         });
                 });
         }
@@ -425,7 +437,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return;
                 if (!field.isPoseWithinArea(positionEstimate.pose))
                         return;
-                addVisionMeasurement(positionEstimate.pose, Utils.fpgaToCurrentTime(positionEstimate.timestampSeconds), VecBuilder.fill(confidence, confidence, 0.1));
+                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
+                                VecBuilder.fill(confidence, confidence, 0.1));
         }
 
         private void updateLimelightOrientationToRobot() {

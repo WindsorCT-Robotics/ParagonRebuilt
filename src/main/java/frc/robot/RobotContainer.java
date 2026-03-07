@@ -68,8 +68,8 @@ public class RobotContainer implements Sendable {
 
   private final CommandXboxController driver;
   private final CommandXboxController operator;
-  private static final Dimensionless REDUCE_SPEED = Percent.of(75);
-  private static final double MOVE_ROBOT_CURVE = 3.0;
+  private static final Dimensionless REDUCE_SPEED = Percent.of(65);
+  private static final double MOVE_ROBOT_CURVE = 2.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
 
   private static final Dimensionless DEADBAND = Percent.of(5);
@@ -117,7 +117,7 @@ public class RobotContainer implements Sendable {
 
     driverLeftAxisX = () -> Value.of(driver.getLeftX());
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
-    driverRightAxisX = () -> Value.of(driver.getRightX());
+    driverRightAxisX = () -> Value.of(driver.getRightX()).unaryMinus();
 
     initSmartDashboard();
   }
@@ -159,14 +159,27 @@ public class RobotContainer implements Sendable {
 
   private void configureControllerBindings() {
     bindDrive();
-    bindBayDoor();
-    bindIntake();
-    bindSpindexer();
-    bindKicker();
-    bindShooter();
+    bindDriveSystemDynamics();
+    // bindBayDoor();
+    // bindIntake();
+    // bindSpindexer();
+    // bindKicker();
+    // bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
+    // driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
     // driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
+                    () -> Value.of(
+                        MathUtil.applyDeadband(
+                            driverLeftAxisX.get().in(Value),
+                            DEADBAND.in(Value))),
+                    MOVE_ROBOT_CURVE),
+                    curveAxis(
+                        () -> Value.of(
+                            MathUtil.applyDeadband(
+                                driverLeftAxisY.get().in(Value),
+                                DEADBAND.in(Value))),
+                        MOVE_ROBOT_CURVE)));
 
     driver.b()
         .whileTrue(new LaunchFuelToTargetDistance(
@@ -227,21 +240,21 @@ public class RobotContainer implements Sendable {
             () -> Percent.of(
                 MathUtil.applyDeadband(
                     driverLeftAxisX.get().in(Percent),
-                    DEADBAND.in(Percent)))
+                    DEADBAND.in(Value)))
                 .times(REDUCE_SPEED),
             MOVE_ROBOT_CURVE),
         curveAxis(
             () -> Percent.of(
                 MathUtil.applyDeadband(
                     driverLeftAxisY.get().in(Percent),
-                    DEADBAND.in(Percent)))
+                    DEADBAND.in(Value)))
                 .times(REDUCE_SPEED),
             MOVE_ROBOT_CURVE),
         curveAxis(
             () -> Percent.of(
                 MathUtil.applyDeadband(
                     driverRightAxisX.get().in(Percent),
-                    DEADBAND.in(Percent))),
+                    DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
@@ -258,10 +271,20 @@ public class RobotContainer implements Sendable {
     // maxDriverLeftJoyStickSpeedY = Percent.of(100);
     // }));
 
-    driver.y().toggleOnTrue(
+    operator.rightBumper().toggleOnTrue(
         drive.angleToOutpost(
-            curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE),
-            curveAxis(driverLeftAxisY, MOVE_ROBOT_CURVE)));
+            curveAxis(
+                    () -> Value.of(
+                        MathUtil.applyDeadband(
+                            driverLeftAxisX.get().in(Value),
+                            DEADBAND.in(Value))),
+                    MOVE_ROBOT_CURVE),
+                    curveAxis(
+                        () -> Value.of(
+                            MathUtil.applyDeadband(
+                                driverLeftAxisY.get().in(Value),
+                                DEADBAND.in(Value))),
+                        MOVE_ROBOT_CURVE)));
     //
     driver.povDown().onTrue(drive.resetGyro());
   }

@@ -1,49 +1,18 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
-import static edu.wpi.first.units.Units.Amps;
-
-import java.util.function.Consumer;
-
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SoftLimitConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkMaxConfigAccessor;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
-import edu.wpi.first.units.measure.Dimensionless;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.base_motors.NeoMotorBase;
-import frc.robot.interfaces.IHomingMotor;
+import frc.robot.hardware.base_motors.KrakenMotorBase;
 
-public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<SparkMax, SparkMaxConfigAccessor> {
-    private final DigitalInput limit;
-    private boolean homingComplete = false;
-
+public class BayDoorMotorBasic extends KrakenMotorBase {
     private BayDoorState motorBayDoorState = BayDoorState.UNKNOWN;
 
     public BayDoorMotorBasic(
             String name,
-            CanId canId,
-            DigitalInput limit,
-            Consumer<Dimensionless> dutyCycleSetter,
-            Consumer<Voltage> voltageSetter) {
+            CanId canId) {
         super(
                 name,
-                canId,
-                new SparkMaxConfig().idleMode(IdleMode.kBrake).inverted(false).smartCurrentLimit(
-                        (int) Amps.of(15).in(Amps)),
-                // https://docs.revrobotics.com/revlib/configuring-devices#resetting-parameters-before-configuring
-                ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters,
-                dutyCycleSetter,
-                voltageSetter);
-
-        this.limit = limit;
+                canId);
     }
 
     @Override
@@ -59,47 +28,5 @@ public class BayDoorMotorBasic extends NeoMotorBase implements IHomingMotor<Spar
 
     public void setBayMotorState(BayDoorState state) {
         motorBayDoorState = state;
-    }
-
-    private void enableSoftLimits(boolean enable) {
-        SparkBaseConfig config = new SparkMaxConfig()
-                .apply(new SoftLimitConfig().forwardSoftLimitEnabled(enable).reverseSoftLimitEnabled(enable));
-        motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
-    }
-
-    @Override
-    public boolean isHomed() {
-        return homingComplete;
-    }
-
-    @Override
-    public void home(Dimensionless dutyCycle) {
-        if (!limit.get()) {
-            enableSoftLimits(false);
-            setDutyCycle(dutyCycle);
-            setBayMotorState(BayDoorState.CLOSING);
-        } else {
-            stop();
-            enableSoftLimits(true);
-            resetRelativeEncoder();
-            setBayMotorState(BayDoorState.CLOSE);
-            homingComplete = true;
-        }
-    }
-
-    public void homeAsFollower(Dimensionless dutyCycle) {
-        if (!limit.get()) {
-            pauseFollower();
-            enableSoftLimits(false);
-            setBayMotorState(BayDoorState.CLOSING);
-            setDutyCycle(dutyCycle);
-        } else {
-            enableSoftLimits(true);
-            stop();
-            resetRelativeEncoder();
-            setBayMotorState(BayDoorState.CLOSE);
-            resumeFollower();
-            homingComplete = true;
-        }
     }
 }

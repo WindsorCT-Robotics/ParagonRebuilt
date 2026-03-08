@@ -9,18 +9,16 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -33,32 +31,25 @@ import frc.robot.hardware.CanId;
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;
     private final SysIdRoutine routine;
-    // TODO: Determine RPS.
+    private final TalonFXConfiguration motorConfiguration;
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
-    private final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(0)
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
-            .withMotionMagicExpo_kV(0.12)
-            .withMotionMagicExpo_kA(0.1);
-    private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
-            .withKP(0)
-            .withKI(0)
-            .withKD(0)
-            .withKS(0.25)
-            .withKV(0.1225)
-            .withKA(300)
-            .withKG(0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
 
     public Kicker(String name, CanId motorId) {
         super("Subsystems/" + name);
-        motor = new KickerMotor("Motor", motorId, this::setDutyCycle, this::setVoltage);
+        motor = new KickerMotor("Motor", motorId);
 
-        motor.configure(motor -> {
-            TalonFXConfigurator configurator = motor.getConfigurator();
-            configurator.apply(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-            configurator.apply(MOTION_MAGIC_CONFIGS);
-            configurator.apply(SLOT0_CONFIGS);
+        motorConfiguration = new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
+                        .withNeutralMode(NeutralModeValue.Brake))
+                .withMotionMagic(new MotionMagicConfigs()
+                        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
+                .withSlot0(new Slot0Configs()
+                        .withKS(0.03)
+                        .withKV(0.01));
+
+        motor.configure(configurator -> {
+            configurator.apply(motorConfiguration);
         });
 
         addChild(motor.getClass().getName(), motor);
@@ -102,26 +93,8 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     }
 
     // region SysId
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> motor.setVoltage(voltage), () -> motor.stop());
-    }
-
     private void setSysIdVoltage(Voltage voltage) {
         motor.setVoltage(voltage);
-    }
-
-    private void setDutyCycle(Dimensionless dutyCycle) {
-        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
-    }
-
-    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
-        return runEnd(() -> {
-            motor.setDutyCycle(dutyCycle);
-        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     @Override

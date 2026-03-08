@@ -57,15 +57,15 @@ public class RobotContainer implements Sendable {
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
   private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
   private static final CanId BAYDOOR_MOTOR_RIGHT_CAN_ID = new CanId((byte) 15);
-  private static final DigitalInputOutput INTAKE_LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
-  private static final DigitalInputOutput INTAKE_RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
+  private static final DigitalInputOutput LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
+  private static final DigitalInputOutput RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
 
+  private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
+
   private static final CanId SHOOTER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
   private static final CanId SHOOTER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
-
-  private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
   private final CommandXboxController driver;
   private final CommandXboxController operator;
@@ -100,8 +100,8 @@ public class RobotContainer implements Sendable {
 
     intake = new Intake(Intake.class.getSimpleName(), INTAKE_ROLLER_MOTOR_CAN_ID);
     bayDoor = new BayDoor(BayDoor.class.getSimpleName(), BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID,
-        INTAKE_RIGHT_BAYDOOR_DIO,
-        INTAKE_LEFT_BAYDOOR_DIO);
+        LEFT_BAYDOOR_DIO,
+        RIGHT_BAYDOOR_DIO);
     spindexer = new Spindexer(Spindexer.class.getSimpleName(), SPINDEXER_MOTOR_CAN_ID);
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
@@ -166,7 +166,7 @@ public class RobotContainer implements Sendable {
 
   private void configureControllerBindings() {
     bindDrive();
-    bindDriveSystemDynamics();
+    // bindDriveSystemDynamics();
     bindBayDoor();
     bindIntake();
     bindSpindexer();
@@ -175,10 +175,11 @@ public class RobotContainer implements Sendable {
 
     driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
     driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
-    operator.leftStick().whileTrue(
+    operator.start().toggleOnTrue(
         shooter.shootFuelSmartDashboard()
             .alongWith(kicker.kickStartFuelSmartDashboard())
             .alongWith(spindexer.indexFuelSmartDashboard()));
+    operator.back().whileTrue(spindexer.shuttleFuelSmartDashboard());
 
     operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
         () -> Value.of(
@@ -193,7 +194,7 @@ public class RobotContainer implements Sendable {
                     DEADBAND.in(Value))),
             MOVE_ROBOT_CURVE)));
 
-    driver.b()
+    driver.a()
         .whileTrue(new LaunchFuelToTargetDistance(
             launchCalculator,
             RPM.of(100),

@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
@@ -117,11 +117,11 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
-                                Meters.of(0.1778).in(Meters),
-                                Meters.of(0.0635).in(Meters),
-                                Meters.of(0.5588).in(Meters),
+                                Inches.of(8).in(Meters),
+                                Inches.of(12).in(Meters),
+                                Inches.of(20.5).in(Meters),
                                 Degrees.zero().in(Degrees),
-                                Degrees.of(30).in(Degrees),
+                                Degrees.zero().in(Degrees),
                                 Degrees.of(-90).in(Degrees));
                 LimelightHelpers.SetRobotOrientation(limelightName,
                                 getPigeon2().getYaw().getValue().in(Degrees),
@@ -321,6 +321,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 SmartDashboard.putNumber("Robot Heading Wrapped", robotHeading.in(Degrees));
                 SmartDashboard.putBoolean("Should Correct Robot Heading", !robotHeading.isNear(targetAngle, threshold));
+                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
 
                 if (!robotHeading.isNear(targetAngle, threshold)) {
                         setControl(
@@ -330,13 +331,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                         .withHeadingPID(targetPID.kP,
                                                                         targetPID.kI,
                                                                         targetPID.kD)
-                                                        .withDriveRequestType(DriveRequestType.Velocity)
+                                                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
                                                         .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
                 } else {
                         setControl(fieldCentricSwerveRequest(x, y, RPM.zero()));
                 }
 
-                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
         }
 
         public Command angleToOutpost(

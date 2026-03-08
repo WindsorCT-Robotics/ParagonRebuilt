@@ -2,7 +2,7 @@ package frc.robot.interfaces;
 
 import edu.wpi.first.units.measure.Dimensionless;
 
-public interface IHomingMotor<Motor, Config> extends IMotor<Motor, Config> {
+public interface IHomingMotor<Motor> extends IMotor<Motor> {
     boolean isHomed();
 
     void home(Dimensionless dutyCycle);

@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,26 +30,17 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IClosedLoopMotor;
 
-public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfiguration>, Sendable {
+public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX>, Sendable {
     protected final TalonFX motor;
+    protected final TalonFXConfigurator configurator;
+    private final TalonFXConfiguration configuration = new TalonFXConfiguration();
     private final String name;
-    private final TalonFXConfigurator configurator;
-    private final TalonFXConfiguration configuration;
-    private final Consumer<Dimensionless> dutyCycleSetter;
-    private final Consumer<Voltage> voltageSetter;
 
     public TalonFXMotorBase(
             String name,
-            CanId canId,
-            TalonFXConfiguration configuration,
-            Consumer<Dimensionless> dutyCycleSetter,
-            Consumer<Voltage> voltageSetter) {
+            CanId canId) {
         motor = new TalonFX(canId.Id());
         configurator = motor.getConfigurator();
-        this.configuration = configuration;
-        configurator.apply(configuration);
-        this.dutyCycleSetter = dutyCycleSetter;
-        this.voltageSetter = voltageSetter;
         this.name = name;
     }
 
@@ -73,12 +64,11 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
 
     @Override
     public void setPointVelocity(AngularVelocity angularVelocity) {
-        motor.setControl(new MotionMagicVelocityVoltage(angularVelocity));
+        motor.setControl(new MotionMagicVelocityDutyCycle(angularVelocity));
     }
 
-    @Override
-    public void configure(Consumer<TalonFX> config) {
-        config.accept(motor);
+    public void configure(Consumer<TalonFXConfigurator> configurator) {
+        configurator.accept(this.configurator);
     }
 
     @Override
@@ -86,7 +76,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
         return motor.getPosition().getValue();
     }
 
-    @Override
+    
     public TalonFXConfiguration getConfiguration() {
         return configuration;
     }
@@ -150,12 +140,8 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX, TalonFXConfig
         builder.setSafeState(this::stop);
 
         builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
-        builder.addDoubleProperty("Duty Cycle (%)", () -> getDutyCycle().in(Percent),
-                dutyCycle -> dutyCycleSetter.accept(Percent.of(dutyCycle)));
         builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
         builder.addBooleanProperty("Is Moving", this::isMoving, null);
-        builder.addDoubleProperty("Voltage (V)", () -> getVoltage().in(Volts),
-                voltage -> voltageSetter.accept(Volts.of(voltage)));
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addDoubleProperty("Temperature (C)", () -> getTemperarure().in(Celsius), null);
     }

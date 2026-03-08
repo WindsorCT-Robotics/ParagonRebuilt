@@ -9,18 +9,16 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -32,39 +30,29 @@ import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
-
+    private final TalonFXConfiguration motorConfiguration;
     private final SysIdRoutine routine;
 
-    private static final boolean INVERTED = true;
     private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
-
-    private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(0)
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
-            .withMotionMagicExpo_kV(0.12)
-            .withMotionMagicExpo_kA(0.1);
-    private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
-            .withKP(0.1)
-            .withKI(0)
-            .withKD(0)
-            .withKS(0.25)
-            .withKV(0.12)
-            .withKA(0)
-            .withKG(0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
 
     public Spindexer(
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor("Motor", motorCanId, this::setDutyCycle, this::setVoltage);
+        motor = new SpindexterMotor("Motor", motorCanId);
 
-        motor.configure(motor -> {
-            TalonFXConfigurator configurator = motor.getConfigurator();
-            configurator.apply(new MotorOutputConfigs().withInverted(
-                    (INVERTED) ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive));
-            configurator.apply(SLOT0_CONFIGS);
-            configurator.apply(MOTION_MAGIC_CONFIGS);
+        motorConfiguration = new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withNeutralMode(NeutralModeValue.Brake))
+                .withMotionMagic(new MotionMagicConfigs()
+                        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(900)))
+                .withSlot0(new Slot0Configs()
+                        .withKS(0.00325)
+                        .withKV(0.011));
+
+        motor.configure(configurator -> {
+            configurator.apply(motorConfiguration);
         });
         addChild(this.getName(), motor);
 
@@ -81,9 +69,13 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         motor.setPointVelocity(RPM.zero());
     }
 
-    // public Command indexFuel() {
-    //     return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
-    // }
+    public Command indexFuel() {
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
+    }
+
+    public Command shuttleFuelSmartDashboard() {
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity().unaryMinus()), () -> motor.stop());
+    }
 
     public Command indexFuelSmartDashboard() {
         return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
@@ -123,26 +115,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     // region SysId
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> {
-            motor.setVoltage(voltage);
-        }, () -> motor.stop());
-    }
-
-    private void setDutyCycle(Dimensionless dutyCycle) {
-        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
-    }
-
-    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
-        return runEnd(() -> {
-            motor.setDutyCycle(dutyCycle);
-        }, () -> motor.stop()).withName(getSubsystem() + "/overrideMotorDutyCycle");
-    }
-
     private void setSysIdVoltage(Voltage voltage) {
         motor.setVoltage(voltage);
     }

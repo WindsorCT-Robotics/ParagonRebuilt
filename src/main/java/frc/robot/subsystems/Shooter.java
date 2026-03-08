@@ -9,19 +9,18 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -34,39 +33,27 @@ import frc.robot.hardware.CanId;
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leadMotor;
     private final ShooterMotorBasic followerMotor;
-
+    private final TalonFXConfiguration motorConfiguration;
     private final SysIdRoutine routine;
-    private static final boolean INVERTED = true;
-
     private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
-
-    private static final MotionMagicConfigs MOTION_MAGIC_CONFIGS = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(0)
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300))
-            .withMotionMagicExpo_kV(0.12)
-            .withMotionMagicExpo_kA(0.1);
-    private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
-            .withKP(0)
-            .withKI(0)
-            .withKD(0)
-            .withKS(0.35)
-            .withKV(0.1225)
-            .withKA(0)
-            .withKG(0)
-            .withGravityType(GravityTypeValue.Elevator_Static);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId, this::setDutyCycle, this::setVoltage);
-        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId, this::setDutyCycle,
-                this::setVoltage);
+        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId);
+        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId);
 
-        leadMotor.configure(motor -> {
-            TalonFXConfigurator configurator = motor.getConfigurator();
-            configurator.apply(new MotorOutputConfigs().withInverted(
-                    (INVERTED) ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive));
-            configurator.apply(MOTION_MAGIC_CONFIGS);
-            configurator.apply(SLOT0_CONFIGS);
+        motorConfiguration = new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withNeutralMode(NeutralModeValue.Coast))
+                .withMotionMagic(new MotionMagicConfigs()
+                        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500)))
+                .withSlot0(new Slot0Configs()
+                        .withKS(0.03)
+                        .withKV(0.0105));
+
+        leadMotor.configure(configurator -> {
+            configurator.apply(motorConfiguration);
         });
 
         followerMotor.follow(leftMotorId.Id(), MotorAlignmentValue.Opposed);
@@ -123,26 +110,6 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     // region SysId
     private void setSysIdVoltage(Voltage voltage) {
         leadMotor.setVoltage(voltage);
-    }
-
-    private void setVoltage(Voltage voltage) {
-        CommandScheduler.getInstance().schedule(overrideMotorVoltage(voltage));
-    }
-
-    public Command overrideMotorVoltage(Voltage voltage) {
-        return runEnd(() -> {
-            leadMotor.setVoltage(voltage);
-        }, this::stop);
-    }
-
-    private void setDutyCycle(Dimensionless dutyCycle) {
-        CommandScheduler.getInstance().schedule(overrideMotorDutyCycle(dutyCycle));
-    }
-
-    public Command overrideMotorDutyCycle(Dimensionless dutyCycle) {
-        return runEnd(() -> {
-            leadMotor.setDutyCycle(dutyCycle);
-        }, this::stop).withName(getSubsystem() + "/overrideMotorDutyCycle");
     }
 
     @Override

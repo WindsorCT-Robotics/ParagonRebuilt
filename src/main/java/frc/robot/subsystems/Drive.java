@@ -40,6 +40,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -63,7 +64,6 @@ import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
 
 public class Drive extends GeneratedDrive implements Sendable {
-        // TODO: Max velocities should be properly tested.
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
         private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(7, 0, 0.3);
@@ -71,7 +71,9 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
-        private static final Angle SHOOTER_OFFSET = Degrees.of(90);
+        private static final Angle LAUNCH_ANGLE = Degrees.of(90);
+        private static final Translation2d LAUNCHER_OFFSET = new Translation2d(null, null); // TODO: Get offset relative
+                                                                                            // to robot forward.
         private final String limelightName;
         private final RectanglePoseArea field;
 
@@ -340,7 +342,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .unless(DriverStation.getAlliance()::isEmpty);
         }
 
-        private Pose2d getHubPosition(Alliance alliance) {
+        private Translation2d getHubPosition(Alliance alliance) {
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
                 Pose3d blueHubYCenter = layout.getTagPose(26).get();
                 Pose3d blueHubXCenter = layout.getTagPose(21).get();
@@ -357,7 +359,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         yHub = redHubYCenter.getMeasureY();
                 }
 
-                return new Pose2d(xHub, yHub, new Rotation2d());
+                return new Translation2d(xHub, yHub);
         }
 
         public Command angleToHub(
@@ -368,20 +370,28 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                         maybeAlliance.ifPresent(alliance -> {
                                 Pose2d robotPosition = getState().Pose;
-                                Pose2d hubPosition = getHubPosition(alliance);
-                                Distance xDifference = robotPosition.getMeasureX().minus(hubPosition.getMeasureX());
-                                Distance yDifference = robotPosition.getMeasureY().minus(hubPosition.getMeasureY());
+                                int k = 1; // 3, 5, 7
+                                Distance launcherDistance = Inches.of(11.3);
+                                Translation2d launcherOffset = new Translation2d(launcherDistance.in(Meters),
+                                                Math.cos(k * Math.PI / 4))
+                                                .rotateAround(Translation2d.kZero, new Rotation2d(getAngle()));
+                                Translation2d launcherPosition = new Translation2d(
+                                                Meters.of(robotPosition.getX()),
+                                                Meters.of(robotPosition.getY()))
+                                                .plus(launcherOffset);
+                                Translation2d hubPosition = getHubPosition(alliance);
 
+                                Translation2d targetPosition = launcherPosition.minus(hubPosition);
                                 Angle targetAngle = Radians
-                                                .of(Math.atan2(yDifference.in(Meters), xDifference.in(Meters)))
-                                                .plus(SHOOTER_OFFSET);
+                                                .of(Math.atan2(targetPosition.getY(), targetPosition.getX()));
 
-                                Angle wrapTargetAngle = Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
+                                // Angle wrapTargetAngle =
+                                // Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
 
                                 moveWithLockedAngle(
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                wrapTargetAngle,
+                                                targetAngle,
                                                 Degrees.of(2));
                         });
                 });

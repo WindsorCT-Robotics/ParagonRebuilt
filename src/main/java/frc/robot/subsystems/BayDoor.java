@@ -182,32 +182,22 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     public Command home() {
-        enableSoftLimits(false);
         return runEnd(
                 () -> {
-                    if (!atLeftCloseLimit.getAsBoolean()) {
-                        leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                        leftMotor.setBayMotorState(BayMotorState.CLOSING);
-                    } else {
-                        leftMotor.stop();
-                    }
-
-                    if (!atRightCloseLimit.getAsBoolean()) {
-                        rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                        rightMotor.setBayMotorState(BayMotorState.CLOSING);
-                    } else {
-                        rightMotor.stop();
-                    }
-                }, () -> {
-                    stop();
-                    leftMotor.resetRelativeEncoder();
-                    rightMotor.resetRelativeEncoder();
-                    enableSoftLimits(true);
-                    removeDefaultCommand();
-                    Elastic.sendNotification(homeNotification);
-                }).until(isBayDoorClosed)
+                    leftMotor.home(atLeftCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
+                    rightMotor.home(atRightCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
+                }, this::onHomingComplete)
+                .withName("Home")
+                .beforeStarting(() -> enableSoftLimits(false))
+                .until(isBayDoorClosed)
                 .handleInterrupt(() -> setDefaultCommand(home()))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Home");
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+    }
+
+    private void onHomingComplete() {
+        enableSoftLimits(true);
+        removeDefaultCommand();
+        Elastic.sendNotification(homeNotification);
     }
 
     public Command open() {

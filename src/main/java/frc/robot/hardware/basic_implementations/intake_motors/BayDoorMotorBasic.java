@@ -46,6 +46,7 @@ public class BayDoorMotorBasic extends KrakenMotorBase {
             setDutyCycle(homeDutyCycle);
         } else {
             stop();
+            resetRelativeEncoder();
             hasHomed = true;
             setBayMotorState(BayMotorState.CLOSE);
         }

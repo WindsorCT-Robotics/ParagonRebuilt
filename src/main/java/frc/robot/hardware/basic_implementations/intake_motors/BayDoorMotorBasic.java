@@ -1,5 +1,7 @@
 package frc.robot.hardware.basic_implementations.intake_motors;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.KrakenMotorBase;
@@ -9,10 +11,12 @@ public class BayDoorMotorBasic extends KrakenMotorBase {
 
     public BayDoorMotorBasic(
             String name,
-            CanId canId) {
+            CanId canId,
+            TalonFXConfiguration configuration) {
         super(
                 name,
-                canId);
+                canId,
+                configuration);
     }
 
     @Override

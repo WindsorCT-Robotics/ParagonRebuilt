@@ -8,8 +8,6 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.function.Consumer;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
@@ -33,14 +31,19 @@ import frc.robot.interfaces.IClosedLoopMotor;
 public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX>, Sendable {
     protected final TalonFX motor;
     protected final TalonFXConfigurator configurator;
-    private final TalonFXConfiguration configuration = new TalonFXConfiguration();
+    private final TalonFXConfiguration defaultConfiguration;
+    private TalonFXConfiguration currentConfiguration;
     private final String name;
 
     public TalonFXMotorBase(
             String name,
-            CanId canId) {
+            CanId canId,
+            TalonFXConfiguration configuration) {
         motor = new TalonFX(canId.Id());
         configurator = motor.getConfigurator();
+        defaultConfiguration = configuration;
+        currentConfiguration = defaultConfiguration;
+        configurator.apply(defaultConfiguration);
         this.name = name;
     }
 
@@ -67,18 +70,22 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX>, Sendable {
         motor.setControl(new MotionMagicVelocityDutyCycle(angularVelocity));
     }
 
-    public void configure(Consumer<TalonFXConfigurator> configurator) {
-        configurator.accept(this.configurator);
+    public void configure(TalonFXConfiguration configuration) {
+        currentConfiguration = configuration;
+        configurator.apply(configuration);
+    }
+
+    public TalonFXConfiguration getCurrentConfiguration() {
+        return currentConfiguration.clone();
+    }
+
+    public TalonFXConfiguration getDefaultConfiguration() {
+        return defaultConfiguration.clone();
     }
 
     @Override
     public Angle getAngle() {
         return motor.getPosition().getValue();
-    }
-
-    
-    public TalonFXConfiguration getConfiguration() {
-        return configuration;
     }
 
     @Override

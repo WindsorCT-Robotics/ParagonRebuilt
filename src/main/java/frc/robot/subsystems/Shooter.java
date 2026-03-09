@@ -10,7 +10,6 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -33,28 +32,30 @@ import frc.robot.hardware.CanId;
 public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
     private final ShooterMotorBasic leadMotor;
     private final ShooterMotorBasic followerMotor;
-    private final TalonFXConfiguration motorConfiguration;
     private final SysIdRoutine routine;
     private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
-        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId);
-        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId);
+        final MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
+                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
+        final Slot0Configs slot0Configs = new Slot0Configs()
+                .withKS(0.03)
+                .withKV(0.0105);
+        final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 
-        motorConfiguration = new TalonFXConfiguration()
+        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
-                        .withNeutralMode(NeutralModeValue.Coast))
-                .withMotionMagic(new MotionMagicConfigs()
-                        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500)))
-                .withSlot0(new Slot0Configs()
-                        .withKS(0.03)
-                        .withKV(0.0105));
-
-        leadMotor.configure(configurator -> {
-            configurator.apply(motorConfiguration);
-        });
+                        .withNeutralMode(neutralModeValue))
+                .withMotionMagic(motionMagicConfigs)
+                .withSlot0(slot0Configs));
+        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId, new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
+                        .withNeutralMode(neutralModeValue))
+                .withMotionMagic(motionMagicConfigs)
+                .withSlot0(slot0Configs));
 
         followerMotor.follow(leftMotorId.Id(), MotorAlignmentValue.Opposed);
 

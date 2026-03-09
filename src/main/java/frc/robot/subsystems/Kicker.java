@@ -31,14 +31,11 @@ import frc.robot.hardware.CanId;
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;
     private final SysIdRoutine routine;
-    private final TalonFXConfiguration motorConfiguration;
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
 
     public Kicker(String name, CanId motorId) {
         super("Subsystems/" + name);
-        motor = new KickerMotor("Motor", motorId);
-
-        motorConfiguration = new TalonFXConfiguration()
+        motor = new KickerMotor("Motor", motorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
@@ -46,11 +43,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                 .withSlot0(new Slot0Configs()
                         .withKS(0.03)
-                        .withKV(0.01));
-
-        motor.configure(configurator -> {
-            configurator.apply(motorConfiguration);
-        });
+                        .withKV(0.01)));
 
         addChild(motor.getClass().getName(), motor);
 

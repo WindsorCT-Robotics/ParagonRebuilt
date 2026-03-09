@@ -38,8 +38,7 @@ import frc.robot.interfaces.ISystemDynamics;
 public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
     private final BayDoorMotorBasic leftMotor;
     private final BayDoorMotorBasic rightMotor;
-    private final TalonFXConfiguration leftMotorConfiguration;
-    private final TalonFXConfiguration rightMotorConfiguration;
+
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
 
@@ -70,43 +69,37 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             DigitalInputOutput rightLimitSwitchDIO) {
         super("Subsystems/" + name);
 
-        leftMotor = new BayDoorMotorBasic("Left Bay Door Motor", leftMotorId);
-        rightMotor = new BayDoorMotorBasic("Right Bay Door Motor", rightMotorId);
+        final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
+                .withForwardSoftLimitThreshold(OPEN_ANGLE)
+                .withReverseSoftLimitThreshold(CLOSE_ANGLE)
+                .withForwardSoftLimitEnable(true)
+                .withReverseSoftLimitEnable(true);
+        final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
+                .withStatorCurrentLimit(Amps.of(25))
+                .withSupplyCurrentLimit(Amps.of(20))
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimitEnable(true);
+        final TorqueCurrentConfigs torqueCurrentConfigs = new TorqueCurrentConfigs()
+                .withPeakForwardTorqueCurrent(Amps.of(10))
+                .withPeakReverseTorqueCurrent(Amps.of(10));
 
-        leftMotorConfiguration = new TalonFXConfiguration()
+        leftMotor = new BayDoorMotorBasic("Left Bay Door Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
-                .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
-                        .withForwardSoftLimitThreshold(OPEN_ANGLE)
-                        .withReverseSoftLimitThreshold(CLOSE_ANGLE)
-                        .withForwardSoftLimitEnable(true)
-                        .withReverseSoftLimitEnable(true))
-                .withCurrentLimits(new CurrentLimitsConfigs()
-                        .withStatorCurrentLimit(Amps.of(25))
-                        .withSupplyCurrentLimit(Amps.of(20))
-                        .withStatorCurrentLimitEnable(true)
-                        .withSupplyCurrentLimitEnable(true))
-                .withTorqueCurrent(new TorqueCurrentConfigs()
-                        .withPeakForwardTorqueCurrent(Amps.of(10))
-                        .withPeakReverseTorqueCurrent(Amps.of(10)));
-
-        rightMotorConfiguration = leftMotorConfiguration.clone()
-                .withMotorOutput(leftMotorConfiguration.clone().MotorOutput
-                        .withInverted((leftMotorConfiguration.MotorOutput.Inverted == InvertedValue.Clockwise_Positive)
-                                ? InvertedValue.CounterClockwise_Positive
-                                : InvertedValue.Clockwise_Positive));
+                .withSoftwareLimitSwitch(softwareLimitSwitchConfigs)
+                .withCurrentLimits(currentLimitsConfigs)
+                .withTorqueCurrent(torqueCurrentConfigs));
+        rightMotor = new BayDoorMotorBasic("Right Bay Door Motor", rightMotorId, new TalonFXConfiguration()
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withNeutralMode(NeutralModeValue.Brake))
+                .withSoftwareLimitSwitch(softwareLimitSwitchConfigs)
+                .withCurrentLimits(currentLimitsConfigs)
+                .withTorqueCurrent(torqueCurrentConfigs));
 
         leftHardLimit = new DigitalInput(leftLimitSwitchDIO.Id());
         rightHardLimit = new DigitalInput(rightLimitSwitchDIO.Id());
-
-        leftMotor.configure(configurator -> {
-            configurator.apply(leftMotorConfiguration);
-        });
-
-        rightMotor.configure(configurator -> {
-            configurator.apply(rightMotorConfiguration);
-        });
 
         routine = new SysIdRoutine(
                 new Config(
@@ -172,21 +165,15 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     private void enableSoftLimits(boolean enable) {
-        leftMotor.configure(configuration -> {
-            configuration.apply(
-                    leftMotorConfiguration.clone().withSoftwareLimitSwitch(
-                            leftMotorConfiguration.clone().SoftwareLimitSwitch
-                                    .withForwardSoftLimitEnable(enable)
-                                    .withReverseSoftLimitEnable(enable)));
-        });
+        TalonFXConfiguration leftMotorConfig = leftMotor.getCurrentConfiguration()
+                .withSoftwareLimitSwitch(leftMotor.getCurrentConfiguration().SoftwareLimitSwitch
+                        .withForwardSoftLimitEnable(enable).withReverseSoftLimitEnable(enable));
+        TalonFXConfiguration rightMotorConfig = rightMotor.getCurrentConfiguration()
+                .withSoftwareLimitSwitch(rightMotor.getCurrentConfiguration().SoftwareLimitSwitch
+                        .withForwardSoftLimitEnable(enable).withReverseSoftLimitEnable(enable));
 
-        rightMotor.configure(configuration -> {
-            configuration.apply(
-                    rightMotorConfiguration.clone().withSoftwareLimitSwitch(
-                            rightMotorConfiguration.clone().SoftwareLimitSwitch
-                                    .withForwardSoftLimitEnable(enable)
-                                    .withReverseSoftLimitEnable(enable)));
-        });
+        leftMotor.configure(leftMotorConfig);
+        rightMotor.configure(rightMotorConfig);
     }
 
     public Command home() {

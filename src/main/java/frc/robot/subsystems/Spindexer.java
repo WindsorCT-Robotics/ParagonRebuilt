@@ -30,7 +30,6 @@ import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
-    private final TalonFXConfiguration motorConfiguration;
     private final SysIdRoutine routine;
 
     private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
@@ -39,9 +38,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             String name,
             CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new SpindexterMotor("Motor", motorCanId);
-
-        motorConfiguration = new TalonFXConfiguration()
+        motor = new SpindexterMotor("Motor", motorCanId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
@@ -49,11 +46,8 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(900)))
                 .withSlot0(new Slot0Configs()
                         .withKS(0.00325)
-                        .withKV(0.011));
+                        .withKV(0.011)));
 
-        motor.configure(configurator -> {
-            configurator.apply(motorConfiguration);
-        });
         addChild(this.getName(), motor);
 
         routine = new SysIdRoutine(new Config(),

@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRollerMotor> {
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
-    private final TalonFXConfiguration motorConfiguration;
 
     // TODO: Determine RPS.
     private AngularVelocity intakeVelocity = RotationsPerSecond.of(40);
@@ -36,9 +35,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
-        motor = new IntakeRollerMotor("Motor", motorCanId);
-
-        motorConfiguration = new TalonFXConfiguration()
+        motor = new IntakeRollerMotor("Motor", motorCanId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
@@ -46,11 +43,8 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                 .withSlot0(new Slot0Configs()
                         .withKS(0.001)
-                        .withKV(0.0105));
+                        .withKV(0.0105)));
 
-        motor.configure(configurator -> {
-            configurator.apply(motorConfiguration);
-        });
         addChild(motor.getClass().getName(), motor);
 
         routine = new SysIdRoutine(

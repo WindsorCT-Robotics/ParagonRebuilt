@@ -17,7 +17,6 @@ import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
@@ -224,7 +223,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 FIELD_CENTRIC
         }
 
-        // TODO: Forward is intake side.
         private SwerveRequest robotCentricSwerveRequest(
                         LinearVelocity x,
                         LinearVelocity y,
@@ -232,8 +230,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return robotCentricSwerveRequest
                                 .withVelocityX(y)
                                 .withVelocityY(x)
-                                .withRotationalRate(rotateRate)
-                                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+                                .withRotationalRate(rotateRate);
         }
 
         private SwerveRequest fieldCentricSwerveRequest(
@@ -243,8 +240,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return fieldCentricSwerveRequest
                                 .withVelocityX(y)
                                 .withVelocityY(x)
-                                .withRotationalRate(rotateRate)
-                                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+                                .withRotationalRate(rotateRate);
         }
 
         public Command move(

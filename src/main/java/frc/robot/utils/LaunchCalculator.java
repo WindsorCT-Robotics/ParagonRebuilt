@@ -33,30 +33,30 @@ public class LaunchCalculator implements Sendable {
         // TODO: Double check these tag numbers
         // TODO: Check for the existence of the tags before calling .get().
 
-        putShooterMap();
-        putKickerMap();
-        putTimeOfFlightMap();
+        putTestedShooterMap();
+        putTestedKickerMap();
+        putTestedTimeOfFlightMap();
     }
 
     private Pose2d getHubPosition(Alliance alliance) {
-                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                Pose3d blueHubYCenter = layout.getTagPose(26).get();
-                Pose3d blueHubXCenter = layout.getTagPose(21).get();
-                Pose3d redHubYCenter = layout.getTagPose(10).get();
-                Pose3d redHubXCenter = layout.getTagPose(5).get();
+        AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+        Pose3d blueHubYCenter = layout.getTagPose(26).get();
+        Pose3d blueHubXCenter = layout.getTagPose(21).get();
+        Pose3d redHubYCenter = layout.getTagPose(10).get();
+        Pose3d redHubXCenter = layout.getTagPose(5).get();
 
-                Distance xHub;
-                Distance yHub;
-                if (alliance.equals(Alliance.Blue)) {
-                        xHub = blueHubXCenter.getMeasureX();
-                        yHub = blueHubYCenter.getMeasureY();
-                } else {
-                        xHub = redHubXCenter.getMeasureX();
-                        yHub = redHubYCenter.getMeasureY();
-                }
-
-                return new Pose2d(xHub, yHub, new Rotation2d());
+        Distance xHub;
+        Distance yHub;
+        if (alliance.equals(Alliance.Blue)) {
+            xHub = blueHubXCenter.getMeasureX();
+            yHub = blueHubYCenter.getMeasureY();
+        } else {
+            xHub = redHubXCenter.getMeasureX();
+            yHub = redHubYCenter.getMeasureY();
         }
+
+        return new Pose2d(xHub, yHub, new Rotation2d());
+    }
 
     private Distance distanceToHub() {
         Pose2d currentPosition = robotPosition.get();
@@ -82,19 +82,19 @@ public class LaunchCalculator implements Sendable {
         return Seconds.of(timeOfFlightMap.get(distanceToHub().in(Meters)));
     }
 
-    private void putShooterMap() {
-        // TODO: No magic numbers.
-        shooterMap.put(Inches.of(45).in(Meters), 120.0);
-        shooterMap.put(Inches.of(115).in(Meters), 360.0);
+    private void putTestedShooterMap() {
+        shooterMap.put(2.0, 2175.0);
+        shooterMap.put(3.0, 2400.00);
     }
 
-    private void putKickerMap() {
-        // TODO: No magic numbers.
-        kickerMap.put(Inches.of(45).in(Meters), 180.0);
-        kickerMap.put(Inches.of(115).in(Meters), 420.0);
+    private void putTestedKickerMap() {
+        kickerMap.put(2.0, 2175.00);
+        kickerMap.put(3.0, 2400.00);
     }
 
-    private void putTimeOfFlightMap() {
+    private void putTestedTimeOfFlightMap() {
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(3.0, 1.5);
     }
 
     @Override

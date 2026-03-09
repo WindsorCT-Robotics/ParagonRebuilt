@@ -29,10 +29,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.generated.Elastic;
+import frc.robot.generated.Elastic.Notification;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
-import frc.robot.hardware.basic_implementations.intake_motors.BayDoorState;
+import frc.robot.hardware.basic_implementations.intake_motors.BayMotorState;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
@@ -42,12 +44,13 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
 
+    private final Elastic.Notification homeNotification;
+    private final SysIdRoutine routine;
+
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-0.1);
     private static final Dimensionless DUTY_CYCLE = Percent.of(0.2);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
     private static final Angle CLOSE_ANGLE = Rotations.of(0);
-
-    private final SysIdRoutine routine;
 
     public final Trigger atLeftCloseLimit;
     public final Trigger atRightCloseLimit;
@@ -68,6 +71,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             DigitalInputOutput leftLimitSwitchDIO,
             DigitalInputOutput rightLimitSwitchDIO) {
         super("Subsystems/" + name);
+
+        homeNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED", "");
 
         final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitThreshold(OPEN_ANGLE)
@@ -144,10 +149,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private void moveTowards(BayDoorMotorBasic motor, Dimensionless percent, Angle goalAngle, Angle currentAngle) {
         if (currentAngle.lte(goalAngle))
             motor.setDutyCycle(percent);
-        motor.setBayMotorState(BayDoorState.OPENING);
+        motor.setBayMotorState(BayMotorState.OPENING);
         if (currentAngle.gt(goalAngle))
             motor.setDutyCycle(percent.unaryMinus());
-        motor.setBayMotorState(BayDoorState.CLOSING);
+        motor.setBayMotorState(BayMotorState.CLOSING);
     }
 
     private void moveToPosition(
@@ -155,7 +160,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             Dimensionless percent,
             Angle goalAngle,
             Angle currentAngle,
-            BayDoorState endState) {
+            BayMotorState endState) {
         if (!currentAngle.isNear(goalAngle, TOLERANCE)) {
             moveTowards(motor, percent, goalAngle, currentAngle);
         } else {
@@ -182,14 +187,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 () -> {
                     if (!atLeftCloseLimit.getAsBoolean()) {
                         leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                        leftMotor.setBayMotorState(BayDoorState.CLOSING);
+                        leftMotor.setBayMotorState(BayMotorState.CLOSING);
                     } else {
                         leftMotor.stop();
                     }
 
                     if (!atRightCloseLimit.getAsBoolean()) {
                         rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                        rightMotor.setBayMotorState(BayDoorState.CLOSING);
+                        rightMotor.setBayMotorState(BayMotorState.CLOSING);
                     } else {
                         rightMotor.stop();
                     }
@@ -199,6 +204,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                     rightMotor.resetRelativeEncoder();
                     enableSoftLimits(true);
                     removeDefaultCommand();
+                    Elastic.sendNotification(homeNotification);
                 }).until(isBayDoorClosed)
                 .handleInterrupt(() -> setDefaultCommand(home()))
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Home");
@@ -206,15 +212,15 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     public Command open() {
         return runEnd(() -> {
-            moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayDoorState.OPEN);
-            moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayDoorState.OPEN);
+            moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayMotorState.OPEN);
+            moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayMotorState.OPEN);
         }, this::stop).withName("Open");
     }
 
     public Command close() {
         return runEnd(() -> {
-            moveToPosition(leftMotor, DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayDoorState.CLOSE);
-            moveToPosition(rightMotor, DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayDoorState.CLOSE);
+            moveToPosition(leftMotor, DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayMotorState.CLOSE);
+            moveToPosition(rightMotor, DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayMotorState.CLOSE);
         }, this::home).until(isBayDoorClosed.or(isBayDoorSoftClosed)).withName("Close");
     }
 

@@ -67,8 +67,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         // TODO: Max velocities should be properly tested.
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants DEFAULT_TARGET_DIRECTION_PID = new PIDConstants(0.5, 0, 0.001);
-        private PIDConstants targetPID = new PIDConstants(0.3, 0.0, 0.0);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
@@ -79,6 +77,9 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
+        private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
+        private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
+        private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
         public Drive(
                         String name,
@@ -130,6 +131,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0,
                                 0.0,
                                 0.0);
+
+                fieldCentricFacingAngleSwerveRequest.HeadingController
+                                .enableContinuousInput(Degrees.of(-180).in(Degrees), Degrees.of(180).in(Degrees));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setP(7);
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setI(0.0);
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setD(0.3);
 
                 initSmartDashboard();
         }
@@ -187,30 +194,6 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         }
 
-        private void setP(double p) {
-                targetPID = new PIDConstants(p, targetPID.kI, targetPID.kD);
-        }
-
-        private double getP() {
-                return targetPID.kP;
-        }
-
-        private void setI(double i) {
-                targetPID = new PIDConstants(targetPID.kI, i, targetPID.kD);
-        }
-
-        private double getI() {
-                return targetPID.kI;
-        }
-
-        private void setD(double d) {
-                targetPID = new PIDConstants(targetPID.kP, targetPID.kI, d);
-        }
-
-        private double getD() {
-                return targetPID.kD;
-        }
-
         @Override
         public void initSendable(SendableBuilder builder) {
                 builder.setSmartDashboardType("Subsystem");
@@ -225,10 +208,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 ".command",
                                 () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
                                 null);
-
-                builder.addDoubleProperty("Target P", this::getP, this::setP);
-                builder.addDoubleProperty("Target I", this::getI, this::setI);
-                builder.addDoubleProperty("Target D", this::getD, this::setD);
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -248,7 +227,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         AngularVelocity rotateRate) {
-                return new RobotCentric()
+                return robotCentricSwerveRequest
                                 .withVelocityX(y)
                                 .withVelocityY(x)
                                 .withRotationalRate(rotateRate)
@@ -259,7 +238,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         AngularVelocity rotateRate) {
-                return new FieldCentric()
+                return fieldCentricSwerveRequest
                                 .withVelocityX(y)
                                 .withVelocityY(x)
                                 .withRotationalRate(rotateRate)
@@ -325,13 +304,9 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 if (!robotHeading.isNear(targetAngle, threshold)) {
                         setControl(
-                                        new FieldCentricFacingAngle()
+                                        fieldCentricFacingAngleSwerveRequest
                                                         .withVelocityX(y)
                                                         .withVelocityY(x)
-                                                        .withHeadingPID(targetPID.kP,
-                                                                        targetPID.kI,
-                                                                        targetPID.kD)
-                                                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
                                                         .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
                 } else {
                         setControl(fieldCentricSwerveRequest(x, y, RPM.zero()));

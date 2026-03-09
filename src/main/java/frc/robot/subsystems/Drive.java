@@ -67,6 +67,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // TODO: Max velocities should be properly tested.
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(7, 0, 0.3);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
@@ -133,10 +134,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController
-                                .enableContinuousInput(Degrees.of(-180).in(Degrees), Degrees.of(180).in(Degrees));
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setP(7);
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setI(0.0);
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setD(0.3);
+                                .enableContinuousInput(-Math.PI, Math.PI);
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(1).in(Radians));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setP(FACING_ANGLE_PID.kP);
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setI(FACING_ANGLE_PID.kI);
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setD(FACING_ANGLE_PID.kD);
 
                 initSmartDashboard();
         }
@@ -307,6 +309,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         fieldCentricFacingAngleSwerveRequest
                                                         .withVelocityX(y)
                                                         .withVelocityY(x)
+                                                        .withHeadingPID(FACING_ANGLE_PID.kP,
+                                                                        FACING_ANGLE_PID.kI,
+                                                                        FACING_ANGLE_PID.kD)
                                                         .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
                 } else {
                         setControl(fieldCentricSwerveRequest(x, y, RPM.zero()));

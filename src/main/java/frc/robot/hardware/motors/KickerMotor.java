@@ -1,4 +1,4 @@
-package frc.robot.hardware.shooter_motors;
+package frc.robot.hardware.motors;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 

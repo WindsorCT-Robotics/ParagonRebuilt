@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.spindexer_motor.SpindexterMotor;
+import frc.robot.hardware.motors.SpindexterMotor;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {

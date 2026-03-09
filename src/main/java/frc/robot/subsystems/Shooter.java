@@ -25,13 +25,13 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
-import frc.robot.hardware.basic_implementations.shooter_motors.ShooterMotorBasic;
 import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.motors.ShooterMotor;
 
-public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotorBasic> {
-    private final ShooterMotorBasic leadMotor;
-    private final ShooterMotorBasic followerMotor;
+public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotor> {
+    private final ShooterMotor leadMotor;
+    private final ShooterMotor followerMotor;
     private final SysIdRoutine routine;
     private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
 
@@ -44,13 +44,13 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                 .withKV(0.0105);
         final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 
-        leadMotor = new ShooterMotorBasic("Left Motor", leftMotorId, new TalonFXConfiguration()
+        leadMotor = new ShooterMotor("Left Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
                         .withNeutralMode(neutralModeValue))
                 .withMotionMagic(motionMagicConfigs)
                 .withSlot0(slot0Configs));
-        followerMotor = new ShooterMotorBasic("Right Motor", rightMotorId, new TalonFXConfiguration()
+        followerMotor = new ShooterMotor("Right Motor", rightMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(neutralModeValue))
@@ -114,7 +114,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     }
 
     @Override
-    public void log(SysIdRoutineLog log, ShooterMotorBasic motor, String name) {
+    public void log(SysIdRoutineLog log, ShooterMotor motor, String name) {
         log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
     }
 

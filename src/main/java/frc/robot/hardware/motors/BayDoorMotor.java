@@ -1,17 +1,18 @@
-package frc.robot.hardware.basic_implementations.intake_motors;
+package frc.robot.hardware.motors;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import frc.robot.hardware.BayMotorState;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.KrakenMotorBase;
 
-public class BayDoorMotorBasic extends KrakenMotorBase {
+public class BayDoorMotor extends KrakenMotorBase {
     private BayMotorState motorBayDoorState = BayMotorState.UNKNOWN;
     private boolean hasHomed = false;
 
-    public BayDoorMotorBasic(
+    public BayDoorMotor(
             String name,
             CanId canId,
             TalonFXConfiguration configuration) {

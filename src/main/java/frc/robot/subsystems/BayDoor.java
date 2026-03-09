@@ -31,15 +31,15 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
+import frc.robot.hardware.BayMotorState;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
-import frc.robot.hardware.basic_implementations.intake_motors.BayDoorMotorBasic;
-import frc.robot.hardware.basic_implementations.intake_motors.BayMotorState;
+import frc.robot.hardware.motors.BayDoorMotor;
 import frc.robot.interfaces.ISystemDynamics;
 
-public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotorBasic> {
-    private final BayDoorMotorBasic leftMotor;
-    private final BayDoorMotorBasic rightMotor;
+public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMotor> {
+    private final BayDoorMotor leftMotor;
+    private final BayDoorMotor rightMotor;
 
     private final DigitalInput leftHardLimit;
     private final DigitalInput rightHardLimit;
@@ -88,14 +88,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 .withPeakForwardTorqueCurrent(Amps.of(10))
                 .withPeakReverseTorqueCurrent(Amps.of(10));
 
-        leftMotor = new BayDoorMotorBasic("Left Bay Door Motor", leftMotorId, new TalonFXConfiguration()
+        leftMotor = new BayDoorMotor("Left Bay Door Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
                 .withSoftwareLimitSwitch(softwareLimitSwitchConfigs)
                 .withCurrentLimits(currentLimitsConfigs)
                 .withTorqueCurrent(torqueCurrentConfigs));
-        rightMotor = new BayDoorMotorBasic("Right Bay Door Motor", rightMotorId, new TalonFXConfiguration()
+        rightMotor = new BayDoorMotor("Right Bay Door Motor", rightMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
@@ -146,7 +146,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addBooleanProperty("Is Right Pressed", atRightCloseLimit, null);
     }
 
-    private void moveTowards(BayDoorMotorBasic motor, Dimensionless percent, Angle goalAngle, Angle currentAngle) {
+    private void moveTowards(BayDoorMotor motor, Dimensionless percent, Angle goalAngle, Angle currentAngle) {
         if (currentAngle.lte(goalAngle))
             motor.setDutyCycle(percent);
         motor.setBayMotorState(BayMotorState.OPENING);
@@ -156,7 +156,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     private void moveToPosition(
-            BayDoorMotorBasic motor,
+            BayDoorMotor motor,
             Dimensionless percent,
             Angle goalAngle,
             Angle currentAngle,
@@ -216,7 +216,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     // region SysId
     @Override
-    public void log(SysIdRoutineLog log, BayDoorMotorBasic motor, String name) {
+    public void log(SysIdRoutineLog log, BayDoorMotor motor, String name) {
         log.motor(
                 name)
                 .angularPosition(motor.getAngle())

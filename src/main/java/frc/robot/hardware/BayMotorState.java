@@ -1,4 +1,4 @@
-package frc.robot.hardware.basic_implementations.intake_motors;
+package frc.robot.hardware;
 
 public enum BayMotorState {
     UNKNOWN,

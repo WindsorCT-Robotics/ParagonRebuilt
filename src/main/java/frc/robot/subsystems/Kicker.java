@@ -24,9 +24,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.hardware.shooter_motors.KickerMotor;
 import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.motors.KickerMotor;
 
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;

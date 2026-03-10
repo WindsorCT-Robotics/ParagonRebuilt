@@ -65,7 +65,7 @@ import frc.robot.generated.TunerConstants;
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(7, 0, 0.3);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(1, 0, 0.3);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
@@ -365,11 +365,16 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                         maybeAlliance.ifPresent(alliance -> {
                                 Pose2d robotPosition = getState().Pose;
+                                
                                 int k = 1; // 3, 5, 7
                                 Distance launcherDistance = Inches.of(11.3);
-                                Translation2d launcherOffset = new Translation2d(launcherDistance.in(Meters),
-                                                Math.cos(k * Math.PI / 4))
-                                                .rotateAround(Translation2d.kZero, new Rotation2d(getAngle()));
+                                Translation2d launcherOffset = new Translation2d(
+                                                launcherDistance.in(Meters) * Math.cos(k * Math.PI / 4),
+                                                launcherDistance.in(Meters) * Math.sin(k * Math.PI / 4))
+                                                .rotateAround(new Translation2d(
+                                                                robotPosition.getMeasureX(),
+                                                                robotPosition.getMeasureY()),
+                                                                new Rotation2d(getAngle()));
                                 Translation2d launcherPosition = new Translation2d(
                                                 Meters.of(robotPosition.getX()),
                                                 Meters.of(robotPosition.getY()))

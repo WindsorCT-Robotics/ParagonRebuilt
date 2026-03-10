@@ -30,8 +30,8 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final SysIdRoutine routine;
 
     // TODO: Determine RPS.
-    private AngularVelocity intakeVelocity = RotationsPerSecond.of(40);
-    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-0);
+    private AngularVelocity intakeVelocity = RotationsPerSecond.of(80);
+    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-80);
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);

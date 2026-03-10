@@ -25,7 +25,7 @@ public class LaunchFuelToTargetDistance extends ParallelCommandGroup {
                                                 .getShooterVelocity()),
                                 kicker.kickStartFuel(() -> launchCalculator
                                                 .getKickerVelocity()),
-                                spindexer.indexFuelAtFlyWheelVelocity(() -> RPM.of(240),
+                                spindexer.indexFuelAtFlyWheelVelocity(() -> RPM.of(1250),
                                                 () -> shooter.getShootTargetVelocity(),
                                                 velocityThreshold));
         }

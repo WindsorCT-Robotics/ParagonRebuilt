@@ -173,8 +173,11 @@ public class RobotContainer implements Sendable {
     bindKicker();
     bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b()).withName("Open Bay Door & Intake Fuel"));
-    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x()).withName("Open Bay Door & Shuttle Fuel"));
+    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b().or(driver.y())).withName("Open Bay Door & Intake Fuel"));
+    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x().or(driver.y())).withName("Open Bay Door & Shuttle Fuel"));
+    driver.y().onTrue(bayDoor.close());
+    driver.start().whileTrue(new LaunchFuelToTargetDistance(launchCalculator, RPM.of(100), () -> drive.getState().Pose, shooter, kicker, spindexer));
+    
     operator.start().toggleOnTrue(
         shooter.shootFuelSmartDashboard()
             .alongWith(kicker.kickStartFuelSmartDashboard())

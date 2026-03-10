@@ -29,7 +29,6 @@ public class LaunchCalculator implements Sendable {
     public LaunchCalculator(Supplier<Pose2d> robotPosition) {
         this.robotPosition = robotPosition;
 
-        // TODO: Double check these tag numbers
         // TODO: Check for the existence of the tags before calling .get().
 
         putTestedShooterMap();

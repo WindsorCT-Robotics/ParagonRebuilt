@@ -70,9 +70,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
-        // private static final Angle LAUNCH_ANGLE = Degrees.of(90);
-        // private static final Translation2d LAUNCHER_OFFSET = new Translation2d(null, null); // TODO: Get offset relative
-                                                                                            // to robot forward.
         private final String limelightName;
         private final RectanglePoseArea field;
 
@@ -159,7 +156,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 SmartDashboard.putData(getName() + "/" + getPigeon2().getClass().getSimpleName(),
                                 getPigeon2());
                 // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
-                // TODO: See if these values are correct.
                 SmartDashboard.putData(getName() + "/SwerveDrive", new Sendable() {
                         @Override
                         public void initSendable(SendableBuilder builder) {

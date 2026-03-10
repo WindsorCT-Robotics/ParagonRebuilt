@@ -29,7 +29,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    // TODO: Determine RPS.
     private AngularVelocity intakeVelocity = RotationsPerSecond.of(80);
     private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-80);
 

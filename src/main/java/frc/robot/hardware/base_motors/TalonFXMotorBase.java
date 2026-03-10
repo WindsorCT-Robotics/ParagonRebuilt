@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -98,7 +99,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX>, Sendable {
      */
     @Override
     public void setDutyCycle(Dimensionless percentage) {
-        motor.set(percentage.in(Percent));
+        motor.set(percentage.in(Value));
     }
 
     @Override

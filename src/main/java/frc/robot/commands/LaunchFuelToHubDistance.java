@@ -21,9 +21,9 @@ public class LaunchFuelToHubDistance extends ParallelCommandGroup {
                         Spindexer spindexer) {
                 addCommands(
                                 shooter.launchFuel(
-                                                () -> launchCalculator.getShooterVelocityToHub()),
+                                                () -> launchCalculator.getShooterVelocityToHub().minus(RPM.of(20))),
                                 kicker.kickFuel(
-                                                () -> launchCalculator.getKickerVelocityToHub()),
+                                                () -> launchCalculator.getKickerVelocityToHub().minus(RPM.of(20))),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
                                                 () -> RPM.of(1250),
                                                 () -> shooter.getLaunchVelocity(),

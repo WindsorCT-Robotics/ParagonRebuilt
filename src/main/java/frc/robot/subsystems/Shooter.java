@@ -42,7 +42,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private final ShooterMotor followerMotor;
     private final SysIdRoutine routine;
     private static final Distance HALF_FIELD = Meters
-            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 2);
+            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
 
@@ -109,11 +109,11 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
             AngularVelocity velocity = RPM.zero();
 
-            maybeAlliance.map(alliance -> {
-                if (alliance == Alliance.Blue && robotPosition.get().getMeasureY().lt(HALF_FIELD))
+            velocity = maybeAlliance.map(alliance -> {
+                if (alliance == Alliance.Blue && robotPosition.get().getMeasureX().lt(HALF_FIELD))
                     return PREP_ANGULAR_VELOCITY;
 
-                if (alliance == Alliance.Red && robotPosition.get().getMeasureY().gt(HALF_FIELD))
+                if (alliance == Alliance.Red && robotPosition.get().getMeasureX().gt(HALF_FIELD))
                     return PREP_ANGULAR_VELOCITY;
 
                 return RPM.zero();

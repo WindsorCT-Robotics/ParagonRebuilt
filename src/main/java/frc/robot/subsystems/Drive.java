@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Value;
@@ -20,6 +21,8 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
@@ -81,6 +84,8 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
+        private DriveRequestType driveRequestType = DriveRequestType.OpenLoopVoltage;
+
         public Drive(
                         String name,
                         String limelightName,
@@ -135,6 +140,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
                 fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI,
                                 FACING_ANGLE_PID.kD);
+                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 initSmartDashboard();
         }
@@ -155,7 +161,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return false;
                 }
 
-                return getAngle().isNear(targetAngle.get(), Degrees.of(15));
+                Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
+                return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
         }
 
         @Override
@@ -318,6 +325,25 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return velocity.times(percent.get());
         }
 
+        private void switchControlType() {
+                if (driveRequestType == DriveRequestType.OpenLoopVoltage) {
+                        driveRequestType = DriveRequestType.Velocity;
+                } else {
+                        driveRequestType = DriveRequestType.OpenLoopVoltage;
+                }
+
+                robotCentricSwerveRequest.withDriveRequestType(driveRequestType)
+                                .withSteerRequestType(SteerRequestType.Position);
+                fieldCentricSwerveRequest.withDriveRequestType(driveRequestType)
+                                .withSteerRequestType(SteerRequestType.Position);
+                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(driveRequestType)
+                                .withSteerRequestType(SteerRequestType.Position);
+        }
+
+        public Command switch1() {
+                return runOnce(() -> switchControlType());
+        }
+
         public Command moveWithPercentages(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y,
@@ -338,16 +364,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle) {
-                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians) + Math.PI));
+                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
 
-                SmartDashboard.putNumber("Robot Heading Wrapped", robotHeading.in(Degrees));
-                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
-
-                setControl(
-                                fieldCentricFacingAngleSwerveRequest
-                                                .withVelocityX(y)
-                                                .withVelocityY(x)
-                                                .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
+                if (!robotHeading.isNear(targetAngle, Degrees.of(3))) {
+                        setControl(
+                                        fieldCentricFacingAngleSwerveRequest
+                                                        .withVelocityX(y)
+                                                        .withVelocityY(x)
+                                                        .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
+                } else {
+                        setControl(fieldCentricSwerveRequest
+                                        .withVelocityX(y)
+                                        .withVelocityY(x)
+                                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+                                        .withRotationalRate(RPM.zero()));
+                }
 
         }
 
@@ -420,7 +451,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command angleToHub(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
-                return run(() -> {
+                return runEnd(() -> {
                         Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
@@ -434,7 +465,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                         targetAngle.get());
-                });
+                }, () -> fieldCentricSwerveRequest.withDriveRequestType(DriveRequestType.OpenLoopVoltage));
         }
 
         private PathPlannerPath createPathToPosition(
@@ -519,6 +550,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees), 0.0, 0.0, 0.0, 0.0, 0.0);
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().plus(Radians.of(Math.PI)).in(Degrees),
+                                0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

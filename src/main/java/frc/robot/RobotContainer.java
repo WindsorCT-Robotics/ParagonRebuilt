@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.LaunchFuelToHubDistance;
 import frc.robot.commands.LaunchFuelToTargetDistance;
@@ -87,6 +88,9 @@ public class RobotContainer implements Sendable {
   private final Supplier<Dimensionless> driverLeftAxisX;
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
+  private final Supplier<Dimensionless> driverRightAxisXNegated;
+  private final Supplier<Dimensionless> driverRightTrigger;
+  private final Trigger driverRightTriggered;
 
   public RobotContainer() {
     try {
@@ -119,16 +123,19 @@ public class RobotContainer implements Sendable {
 
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
-    configureControllerBindings();
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
     // drive.registerTelemetry(logger::telemeterize);
 
     driverLeftAxisX = () -> Value.of(driver.getLeftX());
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
-    driverRightAxisX = () -> Value.of(driver.getRightX()).unaryMinus();
+    driverRightAxisX = () -> Value.of(driver.getRightX());
+    driverRightAxisXNegated = () -> driverRightAxisX.get().unaryMinus();
+    driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
+    driverRightTriggered = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
 
     initSmartDashboard();
+    configureControllerBindings();
   }
 
   private void initSmartDashboard() {
@@ -171,6 +178,8 @@ public class RobotContainer implements Sendable {
   private void configureControllerBindings() {
     bindDrive();
 
+    operator.leftStick().onTrue(drive.switch1());
+
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(
             () -> Value.of(
@@ -187,7 +196,7 @@ public class RobotContainer implements Sendable {
         curveAxis(
             () -> Value.of(
                 MathUtil.applyDeadband(
-                    driverRightAxisX.get().in(Value),
+                    driverRightAxisXNegated.get().in(Value),
                     DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
@@ -195,9 +204,9 @@ public class RobotContainer implements Sendable {
     bayDoor.setDefaultCommand(bayDoor.home());
     intake.setDefaultCommand(intake.stopIntake());
 
-    shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose));
-    kicker.setDefaultCommand(kicker.prepareFuel(() -> drive.getState().Pose));
-    spindexer.setDefaultCommand(spindexer.prepareFuel());
+    shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose).withName("Launcher Prepare Launch"));
+    kicker.setDefaultCommand(kicker.prepareFuel(() -> drive.getState().Pose).withName("Kicker Prepare Launch"));
+    spindexer.setDefaultCommand(spindexer.prepareFuel().withName("Spindexer Prepare Launch"));
 
     driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b().or(driver.y()))
         .withName("Open Bay Door & Intake Fuel"));
@@ -205,12 +214,15 @@ public class RobotContainer implements Sendable {
         .withName("Open Bay Door & Shuttle Fuel"));
     driver.a().onTrue(bayDoor.open());
     driver.y().onTrue(bayDoor.close());
+    driver.back()
+        .whileTrue(new LaunchFuelToHubDistance(launchCalculator, RPM.of(75.0), () -> true, shooter, kicker, spindexer));
 
     // TODO: Is axis 0 right trigger?
     // If the Right Axis was greater than 20% then will launch fuel based on percent
     // to meters
-    driver.axisGreaterThan(0, Percent.of(20).in(Value)).whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
-        Meters.of(driver.getRightTriggerAxis() * 4), RPM.of(100), shooter, kicker, spindexer));
+
+    driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
+        Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
 
     // Manual Launch Fuel With Smartdashboard values.
     operator.povDown().toggleOnTrue(
@@ -296,7 +308,7 @@ public class RobotContainer implements Sendable {
         curveAxis(
             () -> Percent.of(
                 MathUtil.applyDeadband(
-                    driverRightAxisX.get().in(Percent),
+                    driverRightAxisXNegated.get().in(Percent),
                     DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));

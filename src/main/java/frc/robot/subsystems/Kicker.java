@@ -40,7 +40,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     private final KickerMotor motor;
     private final SysIdRoutine routine;
     private static final Distance HALF_FIELD = Meters
-            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 2);
+            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
 
@@ -81,10 +81,10 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
             Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
 
             AngularVelocity velocity = maybeAlliance.map(alliance -> {
-                if (alliance == Alliance.Blue && robotPosition.get().getMeasureY().lt(HALF_FIELD))
+                if (alliance == Alliance.Blue && robotPosition.get().getMeasureX().lt(HALF_FIELD))
                     return PREP_ANGULAR_VELOCITY;
 
-                if (alliance == Alliance.Red && robotPosition.get().getMeasureY().gt(HALF_FIELD))
+                if (alliance == Alliance.Red && robotPosition.get().getMeasureX().gt(HALF_FIELD))
                     return PREP_ANGULAR_VELOCITY;
 
                 return RPM.zero();

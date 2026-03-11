@@ -5,39 +5,100 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Start Top To Depot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Top Depot To Top Shot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": null
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Top Shot To Top Fuel"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Top Fuel To Bottom Fuel"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Bottom Fuel To Bottom Shot"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakefuel"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Start Top To Depot"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "baydooropen"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Top Depot To Top Shot"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "shoothubdistancetilbadflow"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Top Shot To Top Fuel"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Top Fuel To Bottom Fuel"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Bottom Fuel To Bottom Shot"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]

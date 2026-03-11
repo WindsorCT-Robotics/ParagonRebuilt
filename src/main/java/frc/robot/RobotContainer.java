@@ -17,6 +17,8 @@ import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -315,6 +317,17 @@ public class RobotContainer implements Sendable {
                 MOVE_ROBOT_CURVE)));
 
     driver.povDown().onTrue(drive.resetGyro());
+  }
+
+  private void registerPathplannerCommands() {
+    NamedCommands.registerCommand("shoothubdistance",
+        new LaunchFuelToHubDistance(
+            launchCalculator,
+            RPM.of(50),
+            () -> true,
+            shooter,
+            kicker,
+            spindexer));
   }
 
   // region SysId

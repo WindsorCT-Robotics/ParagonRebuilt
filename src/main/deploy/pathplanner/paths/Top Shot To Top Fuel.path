@@ -31,7 +31,20 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "baydoorclose",
+      "waypointRelativePos": 0.4595490716180365,
+      "endWaypointRelativePos": 0,
+      "command": null
+    },
+    {
+      "name": "baydooropen",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": 0.7659151193633955,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,

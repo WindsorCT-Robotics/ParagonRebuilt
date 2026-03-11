@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.468,
-        "y": 5.5
+        "x": 3.4421440397350995,
+        "y": 2.5394536423841068
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.49110320284697545,
-        "y": 4.546061684460261
+        "x": 5.191788079466567,
+        "y": 2.568493377487075
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.202419928825624,
-        "y": 5.621981020166073
+        "x": 7.74728476820829,
+        "y": 1.5521026490102532
       },
       "prevControl": {
-        "x": 2.632182680901543,
-        "y": 5.492870699881376
+        "x": 6.970471854301007,
+        "y": 0.9785678807983332
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "shoothubdistancetilbadflow",
-      "waypointRelativePos": 0.5112732095490714,
-      "endWaypointRelativePos": 1.0,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -48,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": -143.112
+    "velocity": 0,
+    "rotation": 87.87890360333864
   },
   "reversed": false,
-  "folder": "Top Paths",
+  "folder": "Middle Paths",
   "idealStartingState": {
-    "velocity": 1.5,
-    "rotation": -90.0
+    "velocity": 0,
+    "rotation": 45.0
   },
   "useDefaultConstraints": true
 }

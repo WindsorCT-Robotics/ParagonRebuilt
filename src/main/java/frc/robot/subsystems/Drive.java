@@ -347,21 +347,18 @@ public class Drive extends GeneratedDrive implements Sendable {
                 AngularVelocity angleVelocity = RPM.zero();
 
                 SmartDashboard.putNumber("Robot Heading Wrapped", robotHeading.in(Degrees));
-                SmartDashboard.putBoolean("At Target Goal", alignController.atGoal());
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
 
-                if (!alignController.atGoal()) {
-                        angleVelocity = DegreesPerSecond.of(alignController.calculate(robotHeading.in(Degrees), targetAngle.in(Degrees)));
-                        SmartDashboard.putNumber("Angle Velocity", angleVelocity.in(DegreesPerSecond));
-                } else {
-                        alignController.reset(robotHeading.in(Degrees));
+                if (!robotHeading.isNear(targetAngle, Degrees.of(5))) {
+                        double kP = 0.3;
+                        angleVelocity = DegreesPerSecond.of(targetAngle.minus(robotHeading).times(kP).in(Degrees));
                 }
 
                 setControl(
                                 fieldCentricSwerveRequest
-                                .withVelocityX(y)
-                                .withVelocityY(x)
-                                .withRotationalRate(angleVelocity));
+                                                .withVelocityX(y)
+                                                .withVelocityY(x)
+                                                .withRotationalRate(angleVelocity));
 
         }
 

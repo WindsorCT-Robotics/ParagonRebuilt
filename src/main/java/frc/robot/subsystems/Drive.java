@@ -4,7 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Value;
@@ -133,13 +133,29 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI, FACING_ANGLE_PID.kD);
+                fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI,
+                                FACING_ANGLE_PID.kD);
 
                 initSmartDashboard();
         }
 
+        public enum RelativeReference {
+                ROBOT_CENTRIC,
+                FIELD_CENTRIC
+        }
+
         private Angle getAngle() {
                 return getPigeon2().getYaw().getValue();
+        }
+
+        public boolean isAlignedToHub() {
+                Optional<Angle> targetAngle = getLaunchAngleToHub();
+
+                if (targetAngle.isEmpty()) {
+                        return false;
+                }
+
+                return getAngle().isNear(targetAngle.get(), Degrees.of(15));
         }
 
         @Override
@@ -250,11 +266,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .withSpeeds(speeds)
                                 .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                                 .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
-        }
-
-        public enum RelativeReference {
-                ROBOT_CENTRIC,
-                FIELD_CENTRIC
         }
 
         private SwerveRequest robotCentricSwerveRequest(
@@ -384,35 +395,45 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return new Translation2d(xHub, yHub);
         }
 
+        private Optional<Angle> getLaunchAngleToHub() {
+                Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+
+                return maybeAlliance.map(alliance -> {
+                        Translation2d robotPosition = getState().Pose.getTranslation();
+                        Translation2d hubPosition = getHubPosition(alliance);
+
+                        Angle launcherOffset = Radians.of(Math.asin(
+                                        LAUNCHER_TANGENT_OFFSET.div(Meters.of(
+                                                        robotPosition.getDistance(hubPosition)))
+                                                        .in(Value)));
+
+                        Translation2d targetTranslation = robotPosition.minus(hubPosition);
+
+                        Angle targetAngle = Radians
+                                        .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                        .plus(Degrees.of(90)).minus(launcherOffset);
+
+                        return Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
+                });
+        }
+
         public Command angleToHub(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-
-                        maybeAlliance.ifPresent(alliance -> {
-                                Translation2d robotPosition = getState().Pose.getTranslation();
-
-                                Translation2d hubPosition = getHubPosition(alliance);
-
-                                Angle launcherOffset = Radians.of(Math.asin(
-                                                LAUNCHER_TANGENT_OFFSET.div(Meters.of(
-                                                                robotPosition.getDistance(hubPosition)))
-                                                                .in(Value)));
-
-                                Translation2d targetTranslation = robotPosition.minus(hubPosition);
-
-                                Angle targetAngle = Radians
-                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                                .plus(Degrees.of(90)).minus(launcherOffset);
-
-                                Angle wrapTargetAngle = Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
-
-                                moveWithLockedAngle(
-                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                wrapTargetAngle);
-                        });
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
+                        if (targetAngle.isEmpty()) {
+                                moveWithPercentages(
+                                                x,
+                                                y,
+                                                () -> Percent.of(0),
+                                                () -> RelativeReference.FIELD_CENTRIC);
+                                return;
+                        }
+                        moveWithLockedAngle(
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                        targetAngle.get());
                 });
         }
 

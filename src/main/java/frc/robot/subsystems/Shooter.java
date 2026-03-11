@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -14,9 +16,15 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,7 +41,10 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private final ShooterMotor leadMotor;
     private final ShooterMotor followerMotor;
     private final SysIdRoutine routine;
-    private AngularVelocity shootVelocity = RotationsPerSecond.of(0);
+    private static final Distance HALF_FIELD = Meters
+            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 2);
+    private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
+    private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
@@ -70,12 +81,12 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         initSmartDashboard();
     }
 
-    public Command shootFuel(Supplier<AngularVelocity> shootVelocity) {
-        return runEnd(() -> leadMotor.setPointVelocity(shootVelocity.get()), this::stop);
-    }
-
-    public Command shootFuelSmartDashboard() {
-        return runEnd(() -> leadMotor.setPointVelocity(getShootTargetVelocity()), this::stop);
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
+                () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
+                velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
     }
 
     private void initSmartDashboard() {
@@ -84,24 +95,44 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
     }
 
-    public AngularVelocity getShootTargetVelocity() {
-        return shootVelocity;
+    public Command launchFuel(Supplier<AngularVelocity> velocity) {
+        return runEnd(() -> leadMotor.setPointVelocity(velocity.get()), this::stop);
     }
 
-    public AngularVelocity getShootVelocity() {
+    public Command smartDashboardLaunchFuel() {
+        return runEnd(() -> leadMotor.setPointVelocity(getSmartDashboardLaunchTargetVelocity()), this::stop);
+    }
+
+    public Command prepareLaunch(Supplier<Pose2d> robotPosition) {
+        return runEnd(() -> {
+            Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+
+            AngularVelocity velocity = RPM.zero();
+
+            maybeAlliance.map(alliance -> {
+                if (alliance == Alliance.Blue && robotPosition.get().getMeasureY().lt(HALF_FIELD))
+                    return PREP_ANGULAR_VELOCITY;
+
+                if (alliance == Alliance.Red && robotPosition.get().getMeasureY().gt(HALF_FIELD))
+                    return PREP_ANGULAR_VELOCITY;
+
+                return RPM.zero();
+            }).orElse(RPM.zero());
+
+            leadMotor.setPointVelocity(velocity);
+        }, this::stop);
+    }
+
+    public AngularVelocity getSmartDashboardLaunchTargetVelocity() {
+        return smartDashboardLaunchVelocity;
+    }
+
+    public AngularVelocity getLaunchVelocity() {
         return leadMotor.getVelocity();
     }
 
-    public void setShootTargetVelocity(double rpm) {
-        shootVelocity = RPM.of(rpm);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
-                () -> getShootTargetVelocity().in(RPM),
-                this::setShootTargetVelocity);
+    public void setSmartDashboardLaunchTargetVelocity(AngularVelocity velocity) {
+        smartDashboardLaunchVelocity = velocity;
     }
 
     private void stop() {

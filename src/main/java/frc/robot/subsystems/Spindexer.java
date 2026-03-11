@@ -16,6 +16,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,39 +56,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         initSmartDashboard();
     }
 
-    private void hardStop() {
-        motor.stop();
-    }
-
-    private void stop() {
-        motor.setPointVelocity(RPM.zero());
-    }
-
-    public Command indexFuel() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
-    }
-
-    public Command shuttleFuelSmartDashboard() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity().unaryMinus()), () -> motor.stop());
-    }
-
-    public Command indexFuelSmartDashboard() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
-    }
-
-    public Command indexFuelAtFlyWheelVelocity(
-            Supplier<AngularVelocity> indexTargetVelocity,
-            Supplier<AngularVelocity> flyWheelVelocity,
-            AngularVelocity threshold) {
-        return runEnd(() -> {
-            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold)) {
-                motor.setPointVelocity(indexTargetVelocity.get());
-            } else {
-                hardStop();
-            }
-        }, () -> stop());
-    }
-
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
         SmartDashboard.putData(getName() + "/" + motor.getSmartDashboardName(), motor);
@@ -100,11 +68,79 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 this::setIndexTargetVelocity);
     }
 
-    private AngularVelocity getIndexTargetVelocity() {
+    private void hardStop() {
+        motor.stop();
+    }
+
+    private void stop() {
+        motor.setPointVelocity(RPM.zero());
+    }
+
+    public Command prepareFuel() {
+        Timer time = new Timer();
+        setIndexTargetVelocity(RPM.of(400).in(RPM));
+        return runEnd(() -> {
+            if (time.advanceIfElapsed(0.5)) {
+                setIndexTargetVelocity(getIndexTargetVelocity().unaryMinus().in(RPM));
+                time.restart();
+            }
+        }, this::stop);
+    }
+
+    public Command indexFuel(Supplier<AngularVelocity> velocity) {
+        return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
+    }
+
+    public Command indexFueltoHub(Supplier<AngularVelocity> velocity, Supplier<Boolean> isAligned) {
+        return runEnd(() -> {
+            if (isAligned.get()) {
+                motor.setPointVelocity(velocity.get());
+            } else {
+                hardStop();
+            }
+        }, this::stop);
+    }
+
+    public Command smartDashboardShuttleFuel() {
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity().unaryMinus()), () -> motor.stop());
+    }
+
+    public Command smartDashboardIndexFuel() {
+        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
+    }
+
+    public Command indexFuelAtFlyWheelVelocityToHub(
+            Supplier<AngularVelocity> indexTargetVelocity,
+            Supplier<AngularVelocity> flyWheelVelocity,
+            AngularVelocity threshold,
+            Supplier<Boolean> isAligned) {
+        return runEnd(() -> {
+            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.get()) {
+                motor.setPointVelocity(indexTargetVelocity.get());
+            } else {
+                hardStop();
+            }
+        }, this::stop);
+    }
+
+    public Command indexFuelAtFlyWheelVelocity(
+            Supplier<AngularVelocity> indexTargetVelocity,
+            Supplier<AngularVelocity> flyWheelVelocity,
+            AngularVelocity threshold) {
+        return runEnd(() -> {
+            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold)) {
+                motor.setPointVelocity(indexTargetVelocity.get());
+            } else {
+                hardStop();
+            }
+        }, this::stop);
+    }
+
+    public AngularVelocity getIndexTargetVelocity() {
         return indexVelocity;
     }
 
-    private void setIndexTargetVelocity(double rpm) {
+    public void setIndexTargetVelocity(double rpm) {
         indexVelocity = RPM.of(rpm);
     }
 

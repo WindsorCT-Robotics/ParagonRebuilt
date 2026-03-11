@@ -68,15 +68,23 @@ public class LaunchCalculator implements Sendable {
                         Math.pow(a.in(Meters), 2) + Math.pow(b.in(Meters), 2)));
     }
 
-    public AngularVelocity getShooterVelocity() {
+    public AngularVelocity getShooterVelocityToHub() {
         return RPM.of(shooterMap.get(distanceToHub().in(Meters)));
     }
 
-    public AngularVelocity getKickerVelocity() {
+    public AngularVelocity getShooterVelocityToDistance(Distance distance) {
+        return RPM.of(shooterMap.get(distance.in(Meters)));
+    }
+
+    public AngularVelocity getKickerVelocityToHub() {
         return RPM.of(kickerMap.get(distanceToHub().in(Meters)));
     }
 
-    public Time getTimeOfFlight() {
+    public AngularVelocity getKickerVelocityToDistance(Distance distance) {
+        return RPM.of(kickerMap.get(distance.in(Meters)));
+    }
+
+    public Time getTimeOfFlightToHub() {
         return Seconds.of(timeOfFlightMap.get(distanceToHub().in(Meters)));
     }
 
@@ -115,8 +123,8 @@ public class LaunchCalculator implements Sendable {
 
     @Override
     public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty("Predicted Shooter Velocity (RPM)", () -> getShooterVelocity().in(RPM), null);
-        builder.addDoubleProperty("Predicted Kicker Velocity (RPM)", () -> getKickerVelocity().in(RPM), null);
+        builder.addDoubleProperty("Predicted Shooter Velocity (RPM)", () -> getShooterVelocityToHub().in(RPM), null);
+        builder.addDoubleProperty("Predicted Kicker Velocity (RPM)", () -> getKickerVelocityToHub().in(RPM), null);
         builder.addDoubleProperty("Distance To Hub (M)", () -> distanceToHub().in(Meters), null);
     }
 }

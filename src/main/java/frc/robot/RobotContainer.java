@@ -5,6 +5,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.LaunchFuelToHubDistance;
 import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
@@ -166,64 +168,7 @@ public class RobotContainer implements Sendable {
 
   private void configureControllerBindings() {
     bindDrive();
-    // bindDriveSystemDynamics();
-    bindBayDoor();
-    bindIntake();
-    bindSpindexer();
-    bindKicker();
-    bindShooter();
 
-    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b().or(driver.y()))
-        .withName("Open Bay Door & Intake Fuel"));
-    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x().or(driver.y()))
-        .withName("Open Bay Door & Shuttle Fuel"));
-    driver.y().onTrue(bayDoor.close());
-    driver.start().whileTrue(new LaunchFuelToTargetDistance(launchCalculator, RPM.of(100), () -> drive.getState().Pose,
-        shooter, kicker, spindexer));
-
-    operator.start().toggleOnTrue(
-        shooter.shootFuelSmartDashboard()
-            .alongWith(kicker.kickStartFuelSmartDashboard())
-            .alongWith(spindexer.indexFuelSmartDashboard()));
-    operator.back().whileTrue(spindexer.shuttleFuelSmartDashboard());
-
-    operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
-        () -> Value.of(
-            MathUtil.applyDeadband(
-                driverLeftAxisX.get().in(Value),
-                DEADBAND.in(Value))),
-        MOVE_ROBOT_CURVE),
-        curveAxis(
-            () -> Value.of(
-                MathUtil.applyDeadband(
-                    driverLeftAxisY.get().in(Value),
-                    DEADBAND.in(Value))),
-            MOVE_ROBOT_CURVE)));
-
-    driver.a()
-        .whileTrue(new LaunchFuelToTargetDistance(
-            launchCalculator,
-            RPM.of(100),
-            () -> drive.getState().Pose,
-            shooter,
-            kicker,
-            spindexer).alongWith(
-                drive.angleToHub(curveAxis(
-                    () -> Value.of(
-                        MathUtil.applyDeadband(
-                            driverLeftAxisX.get().in(Value),
-                            DEADBAND.in(Value))),
-                    MOVE_ROBOT_CURVE),
-                    curveAxis(
-                        () -> Value.of(
-                            MathUtil.applyDeadband(
-                                driverLeftAxisY.get().in(Value),
-                                DEADBAND.in(Value))),
-                        MOVE_ROBOT_CURVE)))
-            .withName("LaunchFuelToTarget"));
-  }
-
-  private void bindDrive() {
     drive.setDefaultCommand(drive.moveWithPercentages(
         curveAxis(
             () -> Value.of(
@@ -244,6 +189,82 @@ public class RobotContainer implements Sendable {
                     DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
+
+    bayDoor.setDefaultCommand(bayDoor.home());
+    intake.setDefaultCommand(intake.stopIntake());
+
+    shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose));
+    kicker.setDefaultCommand(kicker.prepareFuel(() -> drive.getState().Pose));
+    spindexer.setDefaultCommand(spindexer.prepareFuel());
+
+    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b().or(driver.y()))
+        .withName("Open Bay Door & Intake Fuel"));
+    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x().or(driver.y()))
+        .withName("Open Bay Door & Shuttle Fuel"));
+    driver.a().onTrue(bayDoor.open());
+    driver.y().onTrue(bayDoor.close());
+
+    // TODO: Is axis 0 right trigger?
+    // If the Right Axis was greater than 20% then will launch fuel based on percent
+    // to meters
+    driver.axisGreaterThan(0, Percent.of(20).in(Value)).whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
+        Meters.of(driver.getRightTriggerAxis() * 4), RPM.of(100), shooter, kicker, spindexer));
+
+    // Manual Launch Fuel With Smartdashboard values.
+    operator.povDown().toggleOnTrue(
+        shooter.smartDashboardLaunchFuel()
+            .alongWith(kicker.smartDashboardKickFuel())
+            .alongWith(spindexer.smartDashboardIndexFuel()));
+
+    // Spins the spindexer backwards.
+    operator.back().whileTrue(spindexer.smartDashboardShuttleFuel());
+
+    // Angles launcher
+    // If within the RPM range then spindexer indexes the fuel
+    // If within angle range it launches fuel
+    // Calculates shooter and kicker speed based off of distance
+    // If speed of shooter and kicker was off then operator can adjust with right
+    // trigger
+    operator.leftBumper().whileTrue(new LaunchFuelToHubDistance(
+        launchCalculator,
+        RPM.of(100),
+        drive::isAlignedToHub,
+        shooter,
+        kicker,
+        spindexer).alongWith(
+            drive.angleToHub(curveAxis(
+                () -> Value.of(
+                    MathUtil.applyDeadband(
+                        driverLeftAxisX.get().in(Value),
+                        DEADBAND.in(Value))),
+                MOVE_ROBOT_CURVE),
+                curveAxis(
+                    () -> Value.of(
+                        MathUtil.applyDeadband(
+                            driverLeftAxisY.get().in(Value),
+                            DEADBAND.in(Value))),
+                    MOVE_ROBOT_CURVE)))
+        .withName("LaunchFuelToTarget"));
+
+    // Homes baydoor
+    operator.x().onTrue(bayDoor.home());
+
+    // Angles the launcher to the hub
+    // operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
+    // () -> Value.of(
+    // MathUtil.applyDeadband(
+    // driverLeftAxisX.get().in(Value),
+    // DEADBAND.in(Value))),
+    // MOVE_ROBOT_CURVE),
+    // curveAxis(
+    // () -> Value.of(
+    // MathUtil.applyDeadband(
+    // driverLeftAxisY.get().in(Value),
+    // DEADBAND.in(Value))),
+    // MOVE_ROBOT_CURVE)));
+  }
+
+  private void bindDrive() {
 
     driver.leftBumper().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
@@ -278,20 +299,7 @@ public class RobotContainer implements Sendable {
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    // TODO: Make it so that when true the robot can go in only 4 cardinal
-    // directions.
-    // driver.rightTrigger(TRIGGER_THRESHOLD.in(Percent)).whileTrue(Commands.runEnd(
-    // () -> {
-    // Dimensionless limit =
-    // Percent.of(100).minus(Percent.of(driver.getRightTriggerAxis()));
-    // maxDriverLeftJoyStickSpeedX = limit;
-    // maxDriverLeftJoyStickSpeedY = limit;
-    // }, () -> {
-    // maxDriverLeftJoyStickSpeedX = Percent.of(100);
-    // maxDriverLeftJoyStickSpeedY = Percent.of(100);
-    // }));
-
-    operator.rightBumper().toggleOnTrue(
+    driver.start().toggleOnTrue(
         drive.angleToOutpost(
             curveAxis(
                 () -> Value.of(
@@ -305,33 +313,11 @@ public class RobotContainer implements Sendable {
                         driverLeftAxisY.get().in(Value),
                         DEADBAND.in(Value))),
                 MOVE_ROBOT_CURVE)));
-    //
+
     driver.povDown().onTrue(drive.resetGyro());
   }
 
-  private void bindBayDoor() {
-    bayDoor.setDefaultCommand(bayDoor.home());
-    operator.y().onTrue(bayDoor.open());
-    operator.a().onTrue(bayDoor.close());
-    operator.x().onTrue(bayDoor.home());
-  }
-
-  private void bindIntake() {
-    intake.setDefaultCommand(intake.stopIntake());
-  }
-
-  private void bindSpindexer() {
-
-  }
-
-  private void bindKicker() {
-
-  }
-
-  private void bindShooter() {
-
-  }
-
+  // region SysId
   @SuppressWarnings("unused")
   private void bindDriveSystemDynamics() {
     /*
@@ -382,6 +368,7 @@ public class RobotContainer implements Sendable {
     driver.start().and(driver.y()).whileTrue(kicker.sysIdQuasistatic(Direction.kForward));
     driver.start().and(driver.x()).whileTrue(kicker.sysIdQuasistatic(Direction.kReverse));
   }
+  // endregion
 
   public Command getAutonomousCommand() {
     return autonomousChooser.getSelected();

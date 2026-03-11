@@ -81,16 +81,34 @@ public class LaunchCalculator implements Sendable {
     }
 
     private void putTestedShooterMap() {
+        shooterMap.put(1.5, 2050.0);
         shooterMap.put(2.0, 2175.0);
-        shooterMap.put(3.0, 2400.00);
+        shooterMap.put(2.5, 2235.0);
+        shooterMap.put(3.0, 2400.0);
+        shooterMap.put(3.5, 2550.0);
+        shooterMap.put(4.0, 2725.0);
+        shooterMap.put(4.5, 2875.0);
+        shooterMap.put(5.0, 3025.00);
     }
 
     private void putTestedKickerMap() {
-        kickerMap.put(2.0, 2175.00);
-        kickerMap.put(3.0, 2400.00);
+        kickerMap.put(1.5, 2050.0);
+        kickerMap.put(2.0, 2175.0);
+        kickerMap.put(2.5, 2235.0);
+        kickerMap.put(3.0, 2400.0);
+        kickerMap.put(3.5, 2550.0);
+        kickerMap.put(4.0, 2725.0);
+        kickerMap.put(4.5, 2875.0);
+        kickerMap.put(5.0, 3025.00);
     }
 
     private void putTestedTimeOfFlightMap() {
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(2.0, 1.0);
+        timeOfFlightMap.put(2.0, 1.0);
         timeOfFlightMap.put(2.0, 1.0);
         timeOfFlightMap.put(3.0, 1.5);
     }

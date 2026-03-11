@@ -69,7 +69,9 @@ import frc.robot.generated.TunerConstants;
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(0.5, 0, 0.3);
+        private static final PIDConstants FACING_ANGLE_CLOSE_PID = new PIDConstants(0.5, 0, 0.3);
+        private static final PIDConstants FACING_ANGLE_MEDIAN_PID = new PIDConstants(4, 0, 0.3);
+        private static final PIDConstants FACING_ANGLE_FAR_PID = new PIDConstants(5, 0, 0.5);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
@@ -138,8 +140,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI,
-                                FACING_ANGLE_PID.kD);
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 initSmartDashboard();
@@ -365,13 +365,24 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity y,
                         Angle targetAngle) {
                 Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
+                PIDConstants PID;
+
+                if (robotHeading.isNear(targetAngle, Radians.of(Math.PI / 4))) {
+                        PID = FACING_ANGLE_CLOSE_PID;
+                } else {
+                        PID = FACING_ANGLE_FAR_PID;
+                }
+
+                SmartDashboard.putNumber("P", PID.kP);
 
                 if (!robotHeading.isNear(targetAngle, Degrees.of(3))) {
                         setControl(
                                         fieldCentricFacingAngleSwerveRequest
                                                         .withVelocityX(y)
                                                         .withVelocityY(x)
-                                                        .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
+                                                        .withHeadingPID(PID.kP, PID.kI, PID.kD)
+                                                        .withTargetDirection(
+                                                                new Rotation2d(targetAngle.in(Radians))));
                 } else {
                         setControl(fieldCentricSwerveRequest
                                         .withVelocityX(y)
@@ -380,6 +391,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         .withRotationalRate(RPM.zero()));
                 }
 
+                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
+                SmartDashboard.putNumber("Robot Heading", robotHeading.in(Degrees));
         }
 
         public Command angleToOutpost(

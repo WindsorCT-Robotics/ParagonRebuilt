@@ -1,16 +1,12 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Value;
 
 import java.io.IOException;
@@ -42,14 +38,12 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -73,9 +67,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
         private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(0.5, 0, 0.3);
-        private final ProfiledPIDController alignController = new ProfiledPIDController(0.2, 0.0, 0.0, new Constraints(
-                        RotationsPerSecond.of(1).in(DegreesPerSecond),
-                        RotationsPerSecondPerSecond.of(1).in(DegreesPerSecondPerSecond)));
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
@@ -142,11 +133,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI,
-                                FACING_ANGLE_PID.kD);
-
-                alignController.setTolerance(Degrees.of(5).in(Degrees));
-                alignController.enableContinuousInput(Degrees.of(-180).in(Degrees), Degrees.of(180).in(Degrees));
+                fieldCentricFacingAngleSwerveRequest.withHeadingPID(FACING_ANGLE_PID.kP, FACING_ANGLE_PID.kI, FACING_ANGLE_PID.kD);
 
                 initSmartDashboard();
         }
@@ -210,8 +197,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 builder.addDoubleProperty("d", () -> getD(), (input) -> setD(input));
                         }
                 });
-
-                SmartDashboard.putData("Align Controller", alignController);
         }
 
         private double getP() {
@@ -342,23 +327,16 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle) {
-                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-
-                AngularVelocity angleVelocity = RPM.zero();
+                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians) + Math.PI));
 
                 SmartDashboard.putNumber("Robot Heading Wrapped", robotHeading.in(Degrees));
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
 
-                if (!robotHeading.isNear(targetAngle, Degrees.of(5))) {
-                        double kP = 0.3;
-                        angleVelocity = DegreesPerSecond.of(targetAngle.minus(robotHeading).times(kP).in(Degrees));
-                }
-
                 setControl(
-                                fieldCentricSwerveRequest
+                                fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
-                                                .withRotationalRate(angleVelocity));
+                                                .withTargetDirection(new Rotation2d(targetAngle.in(Radians))));
 
         }
 

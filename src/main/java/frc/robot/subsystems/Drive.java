@@ -70,8 +70,8 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
         private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
-        private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
-        private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(0.1);
+        private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
+        private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
         private final String limelightName;

@@ -303,7 +303,7 @@ public class RobotContainer implements Sendable {
             () -> Percent.zero(),
             new Trigger(() -> false)));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
-    NamedCommands.registerCommand("baydoorclose", bayDoor.open());
+    NamedCommands.registerCommand("baydoorclose", bayDoor.close());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
   }
 

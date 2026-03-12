@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
@@ -113,9 +115,21 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             Supplier<AngularVelocity> indexTargetVelocity,
             Supplier<AngularVelocity> flyWheelVelocity,
             AngularVelocity threshold,
-            Supplier<Boolean> isAligned) {
+            Trigger isAligned,
+            Trigger unstuckFuel,
+            Trigger onAllianceSide) {
         return runEnd(() -> {
-            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.get()) {
+            if (!onAllianceSide.getAsBoolean()) {
+                motor.setPointVelocity(RPM.zero());
+                return;
+            }
+
+            if (unstuckFuel.getAsBoolean()) {
+                motor.setDutyCycle(Percent.of(-10));
+                return;
+            }
+
+            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.getAsBoolean()) {
                 motor.setPointVelocity(indexTargetVelocity.get());
             } else {
                 hardStop();

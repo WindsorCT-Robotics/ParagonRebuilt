@@ -5,30 +5,45 @@ import static edu.wpi.first.units.Units.RPM;
 import java.util.function.Supplier;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.utils.LaunchCalculator;
 
 public class LaunchFuelToHubDistance extends ParallelCommandGroup {
+        private static final AngularVelocity VELOCITY_THRESHOLD = RPM.of(40);
+
         public LaunchFuelToHubDistance(
-                        LaunchCalculator launchCalculator,
-                        AngularVelocity velocityThreshold,
-                        Supplier<Boolean> isAligned,
+                        Drive drive,
                         Shooter shooter,
                         Kicker kicker,
-                        Spindexer spindexer) {
+                        Spindexer spindexer,
+                        LaunchCalculator launchCalculator,
+                        Supplier<Dimensionless> velocityAdjustment,
+                        Trigger unstuckFuel) {
+                Trigger isAligned = drive.isLauncherAlignedToHub();
+                Trigger onAllianceSide = drive.onAllianceSide();
+
                 addCommands(
-                                shooter.launchFuel(
-                                                () -> launchCalculator.getShooterVelocityToHub().minus(RPM.of(20))),
-                                kicker.kickFuel(
-                                                () -> launchCalculator.getKickerVelocityToHub().minus(RPM.of(20))),
+                                shooter.launchFuelAdjustableToHub(
+                                                () -> launchCalculator.getShooterVelocityToHub(),
+                                                velocityAdjustment,
+                                                RPM.of(100),
+                                                onAllianceSide),
+                                kicker.kickFuelToHub(
+                                                () -> launchCalculator.getKickerVelocityToHub().plus(RPM.of(50)),
+                                                onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
-                                                () -> RPM.of(1250),
+                                                () -> RPM.of(1750),
                                                 () -> shooter.getLaunchVelocity(),
-                                                velocityThreshold,
-                                                isAligned));
+                                                VELOCITY_THRESHOLD,
+                                                isAligned,
+                                                unstuckFuel,
+                                                onAllianceSide));
         }
 
 }

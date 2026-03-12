@@ -18,7 +18,6 @@ import org.json.simple.parser.ParseException;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -33,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.AutoScore;
 import frc.robot.commands.LaunchFuelToHubDistance;
 import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.Telemetry;
@@ -154,20 +154,24 @@ public class RobotContainer implements Sendable {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    builder.addDoubleProperty("Curved Percent", () -> curveAxis(driverLeftAxisX, MOVE_ROBOT_CURVE).get().in(Percent),
-        null);
-    builder.addDoubleProperty("Percent", () -> driverLeftAxisX.get().in(Percent), null);
+
   }
 
-  private Supplier<Dimensionless> curveAxis(Supplier<Dimensionless> percent, double exponent) {
-    return () -> {
-      double p = percent.get().in(Value);
+  private Dimensionless getOperatorTriggerAdjustment() {
+    return Value.of(-operator.getLeftTriggerAxis() + operator.getRightTriggerAxis());
+  }
 
-      return Value
-          .of(
-              Math.abs(
-                  Math.pow(p, exponent - 1)) * -p);
-    };
+  private Dimensionless curveAxis(Dimensionless percent, double exponent) {
+    return Value.of(
+        Math.abs(Math.pow(
+            percent.in(Value), exponent - 1)) * percent.unaryMinus().in(Value));
+  }
+
+  private Dimensionless getAxisWithDeadBandAndCurve(Dimensionless value, Dimensionless deadband, double curve) {
+    return curveAxis(Value.of(MathUtil.applyDeadband(
+        value.in(Value),
+        deadband.in(Value))),
+        curve);
   }
 
   private RelativeReference getRelativeReference() {
@@ -175,110 +179,25 @@ public class RobotContainer implements Sendable {
   }
 
   private void configureControllerBindings() {
-    bindDrive();
-
-    operator.leftStick().onTrue(drive.switch1());
+    bindDriver();
+    bindOperator();
 
     drive.setDefaultCommand(drive.moveWithPercentages(
-        curveAxis(
-            () -> Value.of(
-                MathUtil.applyDeadband(
-                    driverLeftAxisX.get().in(Value),
-                    DEADBAND.in(Value))),
-            MOVE_ROBOT_CURVE),
-        curveAxis(
-            () -> Value.of(
-                MathUtil.applyDeadband(
-                    driverLeftAxisY.get().in(Value),
-                    DEADBAND.in(Value))),
-            MOVE_ROBOT_CURVE),
-        curveAxis(
-            () -> Value.of(
-                MathUtil.applyDeadband(
-                    driverRightAxisX.get().in(Value),
-                    DEADBAND.in(Value))),
-            TURN_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
     bayDoor.setDefaultCommand(bayDoor.home());
     intake.setDefaultCommand(intake.stopIntake());
 
     shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose).withName("Launcher Prepare Launch"));
-    kicker.setDefaultCommand(kicker.prepareFuel(() -> drive.getState().Pose).withName("Kicker Prepare Launch"));
+    kicker.setDefaultCommand(
+        kicker.prepareFuel(() -> drive.getState().Pose, drive.onAllianceSide()).withName("Kicker Prepare Launch"));
     spindexer.setDefaultCommand(spindexer.prepareFuel().withName("Spindexer Prepare Launch"));
-
-    driver.x().toggleOnTrue(bayDoor.open().alongWith(intake.intakeFuel()).until(driver.b().or(driver.y()))
-        .withName("Open Bay Door & Intake Fuel"));
-    driver.b().toggleOnTrue(bayDoor.open().alongWith(intake.shuttleFuel()).until(driver.x().or(driver.y()))
-        .withName("Open Bay Door & Shuttle Fuel"));
-    driver.a().onTrue(bayDoor.open());
-    driver.y().onTrue(bayDoor.close());
-    driver.back()
-        .whileTrue(new LaunchFuelToHubDistance(launchCalculator, RPM.of(75.0), () -> true, shooter, kicker, spindexer));
-
-    // TODO: Is axis 0 right trigger?
-    // If the Right Axis was greater than 20% then will launch fuel based on percent
-    // to meters
-
-    driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
-        Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
-
-    // Manual Launch Fuel With Smartdashboard values.
-    operator.povDown().toggleOnTrue(
-        shooter.smartDashboardLaunchFuel()
-            .alongWith(kicker.smartDashboardKickFuel())
-            .alongWith(spindexer.smartDashboardIndexFuel()));
-
-    // Spins the spindexer backwards.
-    operator.back().whileTrue(spindexer.smartDashboardShuttleFuel());
-
-    // Angles launcher
-    // If within the RPM range then spindexer indexes the fuel
-    // If within angle range it launches fuel
-    // Calculates shooter and kicker speed based off of distance
-    // If speed of shooter and kicker was off then operator can adjust with right
-    // trigger
-    operator.leftBumper().whileTrue(new LaunchFuelToHubDistance(
-        launchCalculator,
-        RPM.of(100),
-        drive::isAlignedToHub,
-        shooter,
-        kicker,
-        spindexer).alongWith(
-            drive.angleToHub(curveAxis(
-                () -> Value.of(
-                    MathUtil.applyDeadband(
-                        driverLeftAxisX.get().in(Value),
-                        DEADBAND.in(Value))),
-                MOVE_ROBOT_CURVE),
-                curveAxis(
-                    () -> Value.of(
-                        MathUtil.applyDeadband(
-                            driverLeftAxisY.get().in(Value),
-                            DEADBAND.in(Value))),
-                    MOVE_ROBOT_CURVE)))
-        .withName("LaunchFuelToTarget"));
-
-    // Homes baydoor
-    operator.x().onTrue(bayDoor.home());
-
-    // Angles the launcher to the hub
-    // operator.leftBumper().whileTrue(drive.angleToHub(curveAxis(
-    // () -> Value.of(
-    // MathUtil.applyDeadband(
-    // driverLeftAxisX.get().in(Value),
-    // DEADBAND.in(Value))),
-    // MOVE_ROBOT_CURVE),
-    // curveAxis(
-    // () -> Value.of(
-    // MathUtil.applyDeadband(
-    // driverLeftAxisY.get().in(Value),
-    // DEADBAND.in(Value))),
-    // MOVE_ROBOT_CURVE)));
   }
 
-  private void bindDrive() {
-
+  private void bindDriver() {
     driver.leftBumper().onTrue(Commands.runOnce(() -> {
       if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
         relativeReference = RelativeReference.FIELD_CENTRIC;
@@ -289,56 +208,100 @@ public class RobotContainer implements Sendable {
       SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
 
+    // region moveWithPercentages
     driver.rightBumper().whileTrue(drive.moveWithPercentages(
-        curveAxis(
-            () -> Percent.of(
-                MathUtil.applyDeadband(
-                    driverLeftAxisX.get().in(Percent),
-                    DEADBAND.in(Value)))
-                .times(REDUCE_SPEED),
-            MOVE_ROBOT_CURVE),
-        curveAxis(
-            () -> Percent.of(
-                MathUtil.applyDeadband(
-                    driverLeftAxisY.get().in(Percent),
-                    DEADBAND.in(Value)))
-                .times(REDUCE_SPEED),
-            MOVE_ROBOT_CURVE),
-        curveAxis(
-            () -> Percent.of(
-                MathUtil.applyDeadband(
-                    driverRightAxisX.get().in(Percent),
-                    DEADBAND.in(Value))),
-            TURN_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
+        () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE).times(REDUCE_SPEED),
         this::getRelativeReference));
+    // endregion
 
+    // region toggle outpost angle
     driver.start().toggleOnTrue(
         drive.angleToOutpost(
-            curveAxis(
-                () -> Value.of(
-                    MathUtil.applyDeadband(
-                        driverLeftAxisX.get().in(Value),
-                        DEADBAND.in(Value))),
-                MOVE_ROBOT_CURVE),
-            curveAxis(
-                () -> Value.of(
-                    MathUtil.applyDeadband(
-                        driverLeftAxisY.get().in(Value),
-                        DEADBAND.in(Value))),
-                MOVE_ROBOT_CURVE)));
+            () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+            () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)));
+    // endregion
+
+    // Opens Baydoor and Intakes Fuel
+    driver.x().toggleOnTrue(
+        bayDoor.open()
+            .alongWith(intake.intakeFuel())
+            .until(driver.b().or(driver.y()))
+            .withName("Open Bay Door & Intake Fuel"));
+
+    // Opens Baydoor and Shuttles Fuel
+    driver.b().toggleOnTrue(
+        bayDoor.open()
+            .alongWith(intake.shuttleFuel())
+            .until(driver.x().or(driver.y()))
+            .withName("Open Bay Door & Shuttle Fuel"));
+
+    driver.a().onTrue(bayDoor.open());
+
+    driver.y().onTrue(bayDoor.close());
+
+    driver.back()
+        .whileTrue(new LaunchFuelToHubDistance(
+            drive,
+            shooter,
+            kicker,
+            spindexer,
+            launchCalculator,
+            () -> getOperatorTriggerAdjustment(),
+            operator.start()));
+
+    // If the Right Axis was greater than 20% then will launch fuel based on percent
+    // to meters
+    driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
+        Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
 
     driver.povDown().onTrue(drive.resetGyro());
   }
 
+  private void bindOperator() {
+    // Angles launcher
+    // If within the RPM range then spindexer indexes the fuel
+    // If within angle range it launches fuel
+    // Calculates shooter and kicker speed based off of distance
+    // If speed of shooter and kicker was off then operator can adjust with right
+    // trigger
+    operator.leftBumper().toggleOnTrue(new AutoScore(
+        drive,
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        shooter,
+        kicker,
+        spindexer,
+        launchCalculator,
+        () -> getOperatorTriggerAdjustment(),
+        operator.start()).withName("LaunchFuelToHub"));
+
+    // Manual Launch Fuel With Smartdashboard values.
+    operator.povDown().whileTrue(
+        shooter.smartDashboardLaunchFuel()
+            .alongWith(kicker.smartDashboardKickFuel())
+            .alongWith(spindexer.smartDashboardIndexFuel()));
+
+    // Spins the spindexer backwards.
+    operator.back().whileTrue(
+        spindexer.smartDashboardShuttleFuel()
+            .unless(operator.leftBumper())
+            .until(operator.leftBumper()));
+
+    // Homes baydoor
+    operator.x().onTrue(bayDoor.home());
+  }
+
   private void registerPathplannerCommands() {
     NamedCommands.registerCommand("shoothubdistance",
-        new LaunchFuelToHubDistance(
-            launchCalculator,
-            RPM.of(50),
-            () -> true,
+        new LaunchFuelToHubDistance(drive,
             shooter,
             kicker,
-            spindexer));
+            spindexer,
+            launchCalculator,
+            () -> Percent.zero(),
+            new Trigger(() -> false)));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.open());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());

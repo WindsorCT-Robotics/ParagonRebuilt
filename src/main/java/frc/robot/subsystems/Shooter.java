@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Value;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -20,6 +21,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -29,6 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -97,6 +100,24 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     public Command launchFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> leadMotor.setPointVelocity(velocity.get()), this::stop);
+    }
+
+    public Command launchFuelAdjustableToHub(
+            Supplier<AngularVelocity> velocity,
+            Supplier<Dimensionless> adjustment,
+            AngularVelocity maxAdjustment,
+            Trigger onAllianceSide) {
+        return runEnd(
+                () -> {
+                    if (onAllianceSide.getAsBoolean()) {
+                        leadMotor.setPointVelocity(
+                            velocity.get().plus(
+                                    maxAdjustment.times(adjustment.get().in(Value))));
+                    } else {
+                        leadMotor.setPointVelocity(RPM.zero());
+                    }
+                },
+                this::stop);
     }
 
     public Command smartDashboardLaunchFuel() {

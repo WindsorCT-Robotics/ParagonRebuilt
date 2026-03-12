@@ -1,11 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -15,19 +13,15 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
@@ -39,8 +33,6 @@ import frc.robot.hardware.motors.KickerMotor;
 public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
     private final KickerMotor motor;
     private final SysIdRoutine routine;
-    private static final Distance HALF_FIELD = Meters
-            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
 
@@ -74,21 +66,26 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
 
     public Command kickFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> motor.setPointVelocity(velocity.get()), this::hardStop);
+
     }
 
-    public Command prepareFuel(Supplier<Pose2d> robotPosition) {
+    public Command kickFuelToHub(Supplier<AngularVelocity> velocity, Trigger onAllianceSide) {
         return runEnd(() -> {
-            Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+            if (onAllianceSide.getAsBoolean()) {
+                motor.setPointVelocity(velocity.get());
+            } else {
+                motor.setPointVelocity(RPM.zero());
+            }
+        }, this::hardStop);
+    }
 
-            AngularVelocity velocity = maybeAlliance.map(alliance -> {
-                if (alliance == Alliance.Blue && robotPosition.get().getMeasureX().lt(HALF_FIELD))
-                    return PREP_ANGULAR_VELOCITY;
+    public Command prepareFuel(Supplier<Pose2d> robotPosition, Trigger onAllianceSide) {
+        return runEnd(() -> {
+            AngularVelocity velocity = RPM.zero();
 
-                if (alliance == Alliance.Red && robotPosition.get().getMeasureX().gt(HALF_FIELD))
-                    return PREP_ANGULAR_VELOCITY;
-
-                return RPM.zero();
-            }).orElse(RPM.zero());
+            if (onAllianceSide.getAsBoolean()) {
+                velocity = PREP_ANGULAR_VELOCITY;
+            }
 
             motor.setPointVelocity(velocity);
         }, this::stop);

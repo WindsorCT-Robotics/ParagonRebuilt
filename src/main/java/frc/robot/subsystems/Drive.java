@@ -21,7 +21,6 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
@@ -60,6 +59,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
@@ -82,8 +82,8 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
-
-        private DriveRequestType driveRequestType = DriveRequestType.OpenLoopVoltage;
+        private final Trigger onAllianceSide;
+        private final Trigger isLauncherAlignedToHub;
 
         public Drive(
                         String name,
@@ -137,7 +137,49 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 FACING_ANGLE_PID.kD);
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
+                onAllianceSide = new Trigger(() -> {
+                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+                        Pose2d robotPosition = getState().Pose;
+
+                        return maybeAlliance.map(alliance -> {
+                                Distance hubPositionFromBlueAlliance = getHubPosition(alliance).getMeasureX();
+
+                                if (alliance == Alliance.Blue) {
+                                        if (robotPosition.getMeasureX().lt(hubPositionFromBlueAlliance)) {
+                                                return true;
+                                        }
+                                        return false;
+                                }
+
+                                if (alliance == Alliance.Red) {
+                                        if (robotPosition.getMeasureX().gt(hubPositionFromBlueAlliance)) {
+                                                return true;
+                                        }
+                                        return false;
+                                }
+                                return false;
+                        }).orElse(false);
+                });
+
+                isLauncherAlignedToHub = new Trigger(() -> {
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
+
+                        if (targetAngle.isEmpty()) {
+                                return false;
+                        }
+
+                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
+                        return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
+                });
                 initSmartDashboard();
+        }
+
+        public Trigger onAllianceSide() {
+                return onAllianceSide;
+        }
+
+        public Trigger isLauncherAlignedToHub() {
+                return isLauncherAlignedToHub;
         }
 
         public enum RelativeReference {
@@ -149,28 +191,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return getPigeon2().getYaw().getValue();
         }
 
-        public boolean isAlignedToHub() {
-                Optional<Angle> targetAngle = getLaunchAngleToHub();
-
-                if (targetAngle.isEmpty()) {
-                        return false;
-                }
-
-                Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-                return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
-        }
-
         @Override
         public void periodic() {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
-                SmartDashboard.putNumber("Meters Per Second X", getState().Speeds.vxMetersPerSecond);
-                SmartDashboard.putNumber("Meters Per Second Y", getState().Speeds.vyMetersPerSecond);
-                SmartDashboard.putNumber("Meters Per Second", Math.sqrt(
-                                Math.pow(
-                                                getState().Speeds.vxMetersPerSecond, 2)
-                                                + Math.pow(getState().Speeds.vyMetersPerSecond, 2)));
+                SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
         }
 
         private void initSmartDashboard() {
@@ -337,25 +363,6 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private AngularVelocity percentageToAngularVelocity(AngularVelocity velocity, Supplier<Dimensionless> percent) {
                 return velocity.times(percent.get());
-        }
-
-        private void switchControlType() {
-                if (driveRequestType == DriveRequestType.OpenLoopVoltage) {
-                        driveRequestType = DriveRequestType.Velocity;
-                } else {
-                        driveRequestType = DriveRequestType.OpenLoopVoltage;
-                }
-
-                robotCentricSwerveRequest.withDriveRequestType(driveRequestType)
-                                .withSteerRequestType(SteerRequestType.Position);
-                fieldCentricSwerveRequest.withDriveRequestType(driveRequestType)
-                                .withSteerRequestType(SteerRequestType.Position);
-                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(driveRequestType)
-                                .withSteerRequestType(SteerRequestType.Position);
-        }
-
-        public Command switch1() {
-                return runOnce(() -> switchControlType());
         }
 
         public Command moveWithPercentages(

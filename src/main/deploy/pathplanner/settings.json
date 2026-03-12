@@ -3,9 +3,7 @@
   "robotLength": 0.8763,
   "holonomicMode": true,
   "pathFolders": [
-    "Top Paths",
-    "Starts",
-    "Shots",
+    "Left Paths",
     "Middle Paths"
   ],
   "autoFolders": [],

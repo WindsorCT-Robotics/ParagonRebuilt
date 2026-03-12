@@ -80,10 +80,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 .withForwardSoftLimitEnable(true)
                 .withReverseSoftLimitEnable(true);
         final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(25))
-                .withSupplyCurrentLimit(Amps.of(20))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimitEnable(true);
+                .withStatorCurrentLimit(Amps.of(25));
         final TorqueCurrentConfigs torqueCurrentConfigs = new TorqueCurrentConfigs()
                 .withPeakForwardTorqueCurrent(Amps.of(10))
                 .withPeakReverseTorqueCurrent(Amps.of(10));

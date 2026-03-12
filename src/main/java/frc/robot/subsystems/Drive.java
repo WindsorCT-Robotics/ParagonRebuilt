@@ -131,6 +131,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
+                                FACING_ANGLE_PID.kP,
+                                FACING_ANGLE_PID.kI,
+                                FACING_ANGLE_PID.kD);
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 initSmartDashboard();
@@ -161,6 +165,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
+                SmartDashboard.putNumber("Meters Per Second X", getState().Speeds.vxMetersPerSecond);
+                SmartDashboard.putNumber("Meters Per Second Y", getState().Speeds.vyMetersPerSecond);
+                SmartDashboard.putNumber("Meters Per Second", Math.sqrt(
+                                Math.pow(
+                                                getState().Speeds.vxMetersPerSecond, 2)
+                                                + Math.pow(getState().Speeds.vyMetersPerSecond, 2)));
         }
 
         private void initSmartDashboard() {
@@ -373,9 +383,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
-                                                .withHeadingPID(FACING_ANGLE_PID.kP,
-                                                                FACING_ANGLE_PID.kI,
-                                                                FACING_ANGLE_PID.kD)
                                                 .withTargetDirection(
                                                                 new Rotation2d(targetAngle.in(Radians))));
 

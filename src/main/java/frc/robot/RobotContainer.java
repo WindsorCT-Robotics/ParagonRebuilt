@@ -88,7 +88,6 @@ public class RobotContainer implements Sendable {
   private final Supplier<Dimensionless> driverLeftAxisX;
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
-  private final Supplier<Dimensionless> driverRightAxisXNegated;
   private final Supplier<Dimensionless> driverRightTrigger;
   private final Trigger driverRightTriggered;
 
@@ -125,15 +124,15 @@ public class RobotContainer implements Sendable {
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
 
     logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    // drive.registerTelemetry(logger::telemeterize);
+    drive.registerTelemetry(logger::telemeterize);
 
     driverLeftAxisX = () -> Value.of(driver.getLeftX());
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
     driverRightAxisX = () -> Value.of(driver.getRightX());
-    driverRightAxisXNegated = () -> driverRightAxisX.get().unaryMinus();
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
     driverRightTriggered = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
 
+    registerPathplannerCommands();
     initSmartDashboard();
     configureControllerBindings();
   }
@@ -196,7 +195,7 @@ public class RobotContainer implements Sendable {
         curveAxis(
             () -> Value.of(
                 MathUtil.applyDeadband(
-                    driverRightAxisXNegated.get().in(Value),
+                    driverRightAxisX.get().in(Value),
                     DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
@@ -308,7 +307,7 @@ public class RobotContainer implements Sendable {
         curveAxis(
             () -> Percent.of(
                 MathUtil.applyDeadband(
-                    driverRightAxisXNegated.get().in(Percent),
+                    driverRightAxisX.get().in(Percent),
                     DEADBAND.in(Value))),
             TURN_ROBOT_CURVE),
         this::getRelativeReference));
@@ -340,6 +339,9 @@ public class RobotContainer implements Sendable {
             shooter,
             kicker,
             spindexer));
+    NamedCommands.registerCommand("baydooropen", bayDoor.open());
+    NamedCommands.registerCommand("baydoorclose", bayDoor.open());
+    NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
   }
 
   // region SysId

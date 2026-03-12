@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
-import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Value;
@@ -69,12 +68,10 @@ import frc.robot.generated.TunerConstants;
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_CLOSE_PID = new PIDConstants(0.5, 0, 0.3);
-        private static final PIDConstants FACING_ANGLE_MEDIAN_PID = new PIDConstants(4, 0, 0.3);
-        private static final PIDConstants FACING_ANGLE_FAR_PID = new PIDConstants(5, 0, 0.5);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(10);
-        private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(7);
+        private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(0.1);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
         private final String limelightName;
@@ -109,13 +106,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 DEFAULT_TRANSLATION_PID,
                                                 DEFAULT_ROTATION_PID),
                                 robotConfiguration,
-                                () -> {
-                                        var alliance = DriverStation.getAlliance();
-                                        if (alliance.isPresent()) {
-                                                return alliance.get() == DriverStation.Alliance.Red;
-                                        }
-                                        return false;
-                                },
+                                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
                 this.limelightName = limelightName;
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
@@ -125,12 +116,12 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
-                                Inches.of(8).in(Meters),
-                                Inches.of(12).in(Meters),
+                                Inches.of(-8).in(Meters),
+                                Inches.of(-12).in(Meters),
                                 Inches.of(20.5).in(Meters),
                                 Degrees.zero().in(Degrees),
-                                Degrees.of(20).in(Degrees),
-                                Degrees.of(-90).in(Degrees));
+                                Degrees.of(25).in(Degrees),
+                                Degrees.of(90).in(Degrees));
                 LimelightHelpers.SetRobotOrientation(limelightName,
                                 getPigeon2().getYaw().getValue().in(Degrees),
                                 0.0,
@@ -269,10 +260,18 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
+                double[] x = feedforwards.robotRelativeForcesXNewtons();
+                double[] y = feedforwards.robotRelativeForcesYNewtons();
+
+                // for (int i = 0; i < x.length; i++) {
+                // x[i] = -x[i];
+                // y[i] = -y[i];
+                // }
+
                 setControl(pathPlannerSwerveRequest
                                 .withSpeeds(speeds)
-                                .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-                                .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
+                                .withWheelForceFeedforwardsX(x)
+                                .withWheelForceFeedforwardsY(y));
         }
 
         private SwerveRequest robotCentricSwerveRequest(
@@ -303,11 +302,16 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return run(() -> {
                         switch (reference.get()) {
                                 case ROBOT_CENTRIC:
-                                        setControl(robotCentricSwerveRequest(x.get().unaryMinus(), y.get().unaryMinus(),
+                                        setControl(robotCentricSwerveRequest(
+                                                        x.get(),
+                                                        y.get(),
                                                         rotateRate.get()));
                                         break;
                                 case FIELD_CENTRIC:
-                                        setControl(fieldCentricSwerveRequest(x.get(), y.get(), rotateRate.get()));
+                                        setControl(fieldCentricSwerveRequest(
+                                                        x.get(),
+                                                        y.get(),
+                                                        rotateRate.get()));
                                         break;
                                 default:
                                         throw new IllegalArgumentException(
@@ -365,31 +369,15 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity y,
                         Angle targetAngle) {
                 Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-                PIDConstants PID;
-
-                if (robotHeading.isNear(targetAngle, Radians.of(Math.PI / 4))) {
-                        PID = FACING_ANGLE_CLOSE_PID;
-                } else {
-                        PID = FACING_ANGLE_FAR_PID;
-                }
-
-                SmartDashboard.putNumber("P", PID.kP);
-
-                if (!robotHeading.isNear(targetAngle, Degrees.of(3))) {
-                        setControl(
-                                        fieldCentricFacingAngleSwerveRequest
-                                                        .withVelocityX(y)
-                                                        .withVelocityY(x)
-                                                        .withHeadingPID(PID.kP, PID.kI, PID.kD)
-                                                        .withTargetDirection(
+                setControl(
+                                fieldCentricFacingAngleSwerveRequest
+                                                .withVelocityX(y)
+                                                .withVelocityY(x)
+                                                .withHeadingPID(FACING_ANGLE_PID.kP,
+                                                                FACING_ANGLE_PID.kI,
+                                                                FACING_ANGLE_PID.kD)
+                                                .withTargetDirection(
                                                                 new Rotation2d(targetAngle.in(Radians))));
-                } else {
-                        setControl(fieldCentricSwerveRequest
-                                        .withVelocityX(y)
-                                        .withVelocityY(x)
-                                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-                                        .withRotationalRate(RPM.zero()));
-                }
 
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
                 SmartDashboard.putNumber("Robot Heading", robotHeading.in(Degrees));
@@ -548,7 +536,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private void addVisionMeasurements() {
                 double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
-                                .getDistance(new Translation3d()); // Calculates how far away the april tag is
+                                .getDistance(new Translation3d());
                 double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
                 Pose2d position = positionEstimate.pose;
@@ -563,7 +551,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().plus(Radians.of(Math.PI)).in(Degrees),
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

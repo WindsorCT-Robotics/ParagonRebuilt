@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.468,
-        "y": 5.5
+        "x": 0.6,
+        "y": 5.962375
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.49110320284697545,
-        "y": 4.546061684460261
+        "x": 1.4,
+        "y": 5.962375
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Depot"
     },
     {
       "anchor": {
@@ -20,21 +20,30 @@
         "y": 5.621981020166073
       },
       "prevControl": {
-        "x": 2.632182680901543,
-        "y": 5.492870699881376
+        "x": 2.9542189395451475,
+        "y": 5.656977823646841
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.20712401055408985,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 0.6543535620052771,
+      "rotationDegrees": -135.35051262408012
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "shoothubdistancetilbadflow",
-      "waypointRelativePos": 0.5112732095490714,
+      "name": "shoothubdistance",
+      "waypointRelativePos": 0.37260677466863057,
       "endWaypointRelativePos": 1.0,
       "command": null
     }
@@ -54,8 +63,8 @@
   "reversed": false,
   "folder": "Left Paths",
   "idealStartingState": {
-    "velocity": 1.5,
-    "rotation": -90.0
+    "velocity": 0.1,
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

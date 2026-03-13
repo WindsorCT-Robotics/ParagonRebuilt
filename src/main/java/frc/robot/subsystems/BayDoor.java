@@ -49,6 +49,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
     private static final Dimensionless DUTY_CYCLE = Percent.of(22.5);
+    private static final Dimensionless PRESSURE_DUTY_CYCLE = Percent.of(10);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
     private static final Angle CLOSE_ANGLE = Rotations.of(0);
 
@@ -62,7 +63,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     public final Trigger isBayDoorSoftClosed;
     public final Trigger isBayDoorOpen;
 
-    private static final Angle TOLERANCE = Rotations.of(1);
+    private static final Angle TOLERANCE = Rotations.of(0.1);
 
     public BayDoor(
             String name,
@@ -75,7 +76,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         homeNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED", "");
 
         final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
-                .withForwardSoftLimitThreshold(OPEN_ANGLE)
+                .withForwardSoftLimitThreshold(OPEN_ANGLE.plus(Rotations.of(0.45)))
                 .withReverseSoftLimitThreshold(CLOSE_ANGLE)
                 .withForwardSoftLimitEnable(true)
                 .withReverseSoftLimitEnable(true);
@@ -115,8 +116,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         atLeftCloseLimit = new Trigger(() -> leftHardLimit.get());
         atRightCloseLimit = new Trigger(() -> rightHardLimit.get());
-        atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().isEquivalent(CLOSE_ANGLE));
-        atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().isEquivalent(CLOSE_ANGLE));
+        atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().lt(CLOSE_ANGLE));
+        atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().lt(CLOSE_ANGLE));
         atLeftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE));
         atRightOpenLimit = new Trigger(() -> rightMotor.getAngle().gte(OPEN_ANGLE));
         isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
@@ -141,6 +142,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         builder.addBooleanProperty("Is Intake Open?", isBayDoorOpen, null);
         builder.addBooleanProperty("Is Left Pressed", atLeftCloseLimit, null);
         builder.addBooleanProperty("Is Right Pressed", atRightCloseLimit, null);
+        builder.addBooleanProperty("Is Left Open?", atLeftOpenLimit, null);
+        builder.addBooleanProperty("Is Right Open?", atRightOpenLimit, null);
     }
 
     private void moveTowards(BayDoorMotor motor, Dimensionless percent, Angle goalAngle, Angle currentAngle) {
@@ -201,7 +204,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         return runEnd(() -> {
             moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayMotorState.OPEN);
             moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayMotorState.OPEN);
-        }, this::stop).withName("Open");
+        }, () -> {
+            leftMotor.setDutyCycle(PRESSURE_DUTY_CYCLE);
+            rightMotor.setDutyCycle(PRESSURE_DUTY_CYCLE);
+        }).until(isBayDoorOpen).withName("Open");
     }
 
     public Command close() {

@@ -49,7 +49,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "baydoorclose",
+      "name": "",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": 1.0649867374005304,
       "command": null

@@ -11,7 +11,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": null
+                  "name": "intakefuel"
                 }
               },
               {
@@ -29,16 +29,35 @@
                             }
                           },
                           {
-                            "type": "named",
+                            "type": "sequential",
                             "data": {
-                              "name": null
+                              "commands": [
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "baydoorhome"
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "baydooropen"
+                                  }
+                                }
+                              ]
                             }
                           }
                         ]
                       }
                     },
                     {
-                      "type": "parallel",
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    },
+                    {
+                      "type": "sequential",
                       "data": {
                         "commands": [
                           {
@@ -48,9 +67,22 @@
                             }
                           },
                           {
-                            "type": "named",
+                            "type": "deadline",
                             "data": {
-                              "name": null
+                              "commands": [
+                                {
+                                  "type": "wait",
+                                  "data": {
+                                    "waitTime": 7.0
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "shoothubdistance"
+                                  }
+                                }
+                              ]
                             }
                           }
                         ]
@@ -70,26 +102,19 @@
                       }
                     },
                     {
-                      "type": "parallel",
+                      "type": "sequential",
                       "data": {
                         "commands": [
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Fuel To Bottom Fuel"
+                              "pathName": "Left Fuel To Middle Fuel"
                             }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "type": "parallel",
-                      "data": {
-                        "commands": [
+                          },
                           {
-                            "type": "path",
+                            "type": "named",
                             "data": {
-                              "pathName": "Bottom Fuel To Bottom Shot"
+                              "name": "shoothubdistance"
                             }
                           }
                         ]

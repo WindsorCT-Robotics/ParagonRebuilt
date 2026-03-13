@@ -120,6 +120,7 @@ public class RobotContainer implements Sendable {
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
+    registerPathplannerCommands();
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
 
@@ -131,8 +132,6 @@ public class RobotContainer implements Sendable {
     driverRightAxisX = () -> Value.of(driver.getRightX());
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
     driverRightTriggered = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
-
-    registerPathplannerCommands();
     initSmartDashboard();
     configureControllerBindings();
   }
@@ -281,7 +280,10 @@ public class RobotContainer implements Sendable {
     operator.povDown().whileTrue(
         shooter.smartDashboardLaunchFuel()
             .alongWith(kicker.smartDashboardKickFuel())
-            .alongWith(spindexer.smartDashboardIndexFuel()));
+            .alongWith(spindexer.smartDashboardIndexFuel())
+            .alongWith(drive.angleToHub(
+                () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))));
 
     // Spins the spindexer backwards.
     operator.back().whileTrue(
@@ -304,6 +306,7 @@ public class RobotContainer implements Sendable {
             new Trigger(() -> false)));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
+    NamedCommands.registerCommand("baydoorhome", bayDoor.home());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
   }
 

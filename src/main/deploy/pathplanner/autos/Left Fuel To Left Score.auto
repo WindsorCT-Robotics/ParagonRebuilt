@@ -25,51 +25,26 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Top To Depot"
+                              "pathName": "Left Top To Left Fuel"
                             }
                           },
                           {
-                            "type": "named",
+                            "type": "sequential",
                             "data": {
-                              "name": "baydooropen"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "type": "sequential",
-                      "data": {
-                        "commands": [
-                          {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Left Depot To Top Shot"
-                            }
-                          },
-                          {
-                            "type": "wait",
-                            "data": {
-                              "waitTime": 10.0
-                            }
-                          },
-                          {
-                            "type": "named",
-                            "data": {
-                              "name": "shoothubdistance"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "type": "parallel",
-                      "data": {
-                        "commands": [
-                          {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Left Shot To Top Fuel"
+                              "commands": [
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "baydoorhome"
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "baydooropen"
+                                  }
+                                }
+                              ]
                             }
                           }
                         ]

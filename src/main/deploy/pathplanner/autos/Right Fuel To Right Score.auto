@@ -25,7 +25,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Top To Depot"
+                              "pathName": "Right Top To Right Fuel"
                             }
                           },
                           {
@@ -51,76 +51,39 @@
                       }
                     },
                     {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.5
-                      }
-                    },
-                    {
                       "type": "sequential",
                       "data": {
                         "commands": [
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Depot To Left Shot"
+                              "pathName": "Right Fuel To Right Score"
                             }
                           },
                           {
-                            "type": "race",
+                            "type": "parallel",
                             "data": {
                               "commands": [
                                 {
-                                  "type": "wait",
+                                  "type": "race",
                                   "data": {
-                                    "waitTime": 7.0
-                                  }
-                                },
-                                {
-                                  "type": "named",
-                                  "data": {
-                                    "name": "shoothubdistance"
+                                    "commands": [
+                                      {
+                                        "type": "wait",
+                                        "data": {
+                                          "waitTime": 10.0
+                                        }
+                                      },
+                                      {
+                                        "type": "named",
+                                        "data": {
+                                          "name": "shoothubdistance"
+                                        }
+                                      }
+                                    ]
                                   }
                                 }
                               ]
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "type": "parallel",
-                      "data": {
-                        "commands": [
-                          {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Left Shot To Top Fuel"
-                            }
-                          },
-                          {
-                            "type": "named",
-                            "data": {
-                              "name": "baydoorclose"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "type": "sequential",
-                      "data": {
-                        "commands": [
-                          {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Left Fuel To Middle Fuel And Depot Score"
-                            }
-                          },
-                          {
-                            "type": "named",
-                            "data": {
-                              "name": "shoothubdistance"
                             }
                           }
                         ]

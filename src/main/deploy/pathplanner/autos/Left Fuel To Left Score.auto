@@ -57,13 +57,70 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Fuel To Middle Fuel"
+                              "pathName": "Left Fuel To Middle Fuel And Depot Score"
                             }
                           },
                           {
                             "type": "named",
                             "data": {
                               "name": "shoothubdistance"
+                            }
+                          },
+                          {
+                            "type": "race",
+                            "data": {
+                              "commands": [
+                                {
+                                  "type": "wait",
+                                  "data": {
+                                    "waitTime": 10.0
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "shoothubdistance"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot Score To Depot"
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Depot To Score"
+                            }
+                          },
+                          {
+                            "type": "race",
+                            "data": {
+                              "commands": [
+                                {
+                                  "type": "wait",
+                                  "data": {
+                                    "waitTime": 10.0
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "shoothubdistance"
+                                  }
+                                }
+                              ]
                             }
                           }
                         ]

@@ -3,48 +3,57 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.45,
-        "y": 0.459326
+        "x": 4.2,
+        "y": 7.399326
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.395908305515932,
-        "y": 0.46962815707502287
+        "x": 6.651829545454546,
+        "y": 7.735147727272727
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Trench Shot From Hub"
     },
     {
       "anchor": {
-        "x": 7.651590909090908,
-        "y": 1.261326
+        "x": 6.9,
+        "y": 6.631326
       },
       "prevControl": {
-        "x": 7.2099553417670545,
-        "y": 0.8178675892142577
+        "x": 6.9,
+        "y": 7.012817528628473
       },
       "nextControl": {
-        "x": 7.828003160172391,
-        "y": 1.4384663897149483
+        "x": 6.9,
+        "y": 6.381326
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.764965909090909,
-        "y": 2.138326
+        "x": 6.9,
+        "y": 4.807326
       },
       "prevControl": {
-        "x": 7.764965909090909,
-        "y": 1.6637644526849202
+        "x": 6.9,
+        "y": 5.8050081274875165
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Fuel Start"
+      "linkedName": "Left Trench Shot To Middle To Hub"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.253298153034301,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.2875989445910283,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -57,14 +66,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 90.0
+    "velocity": 0.0,
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Right Paths",
+  "folder": "Left Paths",
   "idealStartingState": {
-    "velocity": 0.0,
-    "rotation": 90.0
+    "velocity": 0.3,
+    "rotation": -176.2118538946995
   },
   "useDefaultConstraints": true
 }

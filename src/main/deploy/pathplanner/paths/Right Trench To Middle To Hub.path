@@ -3,32 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.764965909090909,
-        "y": 2.138326
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 8.127911047370723,
-        "y": 6.297677110436495
-      },
-      "isLocked": false,
-      "linkedName": "Right Fuel Start"
-    },
-    {
-      "anchor": {
         "x": 4.2,
         "y": 0.67
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.653261363636364,
+        "y": 0.7215340909090914
+      },
+      "isLocked": false,
+      "linkedName": "Right Trench Shot From Hub"
+    },
+    {
+      "anchor": {
+        "x": 6.9,
+        "y": 1.437681818181818
+      },
       "prevControl": {
-        "x": 7.632170454545455,
-        "y": 0.3504886363636366
+        "x": 6.9,
+        "y": 1.0561902895533444
+      },
+      "nextControl": {
+        "x": 6.9,
+        "y": 1.6876818181818183
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.9,
+        "y": 3.261988636363636
+      },
+      "prevControl": {
+        "x": 6.9,
+        "y": 2.2643065088761194
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trench Shot From Hub"
+      "linkedName": "Right Trench Score To Middle To Hub"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.2875989445910283,
+      "rotationDegrees": 90.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
@@ -69,13 +90,13 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": -10.477649757423844
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Right Paths",
   "idealStartingState": {
     "velocity": 0.3,
-    "rotation": 90.0
+    "rotation": -10.477649757423844
   },
   "useDefaultConstraints": true
 }

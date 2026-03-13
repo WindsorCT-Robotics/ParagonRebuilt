@@ -8,46 +8,30 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.75465909090909,
-        "y": 4.972920454545455
-      },
-      "isLocked": false,
-      "linkedName": "Left Fuel"
-    },
-    {
-      "anchor": {
-        "x": 4.528625,
-        "y": 5.416113636363637
-      },
-      "prevControl": {
-        "x": 5.484700816686308,
-        "y": 5.295443873092551
-      },
-      "nextControl": {
-        "x": 3.4670227272727265,
-        "y": 5.550102272727272
+        "x": 7.764965909090909,
+        "y": 7.81124784422364
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.5,
-        "y": 5.931454545454546
+        "x": 4.2,
+        "y": 7.399326
       },
       "prevControl": {
-        "x": 2.121386363636364,
-        "y": 5.852602272727274
+        "x": 5.2,
+        "y": 7.399326
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Score"
+      "linkedName": "Left Trench Shot From Hub"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9683377308707153,
-      "rotationDegrees": -137.72964206815973
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 180.0
     }
   ],
   "constraintZones": [],
@@ -63,7 +47,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -122.88737707401496
+    "rotation": -176.2118538946995
   },
   "reversed": false,
   "folder": "Left Paths",

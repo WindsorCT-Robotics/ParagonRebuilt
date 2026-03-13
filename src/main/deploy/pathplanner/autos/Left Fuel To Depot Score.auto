@@ -25,7 +25,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Right Top To Right Fuel"
+                              "pathName": "Left Top To Left Fuel"
                             }
                           },
                           {
@@ -36,6 +36,12 @@
                                   "type": "named",
                                   "data": {
                                     "name": "baydoorhome"
+                                  }
+                                },
+                                {
+                                  "type": "wait",
+                                  "data": {
+                                    "waitTime": 0.8
                                   }
                                 },
                                 {
@@ -57,30 +63,68 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Right Fuel To Right Score"
+                              "pathName": "Left Fuel To Middle Fuel & Shoot From Depot"
                             }
                           },
                           {
-                            "type": "parallel",
+                            "type": "race",
                             "data": {
                               "commands": [
                                 {
-                                  "type": "race",
+                                  "type": "wait",
                                   "data": {
-                                    "commands": [
-                                      {
-                                        "type": "wait",
-                                        "data": {
-                                          "waitTime": 10.0
-                                        }
-                                      },
-                                      {
-                                        "type": "named",
-                                        "data": {
-                                          "name": "shoothubdistance"
-                                        }
-                                      }
-                                    ]
+                                    "waitTime": 8.0
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "shoothubdistance"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Depot Score To Depot"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "sequential",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "Depot To Score"
+                            }
+                          },
+                          {
+                            "type": "race",
+                            "data": {
+                              "commands": [
+                                {
+                                  "type": "wait",
+                                  "data": {
+                                    "waitTime": 10.0
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "shoothubdistance"
                                   }
                                 }
                               ]

@@ -25,7 +25,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Top To Left Fuel"
+                              "pathName": "Right Top To Right Fuel"
                             }
                           },
                           {
@@ -36,12 +36,6 @@
                                   "type": "named",
                                   "data": {
                                     "name": "baydoorhome"
-                                  }
-                                },
-                                {
-                                  "type": "wait",
-                                  "data": {
-                                    "waitTime": 0.8
                                   }
                                 },
                                 {
@@ -57,29 +51,36 @@
                       }
                     },
                     {
-                      "type": "sequential",
+                      "type": "parallel",
                       "data": {
                         "commands": [
                           {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Left Fuel To Middle Fuel And Depot Score"
-                            }
-                          },
-                          {
-                            "type": "race",
+                            "type": "sequential",
                             "data": {
                               "commands": [
                                 {
-                                  "type": "wait",
+                                  "type": "path",
                                   "data": {
-                                    "waitTime": 8.0
+                                    "pathName": "Right Fuel To Right Score"
                                   }
                                 },
                                 {
-                                  "type": "named",
+                                  "type": "race",
                                   "data": {
-                                    "name": "shoothubdistance"
+                                    "commands": [
+                                      {
+                                        "type": "wait",
+                                        "data": {
+                                          "waitTime": 8.0
+                                        }
+                                      },
+                                      {
+                                        "type": "named",
+                                        "data": {
+                                          "name": "shoothubdistance"
+                                        }
+                                      }
+                                    ]
                                   }
                                 }
                               ]
@@ -95,30 +96,24 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Depot Score To Depot"
+                              "pathName": "Right Trench To Middle To Hub"
                             }
                           }
                         ]
                       }
                     },
                     {
-                      "type": "sequential",
+                      "type": "parallel",
                       "data": {
                         "commands": [
                           {
-                            "type": "path",
-                            "data": {
-                              "pathName": "Depot To Score"
-                            }
-                          },
-                          {
-                            "type": "race",
+                            "type": "sequential",
                             "data": {
                               "commands": [
                                 {
-                                  "type": "wait",
+                                  "type": "path",
                                   "data": {
-                                    "waitTime": 10.0
+                                    "pathName": "Hub To Right Score"
                                   }
                                 },
                                 {

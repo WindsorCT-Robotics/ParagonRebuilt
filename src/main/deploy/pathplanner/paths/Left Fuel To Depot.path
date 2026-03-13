@@ -3,48 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.45,
-        "y": 0.459326
+        "x": 7.764965909090909,
+        "y": 5.931
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.395908305515932,
-        "y": 0.46962815707502287
+        "x": 7.75465909090909,
+        "y": 4.972920454545455
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Fuel Start"
     },
     {
       "anchor": {
-        "x": 7.651590909090908,
-        "y": 1.261326
+        "x": 4.528625,
+        "y": 5.416113636363637
       },
       "prevControl": {
-        "x": 7.2099553417670545,
-        "y": 0.8178675892142577
+        "x": 5.484700816686308,
+        "y": 5.295443873092551
       },
       "nextControl": {
-        "x": 7.828003160172391,
-        "y": 1.4384663897149483
+        "x": 3.4670227272727265,
+        "y": 5.550102272727272
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.764965909090909,
-        "y": 2.138326
+        "x": 1.5,
+        "y": 5.931454545454546
       },
       "prevControl": {
-        "x": 7.764965909090909,
-        "y": 1.6637644526849202
+        "x": 2.121386363636364,
+        "y": 5.852602272727274
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Fuel Start"
+      "linkedName": "Depot Shot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9683377308707153,
+      "rotationDegrees": -137.72964206815973
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -57,14 +62,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 90.0
+    "velocity": 0,
+    "rotation": -122.88737707401496
   },
   "reversed": false,
-  "folder": "Right Paths",
+  "folder": "Left Paths",
   "idealStartingState": {
-    "velocity": 0.0,
-    "rotation": 90.0
+    "velocity": 0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

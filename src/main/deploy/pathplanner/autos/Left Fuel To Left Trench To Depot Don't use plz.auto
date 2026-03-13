@@ -51,7 +51,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Fuel To Trench"
+                              "pathName": "Left Fuel To Depot"
                             }
                           }
                         ]
@@ -67,6 +67,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Unused",
   "choreoAuto": false
 }

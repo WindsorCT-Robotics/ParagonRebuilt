@@ -4,36 +4,57 @@
     {
       "anchor": {
         "x": 7.764965909090909,
-        "y": 2.138326
+        "y": 5.931454545454546
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.127911047370723,
-        "y": 6.297677110436495
+        "x": 7.4020340909090905,
+        "y": 1.772102272727274
       },
       "isLocked": false,
-      "linkedName": "Right Fuel Start"
+      "linkedName": "Left Fuel Start"
     },
     {
       "anchor": {
-        "x": 4.2,
-        "y": 0.67
+        "x": 3.601011363634046,
+        "y": 7.395022727271703
       },
       "prevControl": {
-        "x": 7.632170454545455,
-        "y": 0.3504886363636366
+        "x": 8.857488636363636,
+        "y": 7.9000568181818185
+      },
+      "nextControl": {
+        "x": 2.6055951852555697,
+        "y": 7.29938470229009
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.5,
+        "y": 5.931454545454546
+      },
+      "prevControl": {
+        "x": 1.9290000000000005,
+        "y": 6.674504341901595
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trench Shot From Hub"
+      "linkedName": "Depot Shot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7862796833773104,
+      "rotationDegrees": 147.89392213094715
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 0.0,
-      "maxWaypointRelativePos": 0.09455587392550147,
+      "maxWaypointRelativePos": 0.26509572901325507,
       "constraints": {
         "maxVelocity": 1.2,
         "maxAcceleration": 4.0,
@@ -45,8 +66,8 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.4899713467048711,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 0.9331550802139043,
+      "maxWaypointRelativePos": 1.6684491978609617,
       "constraints": {
         "maxVelocity": 5.0,
         "maxAcceleration": 5.0,
@@ -58,7 +79,14 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "shoothubdistance",
+      "waypointRelativePos": 1.4652406417112305,
+      "endWaypointRelativePos": 2.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 4.0,
@@ -69,13 +97,13 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": -10.477649757423844
+    "rotation": -122.88737707401496
   },
   "reversed": false,
-  "folder": "Right Paths",
+  "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 0.3,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

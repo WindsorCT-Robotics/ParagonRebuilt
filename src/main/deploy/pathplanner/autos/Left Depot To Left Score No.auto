@@ -63,7 +63,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Depot To Left Shot"
+                              "pathName": "Depot To Shot From Left Bump"
                             }
                           },
                           {
@@ -114,7 +114,7 @@
                           {
                             "type": "path",
                             "data": {
-                              "pathName": "Left Fuel To Middle Fuel And Depot Score"
+                              "pathName": "Left Fuel To Middle Fuel & Shoot From Depot"
                             }
                           },
                           {
@@ -136,6 +136,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Unused",
   "choreoAuto": false
 }

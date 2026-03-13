@@ -102,7 +102,7 @@ public class LaunchCalculator implements Sendable {
     private void putTestedKickerMap() {
         kickerMap.put(1.5, 1925.0);
         kickerMap.put(2.0, 2050.0);
-        kickerMap.put(2.5, 2150.0);
+        kickerMap.put(2.5, 2175.0);
         kickerMap.put(3.0, 2400.0);
         kickerMap.put(3.5, 2450.0);
         kickerMap.put(4.0, 2600.0);

@@ -24,11 +24,14 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -113,7 +116,7 @@ public class RobotContainer implements Sendable {
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
-    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose);
+    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose, () -> drive.getHubPosition(DriverStation.getAlliance().orElse(Alliance.Blue)));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -228,7 +231,7 @@ public class RobotContainer implements Sendable {
         spindexer,
         launchCalculator,
         () -> getOperatorTriggerAdjustment(),
-        operator.start()).withName("LaunchFuelToHub"));
+        operator.start()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("LaunchFuelToHub"));
 
     // region toggle outpost angle
     driver.start().toggleOnTrue(

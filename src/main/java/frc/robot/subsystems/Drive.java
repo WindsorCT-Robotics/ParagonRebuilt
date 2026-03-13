@@ -111,7 +111,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 this.limelightName = limelightName;
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
                 this.field = new RectanglePoseArea(Translation2d.kZero,
-                                new Translation2d(layout.getFieldWidth(), layout.getFieldLength()));
+                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
                 setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
 
                 LimelightHelpers.setCameraPose_RobotSpace(
@@ -162,14 +162,23 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
 
                 isLauncherAlignedToHub = new Trigger(() -> {
+                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
                         Optional<Angle> targetAngle = getLaunchAngleToHub();
+                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
 
                         if (targetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-                        return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
+                        Angle validTargetAngle = targetAngle.get();
+                        final Angle offset = maybeAlliance.map(alliance -> {
+                                if (alliance == Alliance.Red) {
+                                        return Radians.of(MathUtil.angleModulus(validTargetAngle.plus(Radians.of(Math.PI)).in(Radians)));
+                                }
+                                return validTargetAngle;
+                        }).orElse(validTargetAngle);
+
+                        return currentLaunch.isNear(offset, Degrees.of(15));
                 });
                 initSmartDashboard();
         }
@@ -197,6 +206,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
                 SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
+
         }
 
         private void initSmartDashboard() {
@@ -296,18 +306,10 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
-                double[] x = feedforwards.robotRelativeForcesXNewtons();
-                double[] y = feedforwards.robotRelativeForcesYNewtons();
-
-                // for (int i = 0; i < x.length; i++) {
-                // x[i] = -x[i];
-                // y[i] = -y[i];
-                // }
-
                 setControl(pathPlannerSwerveRequest
                                 .withSpeeds(speeds)
-                                .withWheelForceFeedforwardsX(x)
-                                .withWheelForceFeedforwardsY(y));
+                                .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                                .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
         }
 
         private SwerveRequest robotCentricSwerveRequest(
@@ -421,7 +423,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .unless(DriverStation.getAlliance()::isEmpty);
         }
 
-        private Translation2d getHubPosition(Alliance alliance) {
+        public Translation2d getHubPosition(Alliance alliance) {
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
                 Pose3d blueHubYCenter = layout.getTagPose(26).get();
                 Pose3d blueHubXCenter = layout.getTagPose(21).get();
@@ -438,6 +440,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         yHub = redHubYCenter.getMeasureY();
                 }
 
+                SmartDashboard.putNumber("Hub X", xHub.in(Meters));
+                SmartDashboard.putNumber("Hub Y", yHub.in(Meters));
                 return new Translation2d(xHub, yHub);
         }
 
@@ -455,9 +459,17 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                         Translation2d targetTranslation = robotPosition.minus(hubPosition);
 
-                        Angle targetAngle = Radians
-                                        .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                        .plus(Degrees.of(90)).minus(launcherOffset);
+                        Angle targetAngle;
+
+                        if (alliance == Alliance.Blue) {
+                                targetAngle = Radians
+                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                                .plus(Degrees.of(90)).minus(launcherOffset);
+                        } else {
+                                targetAngle = Radians
+                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                                .plus(Degrees.of(90)).minus(launcherOffset).plus(Radians.of(Math.PI));
+                        }
 
                         return Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
                 });
@@ -554,8 +566,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                 double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
                 Pose2d position = positionEstimate.pose;
-                SmartDashboard.putNumber("Vision Position X", position.getX());
-                SmartDashboard.putNumber("Vision Position Y", position.getY());
+                SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
+                SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
                 if (getPositionEstimate().tagCount <= 0)
                         return;
                 if (!field.isPoseWithinArea(positionEstimate.pose))

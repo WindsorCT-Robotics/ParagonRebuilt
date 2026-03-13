@@ -33,7 +33,8 @@
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
   "robotFeatures": [
-    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.2029,\"y\":-0.2029},\"size\":{\"width\":0.2,\"length\":0.1},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":true}}",
-    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.2029,\"y\":2.4},\"size\":{\"width\":5.0,\"length\":0.0},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
+    "{\"name\":\"Launcher\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.2029,\"y\":-0.2029},\"size\":{\"width\":0.2,\"length\":0.1},\"borderRadius\":0.05,\"strokeWidth\":0.01,\"filled\":false}}",
+    "{\"name\":\"Launcher Aim\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.2029,\"y\":2.4},\"size\":{\"width\":5.0,\"length\":0.0},\"borderRadius\":0.05,\"strokeWidth\":0.01,\"filled\":false}}",
+    "{\"name\":\"Intake\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.6,\"y\":0.0},\"size\":{\"width\":0.9,\"length\":0.3048},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
   ]
 }

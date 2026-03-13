@@ -91,9 +91,9 @@ public class LaunchCalculator implements Sendable {
     private void putTestedShooterMap() {
         shooterMap.put(1.5, 1925.0);
         shooterMap.put(2.0, 2050.0);
-        shooterMap.put(2.5, 2250.0);
-        shooterMap.put(3.0, 2500.0);
-        shooterMap.put(3.5, 2550.0);
+        shooterMap.put(2.5, 2175.0);
+        shooterMap.put(3.0, 2400.0);
+        shooterMap.put(3.5, 2450.0);
         shooterMap.put(4.0, 2600.0);
         shooterMap.put(4.5, 2700.0);
         shooterMap.put(5.0, 3000.0);
@@ -102,9 +102,9 @@ public class LaunchCalculator implements Sendable {
     private void putTestedKickerMap() {
         kickerMap.put(1.5, 1925.0);
         kickerMap.put(2.0, 2050.0);
-        kickerMap.put(2.5, 2250.0);
-        kickerMap.put(3.0, 2500.0);
-        kickerMap.put(3.5, 2550.0);
+        kickerMap.put(2.5, 2150.0);
+        kickerMap.put(3.0, 2400.0);
+        kickerMap.put(3.5, 2450.0);
         kickerMap.put(4.0, 2600.0);
         kickerMap.put(4.5, 2700.0);
         kickerMap.put(5.0, 3000.0);

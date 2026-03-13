@@ -49,7 +49,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
     private static final Dimensionless DUTY_CYCLE = Percent.of(22.5);
-    private static final Dimensionless PRESSURE_DUTY_CYCLE = Percent.of(10);
+    private static final Dimensionless PRESSURE_OPEN_DUTY_CYCLE = Percent.of(5);
+    private static final Dimensionless PRESSURE_CLOSE_DUTY_CYCLE = Percent.of(-5);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
     private static final Angle CLOSE_ANGLE = Rotations.of(0);
 
@@ -76,7 +77,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         homeNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED", "");
 
         final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
-                .withForwardSoftLimitThreshold(OPEN_ANGLE.plus(Rotations.of(0.45)))
+                .withForwardSoftLimitThreshold(OPEN_ANGLE.plus(Rotations.of(0.4)))
                 .withReverseSoftLimitThreshold(CLOSE_ANGLE)
                 .withForwardSoftLimitEnable(true)
                 .withReverseSoftLimitEnable(true);
@@ -197,6 +198,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private void onHomingComplete() {
         enableSoftLimits(true);
         removeDefaultCommand();
+        leftMotor.setDutyCycle(PRESSURE_CLOSE_DUTY_CYCLE);
+        rightMotor.setDutyCycle(PRESSURE_CLOSE_DUTY_CYCLE);
         Elastic.sendNotification(homeNotification);
     }
 
@@ -205,8 +208,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayMotorState.OPEN);
             moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayMotorState.OPEN);
         }, () -> {
-            leftMotor.setDutyCycle(PRESSURE_DUTY_CYCLE);
-            rightMotor.setDutyCycle(PRESSURE_DUTY_CYCLE);
+            leftMotor.setDutyCycle(PRESSURE_OPEN_DUTY_CYCLE);
+            rightMotor.setDutyCycle(PRESSURE_OPEN_DUTY_CYCLE);
         }).until(isBayDoorOpen).withName("Open");
     }
 

@@ -67,7 +67,7 @@
                             }
                           },
                           {
-                            "type": "deadline",
+                            "type": "race",
                             "data": {
                               "commands": [
                                 {
@@ -96,6 +96,12 @@
                             "type": "path",
                             "data": {
                               "pathName": "Left Shot To Top Fuel"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "baydoorclose"
                             }
                           }
                         ]

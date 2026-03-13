@@ -207,13 +207,28 @@ public class RobotContainer implements Sendable {
       SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
 
-    // region moveWithPercentages
     driver.rightBumper().whileTrue(drive.moveWithPercentages(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE).times(REDUCE_SPEED),
         this::getRelativeReference));
-    // endregion
+
+    // Angles launcher
+    // If within the RPM range then spindexer indexes the fuel
+    // If within angle range it launches fuel
+    // Calculates shooter and kicker speed based off of distance
+    // If speed of shooter and kicker was off then operator can adjust with right
+    // trigger
+    driver.rightStick().toggleOnTrue(new AutoScore(
+        drive,
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        shooter,
+        kicker,
+        spindexer,
+        launchCalculator,
+        () -> getOperatorTriggerAdjustment(),
+        operator.start()).withName("LaunchFuelToHub"));
 
     // region toggle outpost angle
     driver.start().toggleOnTrue(
@@ -259,23 +274,6 @@ public class RobotContainer implements Sendable {
   }
 
   private void bindOperator() {
-    // Angles launcher
-    // If within the RPM range then spindexer indexes the fuel
-    // If within angle range it launches fuel
-    // Calculates shooter and kicker speed based off of distance
-    // If speed of shooter and kicker was off then operator can adjust with right
-    // trigger
-    operator.leftBumper().toggleOnTrue(new AutoScore(
-        drive,
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        shooter,
-        kicker,
-        spindexer,
-        launchCalculator,
-        () -> getOperatorTriggerAdjustment(),
-        operator.start()).withName("LaunchFuelToHub"));
-
     // Manual Launch Fuel With Smartdashboard values.
     operator.povDown().whileTrue(
         shooter.smartDashboardLaunchFuel()

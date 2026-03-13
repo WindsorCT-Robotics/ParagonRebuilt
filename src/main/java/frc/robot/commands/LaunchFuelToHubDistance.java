@@ -35,10 +35,10 @@ public class LaunchFuelToHubDistance extends ParallelCommandGroup {
                                                 RPM.of(100),
                                                 onAllianceSide),
                                 kicker.kickFuelToHub(
-                                                () -> launchCalculator.getKickerVelocityToHub().plus(RPM.of(50)),
+                                                () -> launchCalculator.getKickerVelocityToHub(),
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
-                                                () -> RPM.of(1750),
+                                                () -> RPM.of(1250),
                                                 () -> shooter.getLaunchVelocity(),
                                                 VELOCITY_THRESHOLD,
                                                 isAligned,

@@ -218,7 +218,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         return runEnd(() -> {
             moveToPosition(leftMotor, CLOSE_DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayMotorState.CLOSE);
             moveToPosition(rightMotor, CLOSE_DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayMotorState.CLOSE);
-        }, this::home).until(isBayDoorClosed.or(isBayDoorSoftClosed)).withName("Close");
+        }, () -> {
+            leftMotor.setDutyCycle(PRESSURE_CLOSE_DUTY_CYCLE);
+            rightMotor.setDutyCycle(PRESSURE_CLOSE_DUTY_CYCLE);
+        }).until(isBayDoorClosed.or(isBayDoorSoftClosed)).withName("Close");
     }
 
     // region SysId

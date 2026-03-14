@@ -48,6 +48,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
             .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity launcherOffset = RPM.of(0);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
@@ -90,12 +91,22 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
                 () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
+        builder.addDoubleProperty("Launcher Offset (RPM)", () -> getRPMLauncherOffset().in(RPM),
+                this::setRPMLauncherOffset);
     }
 
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
         SmartDashboard.putData(getName() + "/" + leadMotor.getSmartDashboardName(), leadMotor);
         SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
+    }
+
+    private void setRPMLauncherOffset(double rpm) {
+        launcherOffset = RPM.of(rpm);
+    }
+
+    private AngularVelocity getRPMLauncherOffset() {
+        return launcherOffset;
     }
 
     public Command launchFuel(Supplier<AngularVelocity> velocity) {
@@ -111,8 +122,9 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                 () -> {
                     if (onAllianceSide.getAsBoolean()) {
                         leadMotor.setPointVelocity(
-                            velocity.get().plus(
-                                    maxAdjustment.times(adjustment.get().in(Value))));
+                                velocity.get()
+                                        .plus(maxAdjustment.times(adjustment.get().in(Value)))
+                                        .plus(launcherOffset));
                     } else {
                         leadMotor.setPointVelocity(RPM.zero());
                     }

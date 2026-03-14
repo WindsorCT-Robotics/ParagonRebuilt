@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 4.45,
-        "y": 7.61
+        "y": 7.425
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.395908305515932,
-        "y": 7.599697842924978
+        "x": 5.395908305515931,
+        "y": 7.414697842924977
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.651590909090908,
-        "y": 6.807534090909091
+        "x": 7.764965909090909,
+        "y": 7.065204545454545
       },
       "prevControl": {
-        "x": 7.209958407097805,
-        "y": 7.250995554404387
+        "x": 7.764965909090909,
+        "y": 7.565204545454545
       },
       "nextControl": {
-        "x": 7.828001935719612,
-        "y": 6.630392481782927
+        "x": 7.764965909090909,
+        "y": 6.815204545454545
       },
       "isLocked": false,
       "linkedName": null
@@ -33,18 +33,23 @@
     {
       "anchor": {
         "x": 7.764965909090909,
-        "y": 5.931454545454546
+        "y": 4.8
       },
       "prevControl": {
         "x": 7.764965909090909,
-        "y": 6.406016092769626
+        "y": 6.3
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Fuel Start"
+      "linkedName": "Left Middle Fuel"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0131926121372037,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -64,7 +69,7 @@
   "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 0.0,
-    "rotation": -90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

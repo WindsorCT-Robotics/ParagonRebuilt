@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -173,7 +174,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Angle validTargetAngle = targetAngle.get();
                         final Angle offset = maybeAlliance.map(alliance -> {
                                 if (alliance == Alliance.Red) {
-                                        return Radians.of(MathUtil.angleModulus(validTargetAngle.plus(Radians.of(Math.PI)).in(Radians)));
+                                        return Radians.of(MathUtil.angleModulus(
+                                                        validTargetAngle.plus(Radians.of(Math.PI)).in(Radians)));
                                 }
                                 return validTargetAngle;
                         }).orElse(validTargetAngle);
@@ -206,7 +208,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
                 SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
-
+                Logger.recordOutput("Drive/Gyro", getAngle());
         }
 
         private void initSmartDashboard() {
@@ -551,8 +553,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .withName("Subsystems/" + getName() + "/pathToPosition");
         }
 
-        public Command resetGyro() {
-                return Commands.runOnce(() -> getPigeon2().setYaw(Degrees.of(0.0)))
+        public void resetGyro() {
+                getPigeon2().setYaw(Degrees.of(0.0));
+        }
+
+        public Command resetGyroCommand() {
+                return Commands.runOnce(() -> resetGyro())
                                 .withName("Subsystems/" + getName() + "/resetGyro");
         }
 
@@ -560,18 +566,23 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
         }
 
+        private boolean isVisionMeasurementValid(LimelightHelpers.PoseEstimate poseEstimate) {
+                return poseEstimate.tagCount > 0
+                                && field.isPoseWithinArea(poseEstimate.pose);
+        }
+
         private void addVisionMeasurements() {
                 double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
                                 .getDistance(new Translation3d());
                 double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
-                Pose2d position = positionEstimate.pose;
                 SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
                 SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
-                if (getPositionEstimate().tagCount <= 0)
+
+                if (!isVisionMeasurementValid(positionEstimate))
                         return;
-                if (!field.isPoseWithinArea(positionEstimate.pose))
-                        return;
+                
+                Logger.recordOutput("Vision/Pose2D", positionEstimate.pose);
                 addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
                                 VecBuilder.fill(confidence, confidence, 0.1));
         }

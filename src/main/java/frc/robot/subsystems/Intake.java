@@ -29,7 +29,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity intakeVelocity = RotationsPerSecond.of(50);
+    private AngularVelocity intakeVelocity = RotationsPerSecond.of(80);
     private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-80);
 
     public Intake(String name, CanId motorCanId) {

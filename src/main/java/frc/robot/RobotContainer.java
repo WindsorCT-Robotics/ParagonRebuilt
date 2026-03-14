@@ -271,9 +271,9 @@ public class RobotContainer implements Sendable {
     // If the Right Axis was greater than 20% then will launch fuel based on percent
     // to meters
     driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
-        Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
+        () -> Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
 
-    driver.povDown().onTrue(drive.resetGyro());
+    driver.povDown().onTrue(drive.resetGyroCommand());
   }
 
   private void bindOperator() {
@@ -285,12 +285,6 @@ public class RobotContainer implements Sendable {
             .alongWith(drive.angleToHub(
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))));
-
-    // Spins the spindexer backwards.
-    operator.back().whileTrue(
-        spindexer.smartDashboardShuttleFuel()
-            .unless(operator.leftBumper())
-            .until(operator.leftBumper()));
 
     // Homes baydoor
     operator.x().onTrue(bayDoor.home());
@@ -309,6 +303,10 @@ public class RobotContainer implements Sendable {
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
     NamedCommands.registerCommand("baydoorhome", bayDoor.home());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
+  }
+
+  public void resetGyro() {
+    drive.resetGyro();
   }
 
   // region SysId

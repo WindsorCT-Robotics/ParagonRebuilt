@@ -48,7 +48,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final SysIdRoutine routine;
 
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
-    private static final Dimensionless DUTY_CYCLE = Percent.of(22.5);
+    private static final Dimensionless OPEN_DUTY_CYCLE = Percent.of(22.5);
+    private static final Dimensionless CLOSE_DUTY_CYCLE = Percent.of(-15);
     private static final Dimensionless PRESSURE_OPEN_DUTY_CYCLE = Percent.of(5);
     private static final Dimensionless PRESSURE_CLOSE_DUTY_CYCLE = Percent.of(-5);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
@@ -205,8 +206,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     public Command open() {
         return runEnd(() -> {
-            moveToPosition(leftMotor, DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayMotorState.OPEN);
-            moveToPosition(rightMotor, DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayMotorState.OPEN);
+            moveToPosition(leftMotor, OPEN_DUTY_CYCLE, OPEN_ANGLE, leftMotor.getAngle(), BayMotorState.OPEN);
+            moveToPosition(rightMotor, OPEN_DUTY_CYCLE, OPEN_ANGLE, rightMotor.getAngle(), BayMotorState.OPEN);
         }, () -> {
             leftMotor.setDutyCycle(PRESSURE_OPEN_DUTY_CYCLE);
             rightMotor.setDutyCycle(PRESSURE_OPEN_DUTY_CYCLE);
@@ -215,8 +216,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     public Command close() {
         return runEnd(() -> {
-            moveToPosition(leftMotor, DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayMotorState.CLOSE);
-            moveToPosition(rightMotor, DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayMotorState.CLOSE);
+            moveToPosition(leftMotor, CLOSE_DUTY_CYCLE, CLOSE_ANGLE, leftMotor.getAngle(), BayMotorState.CLOSE);
+            moveToPosition(rightMotor, CLOSE_DUTY_CYCLE, CLOSE_ANGLE, rightMotor.getAngle(), BayMotorState.CLOSE);
         }, this::home).until(isBayDoorClosed.or(isBayDoorSoftClosed)).withName("Close");
     }
 

@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.813070288900951,
-        "y": 5.803540447460102
+        "x": 7.099413755513221,
+        "y": 5.034076973483485
       },
       "isLocked": false,
       "linkedName": "Left Trench Shot To Middle To Hub"
     },
     {
       "anchor": {
-        "x": 6.641522727270406,
-        "y": 6.766306818179595
+        "x": 6.796125000001615,
+        "y": 7.399326
       },
       "prevControl": {
-        "x": 6.7619990349281816,
-        "y": 6.422088796300232
+        "x": 7.5739964007232965,
+        "y": 7.042339821939842
       },
       "nextControl": {
-        "x": 6.55893512108838,
-        "y": 7.0022714072711
+        "x": 6.537230563100439,
+        "y": 7.518139643829356
       },
       "isLocked": false,
       "linkedName": null
@@ -36,15 +36,20 @@
         "y": 7.399326
       },
       "prevControl": {
-        "x": 6.631215909090908,
-        "y": 7.910363636363636
+        "x": 5.904643406430592,
+        "y": 7.384029733495473
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Left Trench Shot From Hub"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9472295514511876,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
@@ -85,7 +90,7 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": -176.2118538946995
+    "rotation": -176.21185389469952
   },
   "reversed": false,
   "folder": "Left Paths",

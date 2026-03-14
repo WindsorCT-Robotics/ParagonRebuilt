@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.848227272727273,
-        "y": 0.43792045454545425
+        "x": 7.888647727272726,
+        "y": 0.0874886363636369
       },
       "isLocked": false,
       "linkedName": "Right Trench Score To Middle To Hub"
@@ -31,7 +31,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.33773087071240127,
-      "rotationDegrees": -5.00016824395808
+      "rotationDegrees": -5.000168243958081
     }
   ],
   "constraintZones": [],

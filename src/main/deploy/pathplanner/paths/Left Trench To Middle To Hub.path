@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.651829545454546,
-        "y": 7.735147727272727
+        "x": 6.888886363636363,
+        "y": 7.951590909090909
       },
       "isLocked": false,
       "linkedName": "Left Trench Shot From Hub"
@@ -73,7 +73,7 @@
   "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 0.3,
-    "rotation": -176.2118538946995
+    "rotation": -176.21185389469952
   },
   "useDefaultConstraints": true
 }

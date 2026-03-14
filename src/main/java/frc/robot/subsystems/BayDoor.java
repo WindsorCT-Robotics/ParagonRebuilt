@@ -49,7 +49,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
     private static final Dimensionless OPEN_DUTY_CYCLE = Percent.of(22.5);
-    private static final Dimensionless CLOSE_DUTY_CYCLE = Percent.of(-15);
+    private static final Dimensionless CLOSE_DUTY_CYCLE = Percent.of(15);
     private static final Dimensionless PRESSURE_OPEN_DUTY_CYCLE = Percent.of(5);
     private static final Dimensionless PRESSURE_CLOSE_DUTY_CYCLE = Percent.of(-5);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
@@ -156,7 +156,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             motor.setDutyCycle(percent.unaryMinus());
         motor.setBayMotorState(BayMotorState.CLOSING);
     }
-
+    
     private void moveToPosition(
             BayDoorMotor motor,
             Dimensionless percent,

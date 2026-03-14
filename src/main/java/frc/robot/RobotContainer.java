@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoScore;
+import frc.robot.commands.AutoScoreNoRequirement;
 import frc.robot.commands.LaunchFuelToHubDistance;
 import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.Telemetry;
@@ -277,6 +278,17 @@ public class RobotContainer implements Sendable {
   }
 
   private void bindOperator() {
+    operator.rightStick().toggleOnTrue(new AutoScoreNoRequirement(
+        drive,
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        shooter,
+        kicker,
+        spindexer,
+        launchCalculator,
+        () -> getOperatorTriggerAdjustment(),
+        operator.start()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("LaunchFuelToHub"));
+
     // Manual Launch Fuel With Smartdashboard values.
     operator.povDown().whileTrue(
         shooter.smartDashboardLaunchFuel()

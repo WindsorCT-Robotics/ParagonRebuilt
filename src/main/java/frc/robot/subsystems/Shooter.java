@@ -48,7 +48,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
             .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity launcherOffset = RPM.of(0);
+    private AngularVelocity launcherOffset = RPM.of(-75);
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);

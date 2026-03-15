@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.2702386363636355,
-        "y": 4.849238636363636
+        "x": 7.281,
+        "y": 5.230590909090909
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.2702386363636355,
-        "y": 5.849238636363636
+        "x": 7.281,
+        "y": 6.230590909090909
       },
       "isLocked": false,
       "linkedName": "Left Middle Fuel"

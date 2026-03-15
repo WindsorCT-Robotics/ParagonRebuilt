@@ -19,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -124,7 +125,10 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                         leadMotor.setPointVelocity(
                                 velocity.get()
                                         .plus(maxAdjustment.times(adjustment.get().in(Value)))
-                                        .plus(launcherOffset));
+                                        .plus(RPM.of(MathUtil.clamp(
+                                                getRPMLauncherOffset().in(RPM),
+                                                -500,
+                                                500))));
                     } else {
                         leadMotor.setPointVelocity(RPM.zero());
                     }

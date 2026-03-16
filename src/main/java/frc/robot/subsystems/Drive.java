@@ -95,7 +95,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
-                // TODO: Properly set GUI Settings in PathPlanner
                 robotConfiguration = RobotConfig.fromGUISettings();
 
                 AutoBuilder.configure(

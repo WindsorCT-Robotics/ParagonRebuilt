@@ -26,7 +26,6 @@ public class LaunchCalculator implements Sendable {
         this.robotPosition = robotPosition;
         this.hubPosition = hubPosition;
 
-        // TODO: Check for the existence of the tags before calling .get().
         putTestedShooterMap();
         putTestedKickerMap();
         putTestedTimeOfFlightMap();

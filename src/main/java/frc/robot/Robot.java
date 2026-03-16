@@ -19,11 +19,6 @@ public class Robot extends TimedRobot {
     DataLogManager.start();
   }
 
-  // @Override
-  // public void driverStationConnected() {
-
-  // }
-
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();

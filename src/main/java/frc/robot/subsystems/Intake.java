@@ -74,6 +74,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
     }
 
+    // TODO: Add advantage kit logger
     private AngularVelocity getIntakeTargetVelocity() {
         return intakeVelocity;
     }

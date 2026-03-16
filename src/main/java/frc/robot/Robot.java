@@ -16,13 +16,12 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
-    m_robotContainer.resetGyro();
-    DataLogManager.start();    
+    DataLogManager.start();
   }
 
   // @Override
   // public void driverStationConnected() {
-    
+
   // }
 
   @Override

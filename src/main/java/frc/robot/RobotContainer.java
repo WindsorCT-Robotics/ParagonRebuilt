@@ -117,7 +117,8 @@ public class RobotContainer implements Sendable {
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
-    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose, () -> drive.getHubPosition(DriverStation.getAlliance().orElse(Alliance.Blue)));
+    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose,
+        () -> drive.getHubPosition(DriverStation.getAlliance().orElse(Alliance.Blue)));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -315,10 +316,6 @@ public class RobotContainer implements Sendable {
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
     NamedCommands.registerCommand("baydoorhome", bayDoor.home());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
-  }
-
-  public void resetGyro() {
-    drive.resetGyro();
   }
 
   // region SysId

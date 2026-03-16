@@ -182,6 +182,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                         return currentLaunch.isNear(offset, Degrees.of(15));
                 });
+                resetGyro();
                 initSmartDashboard();
         }
 
@@ -581,7 +582,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 if (!isVisionMeasurementValid(positionEstimate))
                         return;
-                
+
                 Logger.recordOutput("Vision/Pose2D", positionEstimate.pose);
                 addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
                                 VecBuilder.fill(confidence, confidence, 0.1));

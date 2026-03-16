@@ -7,7 +7,7 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 
-public interface IMotor<Motor> {
+public interface IMotor {
 
     public void stop();
 

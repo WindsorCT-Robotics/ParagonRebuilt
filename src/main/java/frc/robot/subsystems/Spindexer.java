@@ -93,9 +93,9 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
     }
 
-    public Command indexFueltoHub(Supplier<AngularVelocity> velocity, Supplier<Boolean> isAligned) {
+    public Command indexFueltoHub(Supplier<AngularVelocity> velocity, Trigger isAligned) {
         return runEnd(() -> {
-            if (isAligned.get()) {
+            if (isAligned.getAsBoolean()) {
                 motor.setPointVelocity(velocity.get());
             } else {
                 hardStop();

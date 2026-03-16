@@ -1,7 +1,6 @@
 package frc.robot.hardware.motors;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -10,7 +9,7 @@ import frc.robot.hardware.CanId;
 import frc.robot.hardware.base_motors.KrakenMotorBase;
 import frc.robot.interfaces.IHomingMotor;
 
-public class BayDoorMotor extends KrakenMotorBase implements IHomingMotor<TalonFX> {
+public class BayDoorMotor extends KrakenMotorBase implements IHomingMotor {
     private BayMotorState motorBayDoorState = BayMotorState.UNKNOWN;
     private boolean hasHomed = false;
 

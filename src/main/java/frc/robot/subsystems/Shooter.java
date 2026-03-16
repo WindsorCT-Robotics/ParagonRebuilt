@@ -45,11 +45,18 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private final ShooterMotor leadMotor;
     private final ShooterMotor followerMotor;
     private final SysIdRoutine routine;
+
     private static final Distance HALF_FIELD = Meters
             .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
+    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(25);
+    private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(500);
+    private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-500);
+
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
     private AngularVelocity launcherOffset = RPM.of(-75);
+
+    public final Trigger nearTargetRPM;
 
     public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
@@ -83,6 +90,10 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
             log(log, followerMotor, "Right Shooter Motor");
         }, this));
 
+        // TODO: Ensure this works and the `getTargetVelocity` provides the correct
+        // values.
+        nearTargetRPM = new Trigger(
+                () -> leadMotor.getVelocity().isNear(leadMotor.getTargetVelocity(), NEAR_TARGET_VELOCITY_THRESHHOLD));
         initSmartDashboard();
     }
 
@@ -92,6 +103,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
                 () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
+
         builder.addDoubleProperty("Launcher Offset (RPM)", () -> getRPMLauncherOffset().in(RPM),
                 this::setRPMLauncherOffset);
     }
@@ -103,7 +115,11 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     }
 
     private void setRPMLauncherOffset(double rpm) {
-        launcherOffset = RPM.of(rpm);
+        launcherOffset = RPM.of(
+                MathUtil.clamp(
+                        rpm,
+                        MIN_USER_VELOCITY_OFFSET.in(RPM),
+                        MAX_USER_VELOCITY_OFFSET.in(RPM)));
     }
 
     private AngularVelocity getRPMLauncherOffset() {
@@ -125,10 +141,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                         leadMotor.setPointVelocity(
                                 velocity.get()
                                         .plus(maxAdjustment.times(adjustment.get().in(Value)))
-                                        .plus(RPM.of(MathUtil.clamp(
-                                                getRPMLauncherOffset().in(RPM),
-                                                -500,
-                                                500))));
+                                        .plus(getRPMLauncherOffset()));
                     } else {
                         leadMotor.setPointVelocity(RPM.zero());
                     }

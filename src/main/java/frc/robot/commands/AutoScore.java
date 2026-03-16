@@ -12,6 +12,59 @@ import frc.robot.subsystems.Spindexer;
 import frc.robot.utils.LaunchCalculator;
 
 public class AutoScore extends ParallelCommandGroup {
+
+        /**
+         * Scores into the hub with SAFETYGUARDS
+         * 
+         * @param drive
+         * @param x
+         * @param y
+         * @param unstuckFuel
+         * @param isAligned
+         * @param onAllianceSide
+         * @param shooter
+         * @param kicker
+         * @param spindexer
+         * @param launchCalculator
+         * @param velocityAdjustment
+         */
+        public AutoScore(
+                        Drive drive,
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y,
+                        Trigger unstuckFuel,
+                        Trigger isAligned,
+                        Trigger onAllianceSide,
+                        Shooter shooter,
+                        Kicker kicker,
+                        Spindexer spindexer,
+                        LaunchCalculator launchCalculator,
+                        Supplier<Dimensionless> velocityAdjustment) {
+                addCommands(
+                                new LaunchFuelToHub(
+                                                shooter,
+                                                kicker,
+                                                spindexer,
+                                                unstuckFuel,
+                                                isAligned,
+                                                onAllianceSide,
+                                                launchCalculator,
+                                                velocityAdjustment)
+                                                .alongWith(drive.angleToHub(x, y)));
+        }
+
+        /**
+         * Attermps to score into the hub REGUARDLESS
+         * 
+         * @param drive
+         * @param x
+         * @param y
+         * @param shooter
+         * @param kicker
+         * @param spindexer
+         * @param launchCalculator
+         * @param velocityAdjustment
+         */
         public AutoScore(
                         Drive drive,
                         Supplier<Dimensionless> x,
@@ -20,18 +73,14 @@ public class AutoScore extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
-                        Supplier<Dimensionless> velocityAdjustment,
-                        Trigger unstuckFuel
-        ) {
+                        Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
-                                new LaunchFuelToHubDistance(
-                                                drive,
+                                new LaunchFuelToHub(
                                                 shooter,
                                                 kicker,
                                                 spindexer,
                                                 launchCalculator,
-                                                velocityAdjustment,
-                                                unstuckFuel)
+                                                velocityAdjustment)
                                                 .alongWith(drive.angleToHub(x, y)));
         }
 }

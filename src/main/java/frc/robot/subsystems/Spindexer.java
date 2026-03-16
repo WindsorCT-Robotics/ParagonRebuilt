@@ -112,7 +112,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     public Command indexFuelAtFlyWheelVelocityToHub(
-            Supplier<AngularVelocity> indexTargetVelocity,
+            AngularVelocity indexTargetVelocity,
             Supplier<AngularVelocity> flyWheelVelocity,
             AngularVelocity threshold,
             Trigger isAligned,
@@ -130,7 +130,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             }
 
             if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.getAsBoolean()) {
-                motor.setPointVelocity(indexTargetVelocity.get());
+                motor.setPointVelocity(indexTargetVelocity);
             } else {
                 hardStop();
             }

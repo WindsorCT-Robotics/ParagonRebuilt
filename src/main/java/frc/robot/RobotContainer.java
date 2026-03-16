@@ -36,8 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoScore;
-import frc.robot.commands.AutoScoreNoRequirement;
-import frc.robot.commands.LaunchFuelToHubDistance;
+import frc.robot.commands.LaunchFuelToHub;
 import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
@@ -197,7 +196,7 @@ public class RobotContainer implements Sendable {
 
     shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose).withName("Launcher Prepare Launch"));
     kicker.setDefaultCommand(
-        kicker.prepareFuel(() -> drive.getState().Pose, drive.onAllianceSide()).withName("Kicker Prepare Launch"));
+        kicker.prepareFuel(() -> drive.getState().Pose, drive.onAllianceSide).withName("Kicker Prepare Launch"));
     spindexer.setDefaultCommand(spindexer.prepareFuel().withName("Spindexer Prepare Launch"));
   }
 
@@ -228,12 +227,16 @@ public class RobotContainer implements Sendable {
         drive,
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        operator.start(),
+        drive.isLauncherAlignedToHub,
+        drive.onAllianceSide,
         shooter,
         kicker,
         spindexer,
         launchCalculator,
-        () -> getOperatorTriggerAdjustment(),
-        operator.start()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("LaunchFuelToHub"));
+        () -> getOperatorTriggerAdjustment())
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+        .withName("LaunchFuelToHub"));
 
     // region toggle outpost angle
     driver.start().toggleOnTrue(
@@ -260,16 +263,6 @@ public class RobotContainer implements Sendable {
 
     driver.y().onTrue(bayDoor.close());
 
-    driver.back()
-        .whileTrue(new LaunchFuelToHubDistance(
-            drive,
-            shooter,
-            kicker,
-            spindexer,
-            launchCalculator,
-            () -> getOperatorTriggerAdjustment(),
-            operator.start()));
-
     // If the Right Axis was greater than 20% then will launch fuel based on percent
     // to meters
     driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
@@ -279,17 +272,6 @@ public class RobotContainer implements Sendable {
   }
 
   private void bindOperator() {
-    operator.rightStick().toggleOnTrue(new AutoScoreNoRequirement(
-        drive,
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        shooter,
-        kicker,
-        spindexer,
-        launchCalculator,
-        () -> getOperatorTriggerAdjustment(),
-        operator.start()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("LaunchFuelToHub"));
-
     // Manual Launch Fuel With Smartdashboard values.
     operator.povDown().whileTrue(
         shooter.smartDashboardLaunchFuel()
@@ -305,13 +287,12 @@ public class RobotContainer implements Sendable {
 
   private void registerPathplannerCommands() {
     NamedCommands.registerCommand("shoothubdistance",
-        new LaunchFuelToHubDistance(drive,
+        new LaunchFuelToHub(
             shooter,
             kicker,
             spindexer,
             launchCalculator,
-            () -> Percent.zero(),
-            new Trigger(() -> false)));
+            () -> Percent.zero()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
     NamedCommands.registerCommand("baydoorhome", bayDoor.home());

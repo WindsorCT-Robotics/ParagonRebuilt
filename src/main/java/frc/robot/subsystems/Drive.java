@@ -78,13 +78,14 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private final String limelightName;
         private final RectanglePoseArea field;
-        private final Trigger onAllianceSide;
-        private final Trigger isLauncherAlignedToHub;
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
+
+        public final Trigger onAllianceSide;
+        public final Trigger isLauncherAlignedToHub;
 
         public Drive(
                         String name,
@@ -173,14 +174,6 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 resetGyro();
                 initSmartDashboard();
-        }
-
-        public Trigger onAllianceSide() {
-                return onAllianceSide;
-        }
-
-        public Trigger isLauncherAlignedToHub() {
-                return isLauncherAlignedToHub;
         }
 
         public enum RelativeReference {

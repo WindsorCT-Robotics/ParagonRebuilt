@@ -29,7 +29,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IClosedLoopMotor;
 
-public class TalonFXMotorBase implements IClosedLoopMotor<TalonFX>, Sendable {
+public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
     protected final TalonFX motor;
     protected final TalonFXConfigurator configurator;
     private final TalonFXConfiguration defaultConfiguration;

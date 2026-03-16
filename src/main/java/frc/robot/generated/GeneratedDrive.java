@@ -38,6 +38,7 @@ public class GeneratedDrive extends TunerSwerveDrivetrain implements Subsystem {
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
+    // Inverted Values for perspectives for prototype robot.
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
@@ -110,7 +111,7 @@ public class GeneratedDrive extends TunerSwerveDrivetrain implements Subsystem {
     );
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSteer;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.

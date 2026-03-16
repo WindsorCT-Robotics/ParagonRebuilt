@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -15,7 +16,14 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    m_robotContainer.resetGyro();
+    DataLogManager.start();    
   }
+
+  // @Override
+  // public void driverStationConnected() {
+    
+  // }
 
   @Override
   public void robotPeriodic() {
@@ -28,6 +36,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
+    if (m_autonomousCommand != m_robotContainer.getAutonomousCommand()) {
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    }
   }
 
   @Override
@@ -60,6 +71,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+
   }
 
   @Override

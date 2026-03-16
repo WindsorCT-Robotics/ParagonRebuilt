@@ -156,25 +156,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
 
                 isLauncherAlignedToHub = new Trigger(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+                        Optional<Alliance> alliance = DriverStation.getAlliance();
                         Optional<Angle> targetAngle = getLaunchAngleToHub();
-                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
 
-                        if (targetAngle.isEmpty()) {
+                        if (alliance.isEmpty() || targetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        Angle validTargetAngle = targetAngle.get();
-                        final Angle offset = maybeAlliance.map(alliance -> {
-                                if (alliance == Alliance.Red) {
-                                        return Radians.of(MathUtil.angleModulus(
-                                                        validTargetAngle.plus(Radians.of(Math.PI)).in(Radians)));
-                                }
-                                return validTargetAngle;
-                        }).orElse(validTargetAngle);
+                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
 
-                        return currentLaunch.isNear(offset, Degrees.of(15));
+                        if (alliance.get() == Alliance.Red)
+                                targetAngle.get().plus(Radians.of(Math.PI));
+
+                        return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
                 });
+
                 resetGyro();
                 initSmartDashboard();
         }

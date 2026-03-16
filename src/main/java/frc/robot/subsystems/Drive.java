@@ -70,21 +70,21 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
         private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
-        private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
+        private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
+
         private final String limelightName;
         private final RectanglePoseArea field;
-
+        private final Trigger onAllianceSide;
+        private final Trigger isLauncherAlignedToHub;
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
-        private final Trigger onAllianceSide;
-        private final Trigger isLauncherAlignedToHub;
 
         public Drive(
                         String name,
@@ -138,27 +138,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 onAllianceSide = new Trigger(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+                        Optional<Alliance> alliance = DriverStation.getAlliance();
                         Pose2d robotPosition = getState().Pose;
 
-                        return maybeAlliance.map(alliance -> {
-                                Distance hubPositionFromBlueAlliance = getHubPosition(alliance).getMeasureX();
-
-                                if (alliance == Alliance.Blue) {
-                                        if (robotPosition.getMeasureX().lt(hubPositionFromBlueAlliance)) {
-                                                return true;
-                                        }
-                                        return false;
-                                }
-
-                                if (alliance == Alliance.Red) {
-                                        if (robotPosition.getMeasureX().gt(hubPositionFromBlueAlliance)) {
-                                                return true;
-                                        }
-                                        return false;
-                                }
+                        if (alliance.isEmpty())
                                 return false;
-                        }).orElse(false);
+
+                        Distance robotXMeasure = robotPosition.getMeasureX();
+                        Distance hubXMeasure = getHubPosition(alliance.get()).getMeasureX();
+                        if (alliance.get() == Alliance.Blue)
+                                return robotXMeasure.gte(hubXMeasure);
+
+                        if (alliance.get() == Alliance.Red)
+                                return robotXMeasure.lte(hubXMeasure);
+
+                        return false;
                 });
 
                 isLauncherAlignedToHub = new Trigger(() -> {

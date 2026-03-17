@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import java.util.function.Supplier;
@@ -17,7 +16,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,7 +33,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final SpindexterMotor motor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity indexVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity indexVelocity = RPM.of(1250);
 
     public Spindexer(
             String name,
@@ -78,17 +76,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         motor.setPointVelocity(RPM.zero());
     }
 
-    public Command prepareFuel() {
-        Timer time = new Timer();
-        setIndexTargetVelocity(RPM.of(400).in(RPM));
-        return runEnd(() -> {
-            if (time.advanceIfElapsed(0.5)) {
-                setIndexTargetVelocity(getIndexTargetVelocity().unaryMinus().in(RPM));
-                time.restart();
-            }
-        }, this::stop);
-    }
-
     public Command indexFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
     }
@@ -112,7 +99,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     public Command indexFuelAtFlyWheelVelocityToHub(
-            AngularVelocity indexTargetVelocity,
+            Supplier<AngularVelocity> indexTargetVelocity,
             Supplier<AngularVelocity> flyWheelVelocity,
             AngularVelocity threshold,
             Trigger isAligned,
@@ -130,7 +117,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             }
 
             if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.getAsBoolean()) {
-                motor.setPointVelocity(indexTargetVelocity);
+                motor.setPointVelocity(indexTargetVelocity.get());
             } else {
                 hardStop();
             }

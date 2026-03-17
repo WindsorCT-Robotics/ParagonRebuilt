@@ -18,6 +18,7 @@ import org.json.simple.parser.ParseException;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.Sendable;
@@ -40,23 +41,29 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.subsystems.BayDoor;
-import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Spindexer;
-import frc.robot.subsystems.Drive.RelativeReference;
+import frc.robot.subsystems.drive.Drive.RelativeReference;
 import frc.robot.utils.LaunchCalculator;
 
+@Logged
 public class RobotContainer implements Sendable {
   // private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
   // private final Telemetry logger;
 
   private final Drive drive;
+
   private final Intake intake;
+
   private final BayDoor bayDoor;
+
   private final Spindexer spindexer;
+
   private final Shooter shooter;
+  
   private final Kicker kicker;
 
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
@@ -194,7 +201,6 @@ public class RobotContainer implements Sendable {
     shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose).withName("Launcher Prepare Launch"));
     kicker.setDefaultCommand(
         kicker.prepareFuel(() -> drive.getState().Pose, drive.onAllianceSide).withName("Kicker Prepare Launch"));
-    spindexer.setDefaultCommand(spindexer.prepareFuel().withName("Spindexer Prepare Launch"));
   }
 
   private void bindDriver() {
@@ -231,6 +237,7 @@ public class RobotContainer implements Sendable {
         kicker,
         spindexer,
         launchCalculator,
+        () -> spindexer.getIndexTargetVelocity(),
         () -> getOperatorTriggerAdjustment())
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         .withName("LaunchFuelToHub"));
@@ -289,6 +296,7 @@ public class RobotContainer implements Sendable {
             kicker,
             spindexer,
             launchCalculator,
+            () -> spindexer.getIndexTargetVelocity(),
             () -> Percent.zero()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());

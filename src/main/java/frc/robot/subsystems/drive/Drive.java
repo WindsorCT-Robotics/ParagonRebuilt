@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
@@ -67,6 +67,7 @@ import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
 
+@Logged
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
@@ -85,9 +86,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
-        @Logged
         public final Trigger onAllianceSide;
-        @Logged
         public final Trigger isLauncherAlignedToHub;
 
         public Drive(
@@ -168,13 +167,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                         }
 
                         Rotation2d targetAngle = maybeTargetAngle.get();
-                        Rotation2d currentLaunch = getAngle();
+                        Angle currentLaunch = getAngle();
 
                         if (alliance.get() == Alliance.Red) {
                                 targetAngle = targetAngle.plus(new Rotation2d(Radians.of(Math.PI)));
                         }
 
-                        return currentLaunch.getMeasure().isNear(targetAngle.getMeasure(), Degrees.of(15));
+                        return currentLaunch.isNear(targetAngle.getMeasure(), Degrees.of(15));
                 });
 
                 resetGyro();
@@ -186,8 +185,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                 FIELD_CENTRIC
         }
 
-        private Rotation2d getAngle() {
-                return new Rotation2d(getPigeon2().getYaw().getValue());
+        private Angle getAngle() {
+                Angle rawGyroAngle = getPigeon2().getYaw().getValue();
+                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
         }
 
         @Override
@@ -211,7 +211,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 ".command",
                                 () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
                                 null);
-                
+                builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
+                builder.addBooleanProperty("On Alliance Side", isLauncherAlignedToHub, null);
+                builder.addDoubleProperty("Robot Heading (Deg)", () -> getAngle().in(Degrees), null);
         }
 
         private void initSmartDashboard() {
@@ -259,7 +261,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return getState().ModuleStates;
         }
 
-        @Logged(name = "SwerveModuleTargetStates")
+        @Logged(name = "Drive/SwerveModuleTargetStates")
         public SwerveModuleState[] getSwerveModuleTargetStates() {
                 return getState().ModuleTargets;
         }
@@ -346,7 +348,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle) {
-                Angle robotHeading = getAngle().getMeasure();
                 setControl(
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
@@ -355,7 +356,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                                 new Rotation2d(targetAngle.in(Radians))));
 
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
-                SmartDashboard.putNumber("Robot Heading", robotHeading.in(Degrees));
         }
 
         public Command angleToOutpost(
@@ -544,7 +544,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().getMeasure().in(Degrees),
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

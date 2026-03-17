@@ -249,12 +249,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         @Logged(name = "SwerveModuleStates")
-        private SwerveModuleState[] getSwerveModuleStates() {
+        public SwerveModuleState[] getSwerveModuleStates() {
                 return getState().ModuleStates;
         }
 
         @Logged(name = "SwerveModuleTargetStates")
-        private SwerveModuleState[] getSwerveModuleTargetStates() {
+        public SwerveModuleState[] getSwerveModuleTargetStates() {
                 return getState().ModuleTargets;
         }
 

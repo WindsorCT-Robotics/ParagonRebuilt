@@ -164,10 +164,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             Angle currentAngle,
             BayMotorState endState) {
         if (!currentAngle.isNear(goalAngle, TOLERANCE)) {
-            System.out.println("MOVING");
             moveTowards(motor, percent, goalAngle, currentAngle);
         } else {
-            System.out.println("SHOULDN'T MOVE");
             motor.stop();
             motor.setBayMotorState(endState);
         }

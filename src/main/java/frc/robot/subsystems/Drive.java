@@ -37,6 +37,7 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -45,6 +46,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -83,7 +85,9 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
+        @Logged
         public final Trigger onAllianceSide;
+        @Logged
         public final Trigger isLauncherAlignedToHub;
 
         public Drive(
@@ -175,21 +179,28 @@ public class Drive extends GeneratedDrive implements Sendable {
                 initSmartDashboard();
         }
 
-        public enum RelativeReference {
-                ROBOT_CENTRIC,
-                FIELD_CENTRIC
-        }
-
-        private Angle getAngle() {
-                return getPigeon2().getYaw().getValue();
-        }
-
         @Override
         public void periodic() {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
-                SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
+        }
+
+        @Override
+        public void initSendable(SendableBuilder builder) {
+                builder.setSmartDashboardType("Subsystem");
+
+                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
+                builder.addStringProperty(
+                                ".default",
+                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
+                builder.addStringProperty(
+                                ".command",
+                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
+                                null);
+                
         }
 
         private void initSmartDashboard() {
@@ -230,62 +241,25 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 null);
                         }
                 });
-
-                SmartDashboard.putData("Facing Angle PID", new Sendable() {
-                        @Override
-                        public void initSendable(SendableBuilder builder) {
-                                builder.setSmartDashboardType("PIDController");
-                                builder.addDoubleProperty("p", () -> getP(), (input) -> setP(input));
-                                builder.addDoubleProperty("i", () -> getI(), (input) -> setI(input));
-                                builder.addDoubleProperty("d", () -> getD(), (input) -> setD(input));
-                        }
-                });
         }
 
-        private double getP() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getP();
+        public enum RelativeReference {
+                ROBOT_CENTRIC,
+                FIELD_CENTRIC
         }
 
-        private double getI() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getI();
+        @Logged(name = "SwerveModuleStates")
+        private SwerveModuleState[] getSwerveModuleStates() {
+                return getState().ModuleStates;
         }
 
-        private double getD() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getD();
+        @Logged(name = "SwerveModuleTargetStates")
+        private SwerveModuleState[] getSwerveModuleTargetStates() {
+                return getState().ModuleTargets;
         }
 
-        private void setP(double p) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(p,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setI(double i) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(), i,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setD(double d) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(), d);
-        }
-
-        @Override
-        public void initSendable(SendableBuilder builder) {
-                builder.setSmartDashboardType("Subsystem");
-
-                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
-                builder.addStringProperty(
-                                ".default",
-                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
-                                null);
-                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
-                builder.addStringProperty(
-                                ".command",
-                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
-                                null);
+        private Angle getAngle() {
+                return getPigeon2().getYaw().getValue();
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {

@@ -151,32 +151,43 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Distance robotXMeasure = robotPosition.getMeasureX();
                         Distance hubXMeasure = getHubPosition(alliance.get()).getMeasureX();
                         if (alliance.get() == Alliance.Blue)
-                                return robotXMeasure.gte(hubXMeasure);
+                                return robotXMeasure.lte(hubXMeasure);
 
                         if (alliance.get() == Alliance.Red)
-                                return robotXMeasure.lte(hubXMeasure);
+                                return robotXMeasure.gte(hubXMeasure);
 
                         return false;
                 });
 
                 isLauncherAlignedToHub = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
-                        Optional<Angle> targetAngle = getLaunchAngleToHub();
+                        Optional<Rotation2d> maybeTargetAngle = getLaunchAngleToHub();
 
-                        if (alliance.isEmpty() || targetAngle.isEmpty()) {
+                        if (alliance.isEmpty() || maybeTargetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
+                        Rotation2d targetAngle = maybeTargetAngle.get();
+                        Rotation2d currentLaunch = getAngle();
 
-                        if (alliance.get() == Alliance.Red)
-                                targetAngle.get().plus(Radians.of(Math.PI));
+                        if (alliance.get() == Alliance.Red) {
+                                targetAngle = targetAngle.plus(new Rotation2d(Radians.of(Math.PI)));
+                        }
 
-                        return currentLaunch.isNear(targetAngle.get(), Degrees.of(15));
+                        return currentLaunch.getMeasure().isNear(targetAngle.getMeasure(), Degrees.of(15));
                 });
 
                 resetGyro();
                 initSmartDashboard();
+        }
+
+        public enum RelativeReference {
+                ROBOT_CENTRIC,
+                FIELD_CENTRIC
+        }
+
+        private Rotation2d getAngle() {
+                return new Rotation2d(getPigeon2().getYaw().getValue());
         }
 
         @Override
@@ -243,11 +254,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
         }
 
-        public enum RelativeReference {
-                ROBOT_CENTRIC,
-                FIELD_CENTRIC
-        }
-
         @Logged(name = "SwerveModuleStates")
         public SwerveModuleState[] getSwerveModuleStates() {
                 return getState().ModuleStates;
@@ -256,10 +262,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         @Logged(name = "SwerveModuleTargetStates")
         public SwerveModuleState[] getSwerveModuleTargetStates() {
                 return getState().ModuleTargets;
-        }
-
-        private Angle getAngle() {
-                return getPigeon2().getYaw().getValue();
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -344,7 +346,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle) {
-                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
+                Angle robotHeading = getAngle().getMeasure();
                 setControl(
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
@@ -402,7 +404,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return new Translation2d(xHub, yHub);
         }
 
-        private Optional<Angle> getLaunchAngleToHub() {
+        private Optional<Rotation2d> getLaunchAngleToHub() {
                 Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
 
                 return maybeAlliance.map(alliance -> {
@@ -428,7 +430,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 .plus(Degrees.of(90)).minus(launcherOffset).plus(Radians.of(Math.PI));
                         }
 
-                        return Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
+                        return new Rotation2d(Radians.of(MathUtil.angleModulus(targetAngle.in(Radians))));
                 });
         }
 
@@ -436,7 +438,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return runEnd(() -> {
-                        Optional<Angle> targetAngle = getLaunchAngleToHub();
+                        Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
                                                 x,
@@ -448,7 +450,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle.get());
+                                        targetAngle.get().getMeasure());
                 }, () -> fieldCentricSwerveRequest.withDriveRequestType(DriveRequestType.OpenLoopVoltage));
         }
 
@@ -542,7 +544,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().getMeasure().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

@@ -6,7 +6,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.RPM;
@@ -21,7 +20,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -38,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoScore;
 import frc.robot.commands.LaunchFuelToHub;
 import frc.robot.commands.LaunchFuelToTargetDistance;
-import frc.robot.generated.Telemetry;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
@@ -52,8 +49,8 @@ import frc.robot.subsystems.Drive.RelativeReference;
 import frc.robot.utils.LaunchCalculator;
 
 public class RobotContainer implements Sendable {
-  private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
-  private final Telemetry logger;
+  // private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
+  // private final Telemetry logger;
 
   private final Drive drive;
   private final Intake intake;
@@ -128,8 +125,8 @@ public class RobotContainer implements Sendable {
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
     SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
 
-    logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    drive.registerTelemetry(logger::telemeterize);
+    // logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
+    // drive.registerTelemetry(logger::telemeterize);
 
     driverLeftAxisX = () -> Value.of(driver.getLeftX());
     driverLeftAxisY = () -> Value.of(driver.getLeftY());

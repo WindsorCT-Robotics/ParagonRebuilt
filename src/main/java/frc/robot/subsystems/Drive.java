@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
-import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -191,7 +190,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
                 SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
-                Logger.recordOutput("Drive/Gyro", getAngle());
         }
 
         private void initSmartDashboard() {
@@ -565,7 +563,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 if (!isVisionMeasurementValid(positionEstimate))
                         return;
 
-                Logger.recordOutput("Vision/Pose2D", positionEstimate.pose);
                 addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
                                 VecBuilder.fill(confidence, confidence, 0.1));
         }

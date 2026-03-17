@@ -10,6 +10,7 @@ import frc.robot.hardware.base_motors.KrakenMotorBase;
 import frc.robot.interfaces.IHomingMotor;
 
 public class BayDoorMotor extends KrakenMotorBase implements IHomingMotor {
+    
     private BayMotorState motorBayDoorState = BayMotorState.UNKNOWN;
     private boolean hasHomed = false;
 

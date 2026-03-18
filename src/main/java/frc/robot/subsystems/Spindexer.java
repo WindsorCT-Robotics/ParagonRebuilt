@@ -64,7 +64,9 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Indexing Target Velocity (RPM)", () -> getIndexTargetVelocity().in(RPM),
+        builder.addDoubleProperty(
+                "Indexing Target Velocity (RPM)",
+                () -> getIndexTargetVelocity().in(RPM),
                 this::setIndexTargetVelocity);
     }
 

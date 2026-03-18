@@ -54,6 +54,23 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         initSmartDashboard();
     }
 
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty("Intake Target Velocity",
+                () -> getIntakeTargetVelocity().in(RotationsPerSecond),
+                this::setIntakeTargetVelocity);
+                
+        builder.addDoubleProperty("Shuttle Target Velocity",
+                () -> getShuttleTargetVelocity().in(RotationsPerSecond),
+                this::setShuttleTargetVelocity);
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getSubsystem(), this);
+        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
+    }
+
     public Command intakeFuel() {
         return runEnd(() -> motor.setPointVelocity(getIntakeTargetVelocity()), this::stopIntake)
                 .withName(getSubsystem() + "/intakeFuel");
@@ -69,12 +86,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
                 .withName(getSubsystem() + "/stopIntake");
     }
 
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getSubsystem(), this);
-        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
-    }
-
-    // TODO: Add advantage kit logger
     private AngularVelocity getIntakeTargetVelocity() {
         return intakeVelocity;
     }
@@ -89,15 +100,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     private void setShuttleTargetVelocity(double RPS) {
         shuttleVelocity = RotationsPerSecond.of(-RPS);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty("Intake Target Velocity", () -> getIntakeTargetVelocity().in(RotationsPerSecond),
-                this::setIntakeTargetVelocity);
-        builder.addDoubleProperty("Shuttle Target Velocity", () -> getShuttleTargetVelocity().in(RotationsPerSecond),
-                this::setShuttleTargetVelocity);
     }
 
     // region SysId

@@ -56,6 +56,24 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         initSmartDashboard();
     }
 
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty(
+                "Motor Velocity (RPM)",
+                () -> getTargetVelocity().in(RPM),
+                this::setTargetVelocity);
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getSubsystem(), this);
+        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
+    }
+
+    public Command smartDashboardKickFuel() {
+        return runEnd(() -> motor.setPointVelocity(getTargetVelocity()), this::hardStop);
+    }
+
     private void hardStop() {
         motor.stop();
     }
@@ -91,28 +109,12 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         }, this::stop);
     }
 
-    public Command smartDashboardKickFuel() {
-        return runEnd(() -> motor.setPointVelocity(getTargetVelocity()), this::hardStop);
-    }
-
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getSubsystem(), this);
-        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
-    }
-
     private AngularVelocity getTargetVelocity() {
         return kickVelocity;
     }
 
     private void setTargetVelocity(double rpm) {
         kickVelocity = RPM.of(rpm);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty("Motor Velocity (RPM)", () -> getTargetVelocity().in(RPM),
-                this::setTargetVelocity);
     }
 
     // region SysId

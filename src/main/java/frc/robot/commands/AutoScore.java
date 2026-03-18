@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -39,6 +40,7 @@ public class AutoScore extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
                                 new LaunchFuelToHub(
@@ -49,6 +51,7 @@ public class AutoScore extends ParallelCommandGroup {
                                                 isAligned,
                                                 onAllianceSide,
                                                 launchCalculator,
+                                                indexTargetVelocity,
                                                 velocityAdjustment)
                                                 .alongWith(drive.angleToHub(x, y)));
         }
@@ -73,6 +76,7 @@ public class AutoScore extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
                                 new LaunchFuelToHub(
@@ -80,6 +84,7 @@ public class AutoScore extends ParallelCommandGroup {
                                                 kicker,
                                                 spindexer,
                                                 launchCalculator,
+                                                indexTargetVelocity,
                                                 velocityAdjustment)
                                                 .alongWith(drive.angleToHub(x, y)));
         }

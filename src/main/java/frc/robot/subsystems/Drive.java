@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
-import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -46,6 +45,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -65,6 +69,7 @@ import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.LimelightHelpers.PoseEstimate;
 
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
@@ -76,6 +81,20 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
 
+        private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
+
+        private final NetworkTable driveTable = NT_INSTANCE.getTable("SmartDashboard/Subsystems/Drive");
+        private final StructPublisher<Pose2d> robotPosition = driveTable
+                        .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
+        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
+                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+        private final StructPublisher<Pose2d> validvisionPosition = driveTable
+                        .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
+                        .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
+                        .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
+
         private final String limelightName;
         private final RectanglePoseArea field;
         private final RobotConfig robotConfiguration;
@@ -84,8 +103,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
+        private final Supplier<PoseEstimate> poseEstimate;
         public final Trigger onAllianceSide;
         public final Trigger isLauncherAlignedToHub;
+        public final Trigger isVisionEstimateInField;
+        public final Trigger isVisionEstimateHasTags;
+        public final Trigger isVisionMeasurementValid;
 
         public Drive(
                         String name,
@@ -109,12 +132,15 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 robotConfiguration,
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
+
                 this.limelightName = limelightName;
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                this.field = new RectanglePoseArea(Translation2d.kZero,
-                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
-                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
 
+                this.field = new RectanglePoseArea(
+                                Translation2d.kZero,
+                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
+
+                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
                                 Inches.of(-8).in(Meters),
@@ -131,12 +157,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0,
                                 0.0);
 
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
-                                FACING_ANGLE_PID.kP,
-                                FACING_ANGLE_PID.kI,
-                                FACING_ANGLE_PID.kD);
-                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
+                poseEstimate = () -> LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+
+                isVisionEstimateInField = new Trigger(() -> field.isPoseWithinArea(poseEstimate.get().pose));
+                isVisionEstimateHasTags = new Trigger(() -> poseEstimate.get().tagCount > 0);
+                isVisionMeasurementValid = isVisionEstimateHasTags.and(isVisionEstimateInField);
 
                 onAllianceSide = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -165,14 +190,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                         }
 
                         Rotation2d targetAngle = maybeTargetAngle.get();
-                        Rotation2d currentLaunch = getAngle();
+                        Angle currentLaunch = getAngle();
 
                         if (alliance.get() == Alliance.Red) {
                                 targetAngle = targetAngle.plus(new Rotation2d(Radians.of(Math.PI)));
                         }
 
-                        return currentLaunch.getMeasure().isNear(targetAngle.getMeasure(), Degrees.of(15));
+                        return currentLaunch.isNear(targetAngle.getMeasure(), Degrees.of(15));
                 });
+
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
+                                FACING_ANGLE_PID.kP,
+                                FACING_ANGLE_PID.kI,
+                                FACING_ANGLE_PID.kD);
+                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 resetGyro();
                 initSmartDashboard();
@@ -183,8 +215,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                 FIELD_CENTRIC
         }
 
-        private Rotation2d getAngle() {
-                return new Rotation2d(getPigeon2().getYaw().getValue());
+        private Angle getAngle() {
+                Angle rawGyroAngle = getPigeon2().getYaw().getValue();
+                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
         }
 
         @Override
@@ -192,8 +225,31 @@ public class Drive extends GeneratedDrive implements Sendable {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
-                SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
-                Logger.recordOutput("Drive/Gyro", getAngle());
+
+                SwerveDriveState robotState = getState();
+                robotPosition.set(robotState.Pose);
+                currentModulesStates.set(robotState.ModuleStates);
+                targetModuleStates.set(robotState.ModuleTargets);
+        }
+
+        @Override
+        public void initSendable(SendableBuilder builder) {
+                builder.setSmartDashboardType("Subsystem");
+
+                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
+                builder.addStringProperty(
+                                ".default",
+                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
+                builder.addStringProperty(
+                                ".command",
+                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
+                builder.addBooleanProperty("On Alliance Side", isLauncherAlignedToHub, null);
+                builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
+                builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
         }
 
         private void initSmartDashboard() {
@@ -234,64 +290,14 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 null);
                         }
                 });
-
-                SmartDashboard.putData("Facing Angle PID", new Sendable() {
-                        @Override
-                        public void initSendable(SendableBuilder builder) {
-                                builder.setSmartDashboardType("PIDController");
-                                builder.addDoubleProperty("p", () -> getP(), (input) -> setP(input));
-                                builder.addDoubleProperty("i", () -> getI(), (input) -> setI(input));
-                                builder.addDoubleProperty("d", () -> getD(), (input) -> setD(input));
-                        }
-                });
         }
 
-        private double getP() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getP();
+        public SwerveModuleState[] getSwerveModuleStates() {
+                return getState().ModuleStates;
         }
 
-        private double getI() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getI();
-        }
-
-        private double getD() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getD();
-        }
-
-        private void setP(double p) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(p,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setI(double i) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(), i,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setD(double d) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(), d);
-        }
-
-        @Override
-        public void initSendable(SendableBuilder builder) {
-                builder.setSmartDashboardType("Subsystem");
-
-                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
-                builder.addStringProperty(
-                                ".default",
-                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
-                                null);
-                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
-                builder.addStringProperty(
-                                ".command",
-                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
-                                null);
-                builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
-                builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
+        public SwerveModuleState[] getSwerveModuleTargetStates() {
+                return getState().ModuleTargets;
         }
 
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
@@ -376,7 +382,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle) {
-                Angle robotHeading = getAngle().getMeasure();
                 setControl(
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
@@ -385,7 +390,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                                 new Rotation2d(targetAngle.in(Radians))));
 
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
-                SmartDashboard.putNumber("Robot Heading", robotHeading.in(Degrees));
         }
 
         public Command angleToOutpost(
@@ -549,33 +553,26 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .withName("Subsystems/" + getName() + "/resetGyro");
         }
 
-        private LimelightHelpers.PoseEstimate getPositionEstimate() {
-                return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
-        }
-
-        private boolean isVisionMeasurementValid(LimelightHelpers.PoseEstimate poseEstimate) {
-                return poseEstimate.tagCount > 0
-                                && field.isPoseWithinArea(poseEstimate.pose);
-        }
-
         private void addVisionMeasurements() {
                 double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
                                 .getDistance(new Translation3d());
                 double confidence = (targetDistance - 1) / 6;
-                LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
-                SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
-                SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
+                LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
 
-                if (!isVisionMeasurementValid(positionEstimate))
+                if (!isVisionMeasurementValid.getAsBoolean()) {
+                        invalidVisionPosition.set(positionEstimate.pose);
                         return;
+                }
 
-                Logger.recordOutput("Vision/Pose2D", positionEstimate.pose);
-                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
+                addVisionMeasurement(
+                                positionEstimate.pose,
+                                positionEstimate.timestampSeconds,
                                 VecBuilder.fill(confidence, confidence, 0.1));
+                validvisionPosition.set(positionEstimate.pose);
         }
 
         private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().getMeasure().in(Degrees),
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

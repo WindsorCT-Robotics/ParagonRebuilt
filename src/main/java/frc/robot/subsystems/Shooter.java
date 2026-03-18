@@ -100,12 +100,17 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Motor Shoot Velocity (RPM)",
+        builder.addDoubleProperty(
+                "Motor Shoot Velocity (RPM)",
                 () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
 
-        builder.addDoubleProperty("Launcher Offset (RPM)", () -> getRPMLauncherOffset().in(RPM),
+        builder.addDoubleProperty(
+                "Launcher Offset (RPM)",
+                () -> getRPMLauncherOffset().in(RPM),
                 this::setRPMLauncherOffset);
+
+        builder.addBooleanProperty("nearTargetRPM", nearTargetRPM, null);
     }
 
     private void initSmartDashboard() {

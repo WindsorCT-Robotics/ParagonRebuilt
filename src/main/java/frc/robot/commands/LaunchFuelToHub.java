@@ -16,7 +16,6 @@ import frc.robot.utils.LaunchCalculator;
 public class LaunchFuelToHub extends ParallelCommandGroup {
         private static final AngularVelocity VELOCITY_THRESHOLD = RPM.of(40);
         private static final AngularVelocity MAX_VELOCITY_ADJUSTMENT = RPM.of(100);
-        private static final AngularVelocity INDEX_TARGET_VELOCITY = RPM.of(1250);
 
         /**
          * Has SAFEGUARDS to prevent shooting and launch fuel at requested distance.
@@ -38,6 +37,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Trigger isAligned,
                         Trigger onAllianceSide,
                         LaunchCalculator launchCalculator,
+                        Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
                                 shooter.launchFuelAdjustableToHub(
@@ -49,7 +49,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 () -> launchCalculator.getKickerVelocityToHub(),
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
-                                                INDEX_TARGET_VELOCITY,
+                                                indexTargetVelocity,
                                                 () -> shooter.getLaunchVelocity(),
                                                 VELOCITY_THRESHOLD,
                                                 isAligned,
@@ -73,6 +73,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Spindexer spindexer,
                         Trigger unstuckFuel,
                         LaunchCalculator launchCalculator,
+                        Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 Trigger onAllianceSide = new Trigger(() -> true);
                 Trigger isAligned = new Trigger(() -> true);
@@ -86,7 +87,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 () -> launchCalculator.getKickerVelocityToHub(),
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
-                                                INDEX_TARGET_VELOCITY,
+                                                indexTargetVelocity,
                                                 () -> shooter.getLaunchVelocity(),
                                                 VELOCITY_THRESHOLD,
                                                 isAligned,
@@ -108,6 +109,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 Trigger onAllianceSide = new Trigger(() -> true);
                 Trigger unstuckFuel = new Trigger(() -> false);
@@ -123,7 +125,7 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 () -> launchCalculator.getKickerVelocityToHub(),
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
-                                                INDEX_TARGET_VELOCITY,
+                                                indexTargetVelocity,
                                                 () -> shooter.getLaunchVelocity(),
                                                 VELOCITY_THRESHOLD,
                                                 isAligned,

@@ -46,6 +46,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
@@ -81,9 +82,17 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
 
-        private final StructPublisher<Pose2d> robotPosition = NT_INSTANCE.getStructTopic("Robot Position 2D", Pose2d.struct).publish();
-        private final StructArrayPublisher<SwerveModuleState> currentModulesStates = NT_INSTANCE.getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
-        private final StructArrayPublisher<SwerveModuleState> targetModuleStates = NT_INSTANCE.getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
+        private final NetworkTable driveTable = NT_INSTANCE.getTable("SmartDashboard/Subsystems/Drive");
+        private final StructPublisher<Pose2d> robotPosition = driveTable
+                        .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
+        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
+                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+        private final StructPublisher<Pose2d> validvisionPosition = driveTable
+                        .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
+                        .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
+                        .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
 
         private final String limelightName;
         private final RectanglePoseArea field;
@@ -202,7 +211,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
-                
+
                 SwerveDriveState robotState = getState();
                 robotPosition.set(robotState.Pose);
                 currentModulesStates.set(robotState.ModuleStates);
@@ -225,7 +234,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 null);
                 builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
                 builder.addBooleanProperty("On Alliance Side", isLauncherAlignedToHub, null);
-                builder.addDoubleProperty("Robot Heading (Deg)", () -> getAngle().in(Degrees), null);
         }
 
         private void initSmartDashboard() {
@@ -546,11 +554,16 @@ public class Drive extends GeneratedDrive implements Sendable {
                 SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
                 SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
 
-                if (!isVisionMeasurementValid(positionEstimate))
+                if (!isVisionMeasurementValid(positionEstimate)) {
+                        invalidVisionPosition.set(positionEstimate.pose);
                         return;
+                }
 
-                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
+                addVisionMeasurement(
+                                positionEstimate.pose,
+                                positionEstimate.timestampSeconds,
                                 VecBuilder.fill(confidence, confidence, 0.1));
+                validvisionPosition.set(positionEstimate.pose);
         }
 
         private void updateLimelightOrientationToRobot() {

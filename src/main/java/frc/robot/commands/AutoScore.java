@@ -6,10 +6,10 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Spindexer;
-import frc.robot.subsystems.drive.Drive;
 import frc.robot.utils.LaunchCalculator;
 
 public class AutoScore extends ParallelCommandGroup {

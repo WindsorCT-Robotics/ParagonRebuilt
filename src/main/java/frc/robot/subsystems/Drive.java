@@ -69,6 +69,7 @@ import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.LimelightHelpers.PoseEstimate;
 
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
@@ -102,8 +103,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
+        private final Supplier<PoseEstimate> poseEstimate;
         public final Trigger onAllianceSide;
         public final Trigger isLauncherAlignedToHub;
+        public final Trigger isVisionEstimateInField;
+        public final Trigger isVisionEstimateHasTags;
+        public final Trigger isVisionMeasurementValid;
 
         public Drive(
                         String name,
@@ -127,12 +132,15 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 robotConfiguration,
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
+
                 this.limelightName = limelightName;
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                this.field = new RectanglePoseArea(Translation2d.kZero,
-                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
-                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
 
+                this.field = new RectanglePoseArea(
+                                Translation2d.kZero,
+                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
+
+                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
                                 Inches.of(-8).in(Meters),
@@ -149,12 +157,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0,
                                 0.0);
 
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
-                                FACING_ANGLE_PID.kP,
-                                FACING_ANGLE_PID.kI,
-                                FACING_ANGLE_PID.kD);
-                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
+                poseEstimate = () -> LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+
+                isVisionEstimateInField = new Trigger(() -> field.isPoseWithinArea(poseEstimate.get().pose));
+                isVisionEstimateHasTags = new Trigger(() -> poseEstimate.get().tagCount > 0);
+                isVisionMeasurementValid = isVisionEstimateHasTags.and(isVisionEstimateInField);
 
                 onAllianceSide = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -191,6 +198,13 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                         return currentLaunch.isNear(targetAngle.getMeasure(), Degrees.of(15));
                 });
+
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
+                                FACING_ANGLE_PID.kP,
+                                FACING_ANGLE_PID.kI,
+                                FACING_ANGLE_PID.kD);
+                fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
                 resetGyro();
                 initSmartDashboard();
@@ -234,6 +248,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 null);
                 builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
                 builder.addBooleanProperty("On Alliance Side", isLauncherAlignedToHub, null);
+                builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
+                builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
         }
 
         private void initSmartDashboard() {
@@ -537,24 +553,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .withName("Subsystems/" + getName() + "/resetGyro");
         }
 
-        private LimelightHelpers.PoseEstimate getPositionEstimate() {
-                return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
-        }
-
-        private boolean isVisionMeasurementValid(LimelightHelpers.PoseEstimate poseEstimate) {
-                return poseEstimate.tagCount > 0
-                                && field.isPoseWithinArea(poseEstimate.pose);
-        }
-
         private void addVisionMeasurements() {
                 double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
                                 .getDistance(new Translation3d());
                 double confidence = (targetDistance - 1) / 6;
-                LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
-                SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
-                SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
+                LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
 
-                if (!isVisionMeasurementValid(positionEstimate)) {
+                if (!isVisionMeasurementValid.getAsBoolean()) {
                         invalidVisionPosition.set(positionEstimate.pose);
                         return;
                 }

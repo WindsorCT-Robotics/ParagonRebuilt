@@ -33,7 +33,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final SpindexterMotor motor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity indexVelocity = RPM.of(1250);
+    private AngularVelocity indexVelocity = RPM.of(2000);
 
     public Spindexer(
             String name,

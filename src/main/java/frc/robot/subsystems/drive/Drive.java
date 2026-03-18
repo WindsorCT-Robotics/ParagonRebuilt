@@ -46,6 +46,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -75,6 +78,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
+
+        private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
+
+        private final StructPublisher<Pose2d> robotPosition = NT_INSTANCE.getStructTopic("Robot Position 2D", Pose2d.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> currentModulesStates = NT_INSTANCE.getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+        private final StructArrayPublisher<SwerveModuleState> targetModuleStates = NT_INSTANCE.getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
 
         private final String limelightName;
         private final RectanglePoseArea field;
@@ -193,6 +202,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
+                
+                SwerveDriveState robotState = getState();
+                robotPosition.set(robotState.Pose);
+                currentModulesStates.set(robotState.ModuleStates);
+                targetModuleStates.set(robotState.ModuleTargets);
         }
 
         @Override

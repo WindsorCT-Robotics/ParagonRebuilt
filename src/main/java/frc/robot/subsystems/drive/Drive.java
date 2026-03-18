@@ -37,7 +37,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -67,7 +66,6 @@ import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
 
-@Logged
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
@@ -256,12 +254,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
         }
 
-        @Logged(name = "SwerveModuleStates")
         public SwerveModuleState[] getSwerveModuleStates() {
                 return getState().ModuleStates;
         }
 
-        @Logged(name = "Drive/SwerveModuleTargetStates")
         public SwerveModuleState[] getSwerveModuleTargetStates() {
                 return getState().ModuleTargets;
         }

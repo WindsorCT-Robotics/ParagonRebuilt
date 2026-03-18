@@ -18,7 +18,6 @@ import org.json.simple.parser.ParseException;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.Sendable;
@@ -49,7 +48,6 @@ import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.drive.Drive.RelativeReference;
 import frc.robot.utils.LaunchCalculator;
 
-@Logged
 public class RobotContainer implements Sendable {
   // private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
   // private final Telemetry logger;

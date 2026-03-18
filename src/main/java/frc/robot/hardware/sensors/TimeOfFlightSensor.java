@@ -21,6 +21,7 @@ public class TimeOfFlightSensor implements ITimeOfFlightSensor, Sendable {
 
     public TimeOfFlightSensor(String name, CanId canId, Distance threshold) {
         sensor = new TimeOfFlight(canId.Id());
+        this.threshold = threshold;
         this.name = name;
     }
 

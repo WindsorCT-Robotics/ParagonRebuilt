@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -27,18 +28,23 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.SpindexterMotor;
+import frc.robot.hardware.sensors.TimeOfFlightSensor;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
+    private final TimeOfFlightSensor fuelSensor;
     private final SysIdRoutine routine;
 
     private AngularVelocity indexVelocity = RPM.of(2000);
+    private final Trigger fuelDetected;
 
     public Spindexer(
-            String name,
-            CanId motorCanId) {
-        super("Subsystems/" + name);
+            String subsystemName,
+            String fuelSensorName,
+            CanId motorCanId,
+            CanId fuelSensorCanId) {
+        super("Subsystems/" + subsystemName);
         motor = new SpindexterMotor("Motor", motorCanId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
@@ -48,6 +54,9 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 .withSlot0(new Slot0Configs()
                         .withKS(0.00325)
                         .withKV(0.011)));
+
+        fuelSensor = new TimeOfFlightSensor(fuelSensorName, fuelSensorCanId, Inches.of(6));
+        fuelDetected = new Trigger(() -> fuelSensor.atThreshold());
 
         addChild(this.getName(), motor);
 
@@ -59,6 +68,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private void initSmartDashboard() {
         SmartDashboard.putData(getName(), this);
         SmartDashboard.putData(getName() + "/" + motor.getSmartDashboardName(), motor);
+        SmartDashboard.putData(getName() + "/" + fuelSensor.getSmartDashboardName(), fuelSensor);
     }
 
     @Override

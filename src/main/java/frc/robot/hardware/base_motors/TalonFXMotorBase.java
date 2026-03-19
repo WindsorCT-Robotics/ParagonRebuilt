@@ -13,7 +13,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -32,6 +32,7 @@ import frc.robot.interfaces.IClosedLoopMotor;
 public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
     protected final TalonFX motor;
     protected final TalonFXConfigurator configurator;
+    private final CanId canId;
     private final TalonFXConfiguration defaultConfiguration;
     private TalonFXConfiguration currentConfiguration;
     private final String name;
@@ -41,6 +42,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
             CanId canId,
             TalonFXConfiguration configuration) {
         motor = new TalonFX(canId.Id());
+        this.canId = canId;
         configurator = motor.getConfigurator();
         defaultConfiguration = configuration;
         currentConfiguration = defaultConfiguration;
@@ -48,12 +50,16 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
         this.name = name;
     }
 
-    public void follow(int Id, MotorAlignmentValue alignment) {
-        motor.setControl(new Follower(Id, alignment));
+    public void follow(CanId Id, MotorAlignmentValue alignment) {
+        motor.setControl(new Follower(Id.Id(), alignment));
     }
 
     public void followAndIgnoreInversion(int Id) {
         motor.setControl(new StrictFollower(Id));
+    }
+
+    public CanId getCanId() {
+        return canId;
     }
 
     @Override
@@ -63,7 +69,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
 
     @Override
     public void setPointPosition(Angle angle) {
-        motor.setControl(new MotionMagicVoltage(angle));
+        motor.setControl(new PositionDutyCycle(angle));
     }
 
     @Override

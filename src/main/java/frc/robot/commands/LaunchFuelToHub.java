@@ -33,10 +33,12 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Shooter shooter,
                         Kicker kicker,
                         Spindexer spindexer,
-                        Trigger unstuckFuel,
+                        LaunchCalculator launchCalculator,
+                        Trigger manualUnstuckFuel,
+                        Trigger overrideNearLauncherAtTargetRPM,
+                        Trigger nearLauncherTargetRPM,
                         Trigger isAligned,
                         Trigger onAllianceSide,
-                        LaunchCalculator launchCalculator,
                         Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
@@ -50,10 +52,10 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
                                                 indexTargetVelocity,
-                                                () -> shooter.getLaunchVelocity(),
-                                                VELOCITY_THRESHOLD,
+                                                nearLauncherTargetRPM,
+                                                overrideNearLauncherAtTargetRPM,
                                                 isAligned,
-                                                unstuckFuel,
+                                                manualUnstuckFuel,
                                                 onAllianceSide));
         }
 
@@ -71,8 +73,10 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Shooter shooter,
                         Kicker kicker,
                         Spindexer spindexer,
-                        Trigger unstuckFuel,
                         LaunchCalculator launchCalculator,
+                        Trigger nearLauncherTargetRPM,
+                        Trigger overrideNearLauncherAtTargetRPM,
+                        Trigger manualUnstuckFuel,
                         Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 Trigger onAllianceSide = new Trigger(() -> true);
@@ -88,10 +92,10 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
                                                 indexTargetVelocity,
-                                                () -> shooter.getLaunchVelocity(),
-                                                VELOCITY_THRESHOLD,
+                                                nearLauncherTargetRPM,
+                                                overrideNearLauncherAtTargetRPM,
                                                 isAligned,
-                                                unstuckFuel,
+                                                manualUnstuckFuel,
                                                 onAllianceSide));
         }
 
@@ -109,6 +113,8 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Trigger nearLauncherTargetRPM,
+                        Trigger overrideNearLauncherAtTargetRPM,
                         Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 Trigger onAllianceSide = new Trigger(() -> true);
@@ -126,8 +132,8 @@ public class LaunchFuelToHub extends ParallelCommandGroup {
                                                 onAllianceSide),
                                 spindexer.indexFuelAtFlyWheelVelocityToHub(
                                                 indexTargetVelocity,
-                                                () -> shooter.getLaunchVelocity(),
-                                                VELOCITY_THRESHOLD,
+                                                nearLauncherTargetRPM,
+                                                overrideNearLauncherAtTargetRPM,
                                                 isAligned,
                                                 unstuckFuel,
                                                 onAllianceSide));

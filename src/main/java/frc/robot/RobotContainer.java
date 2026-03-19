@@ -49,7 +49,8 @@ import frc.robot.subsystems.Drive.RelativeReference;
 import frc.robot.utils.LaunchCalculator;
 
 public class RobotContainer implements Sendable {
-  // private static final LinearVelocity MAX_SPEED = TunerConstants.kSpeedAt12Volts;
+  // private static final LinearVelocity MAX_SPEED =
+  // TunerConstants.kSpeedAt12Volts;
   // private final Telemetry logger;
 
   private final Drive drive;
@@ -61,7 +62,7 @@ public class RobotContainer implements Sendable {
   private final Spindexer spindexer;
 
   private final Shooter shooter;
-  
+
   private final Kicker kicker;
 
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
@@ -71,6 +72,7 @@ public class RobotContainer implements Sendable {
   private static final DigitalInputOutput RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
+  private static final CanId TOF_SENSOR_CAN_ID = new CanId((byte) 21);
 
   private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
@@ -114,11 +116,13 @@ public class RobotContainer implements Sendable {
     bayDoor = new BayDoor(BayDoor.class.getSimpleName(), BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID,
         LEFT_BAYDOOR_DIO,
         RIGHT_BAYDOOR_DIO);
-    spindexer = new Spindexer(Spindexer.class.getSimpleName(), SPINDEXER_MOTOR_CAN_ID);
+    spindexer = new Spindexer(Spindexer.class.getSimpleName(), "Fuel Sensor", SPINDEXER_MOTOR_CAN_ID,
+        TOF_SENSOR_CAN_ID);
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
-    launchCalculator = new LaunchCalculator(() -> drive.getState().Pose,
+    launchCalculator = new LaunchCalculator(
+        () -> drive.getState().Pose,
         () -> drive.getHubPosition(DriverStation.getAlliance().orElse(Alliance.Blue)));
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
@@ -228,17 +232,34 @@ public class RobotContainer implements Sendable {
         drive,
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        operator.start(),
-        drive.isLauncherAlignedToHub,
-        drive.onAllianceSide,
         shooter,
         kicker,
         spindexer,
         launchCalculator,
+        operator.start(),
+        operator.back(),
+        shooter.nearTargetRPM,
+        drive.isLauncherAlignedToHub,
+        drive.onAllianceSide,
         () -> spindexer.getIndexTargetVelocity(),
         () -> getOperatorTriggerAdjustment())
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         .withName("LaunchFuelToHub"));
+
+    // Drive drive,
+    // Supplier<Dimensionless> x,
+    // Supplier<Dimensionless> y,
+    // Shooter shooter,
+    // Kicker kicker,
+    // Spindexer spindexer,
+    // LaunchCalculator launchCalculator,
+    // Trigger manualUnstuckFuel,
+    // Trigger overrideNearLauncherAtTargetRPM,
+    // Trigger nearLauncherTargetRPM,
+    // Trigger isAligned,
+    // Trigger onAllianceSide,
+    // Supplier<AngularVelocity> indexTargetVelocity,
+    // Supplier<Dimensionless> velocityAdjustment
 
     // region toggle outpost angle
     driver.start().toggleOnTrue(
@@ -294,6 +315,8 @@ public class RobotContainer implements Sendable {
             kicker,
             spindexer,
             launchCalculator,
+            shooter.nearTargetRPM,
+            new Trigger(() -> true),
             () -> spindexer.getIndexTargetVelocity(),
             () -> Percent.zero()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());

@@ -16,7 +16,7 @@ public class FuelSensor extends TimeOfFlightSensorBase {
     private final BooleanSupplier isIndexingToScore;
     private final Timer elapsedIndexingToScore = new Timer();
     private final Timer elapsedSinceNofuel = new Timer();
-    private boolean fuelDetected = false;
+    private boolean wasFuelDetected = false;
     private boolean wasIndexingToScore = false;
     private int fuelCount = 0;
     private int fuelTotalCount = 0;
@@ -68,37 +68,49 @@ public class FuelSensor extends TimeOfFlightSensorBase {
         return Seconds.of(elapsedSinceNofuel.get());
     }
 
-    private void updateBallPerIndexPeriod() {
+    public void update() {
         boolean indexingToScore = isIndexingToScore.getAsBoolean();
 
-        if (wasIndexingToScore) {
-            if (!indexingToScore) {
-                resetFuelCount();
-                elapsedIndexingToScore.stop();
-                elapsedIndexingToScore.reset();
-                return;
-            }
-        } else if (indexingToScore) {
+        // If indexing to score into hub but wasn't indexing before.
+        if (indexingToScore && !wasIndexingToScore) {
+            wasIndexingToScore = true;
             elapsedIndexingToScore.start();
+            /*
+             * On start-up, the conditions:
+             * currentlyFuelDetected && !wasFuelDetected
+             * !currentlyFuelDetected && wasFuelDetected
+             * are both false, thus to ensure the first
+             * fuel is unjammed it must presume that
+             * there was no fuel on start-up.
+             */
+            elapsedSinceNofuel.restart();
         }
 
-        boolean fuel = belowThreshold();
+        // If not indexing to score into hub but was indexing before.
+        if (!indexingToScore && wasIndexingToScore) {
+            resetFuelCount();
+            elapsedIndexingToScore.stop();
+            elapsedIndexingToScore.reset();
+            wasIndexingToScore = false;
+        }
 
-        if (fuelDetected) {
-            if (!fuel) {
-                elapsedSinceNofuel.start();
-                fuelCount++;
-                fuelTotalCount++;
-            }
-        } else if (fuel) {
+        boolean currentlyFuelDetected = belowThreshold();
+
+        // If the fuel was detected and previously wasn't.
+        // Fuel is present.
+        if (currentlyFuelDetected && !wasFuelDetected) {
+            wasFuelDetected = true;
             elapsedSinceNofuel.stop();
             elapsedSinceNofuel.reset();
         }
 
-        fuelDetected = fuel;
-    }
-
-    public void update() {
-        updateBallPerIndexPeriod();
+        // If the fuel was previously detected and the fuel was no longer detected.
+        // Fuel is no longer present, thus measures for how long until the next fuel.
+        if (!currentlyFuelDetected && wasFuelDetected) {
+            wasFuelDetected = false;
+            elapsedSinceNofuel.start();
+            fuelCount++;
+            fuelTotalCount++;
+        }
     }
 }

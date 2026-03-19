@@ -167,7 +167,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             if (initStuckTimer) {
                 if (!stuckRoutineTimer.hasElapsed(Seconds.of(0.5))) {
                     motor.setPointVelocity(UNSTUCK_VELOCITY);
-                    indexingToScore = false;
+                    indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of current scoring cycle
                     return;
                 } else {
                     initStuckTimer = false;

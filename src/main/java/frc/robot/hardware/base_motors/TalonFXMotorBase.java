@@ -13,7 +13,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -69,7 +69,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
 
     @Override
     public void setPointPosition(Angle angle) {
-        motor.setControl(new MotionMagicVoltage(angle));
+        motor.setControl(new PositionDutyCycle(angle));
     }
 
     @Override

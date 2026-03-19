@@ -75,11 +75,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
     .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-    .withGravityType(GravityTypeValue.Elevator_Static)
-    .withKG(0)
-    .withKS(0)
-    .withKV(0)
-    .withKP(0);
+    .withGravityType(GravityTypeValue.Arm_Cosine)
+    .withKG(0.1)
+    .withKS(0.05)
+    .withKP(0.07);
 
     public final Trigger atLeftCloseLimit;
     public final Trigger atRightCloseLimit;
@@ -191,7 +190,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                         .withForwardSoftLimitEnable(enable).withReverseSoftLimitEnable(enable));
 
         leadMotor.configure(leftMotorConfig);
-        leadMotor.configure(rightMotorConfig);
+        followerMotor.configure(rightMotorConfig);
     }
 
     public Command home() {
@@ -217,12 +216,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     public Command open() {
         return runEnd(() -> {
             leadMotor.setPointPosition(OPEN_ANGLE);
+            followerMotor.setPointPosition(OPEN_ANGLE);
         }, this::stop).withName("Open");
     }
 
     public Command close() {
         return runEnd(() -> {
             leadMotor.setPointPosition(CLOSE_ANGLE);
+            followerMotor.setPointPosition(CLOSE_ANGLE);
         }, this::stop).withName("Close");
     }
 

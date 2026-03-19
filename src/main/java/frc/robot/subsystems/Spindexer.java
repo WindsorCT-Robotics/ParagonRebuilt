@@ -46,7 +46,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final Trigger stuckRoutine;
     private final Timer stuckRoutineTimer = new Timer();
     private boolean initStuckTimer = false;
-
     private boolean indexingToScore = false;
 
     public Spindexer(
@@ -57,13 +56,13 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         super("Subsystems/" + subsystemName);
         motor = new SpindexterMotor("Motor", motorCanId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
-                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(900)))
                 .withSlot0(new Slot0Configs()
-                        .withKS(0.00325)
-                        .withKV(0.011)));
+                        .withKS(0.03)
+                        .withKV(0.009)));
 
         fuelSensor = new FuelSensor(
                 fuelSensorName,

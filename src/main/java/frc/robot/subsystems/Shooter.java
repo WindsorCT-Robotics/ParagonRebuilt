@@ -80,7 +80,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                 .withMotionMagic(motionMagicConfigs)
                 .withSlot0(slot0Configs));
 
-        followerMotor.follow(leftMotorId.Id(), MotorAlignmentValue.Opposed);
+        followerMotor.follow(leftMotorId, MotorAlignmentValue.Opposed);
 
         addChild(getName(), leadMotor);
         addChild(getName(), followerMotor);

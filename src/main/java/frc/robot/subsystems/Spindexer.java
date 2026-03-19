@@ -149,19 +149,19 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return runEnd(() -> {
             if (!onAllianceSide.getAsBoolean()) {
                 motor.setPointVelocity(RPM.zero());
-                indexingToScore = false;
+                indexingToScore = false; // Shouldn't set to false here, since scoring period should just be while command is running
                 return;
             }
 
             if (manualUnstuckFuel.getAsBoolean()) {
                 motor.setPointVelocity(UNSTUCK_VELOCITY);
-                indexingToScore = false;
+                indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of current scoring cycle
                 return;
             }
 
             if (!initStuckTimer && stuckRoutine.getAsBoolean()) {
                 stuckRoutineTimer.restart();
-                initStuckTimer = true;
+                initStuckTimer = true; 
             }
 
             if (initStuckTimer) {
@@ -177,7 +177,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             if (launcherAtTargetRPM.and(isAligned).getAsBoolean()
                     || overrideLauncherAtTargetRPM.getAsBoolean()) {
                 motor.setPointVelocity(indexTargetVelocity.get());
-                indexingToScore = true;
+                indexingToScore = true; // Should set to true here, since we are ready to score and so the scoring period is starting
             } else {
                 hardStop();
             }

@@ -7,7 +7,9 @@ import edu.wpi.first.units.measure.Time;
 
 public interface ITimeOfFlightSensor {
     public Distance getDistance();
-    public boolean atThreshold();
+    public boolean pastThreshold();
+    public boolean belowThreshold();
+    public boolean atThreshold(Distance leniency);
     public void setThreshold(Distance threshold);
     public void setRangeMode(RangingMode mode, Time sampleTime);
 }

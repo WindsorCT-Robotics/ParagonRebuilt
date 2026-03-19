@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Millimeters;
+import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.function.Supplier;
 
@@ -13,8 +15,10 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.playingwithfusion.TimeOfFlight.RangingMode;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,16 +32,19 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.SpindexterMotor;
-import frc.robot.hardware.sensors.TimeOfFlightSensor;
+import frc.robot.hardware.sensors.FuelSensor;
 import frc.robot.interfaces.ISystemDynamics;
 
 public class Spindexer extends SubsystemBase implements ISystemDynamics<SpindexterMotor> {
     private final SpindexterMotor motor;
-    private final TimeOfFlightSensor fuelSensor;
+    private final FuelSensor fuelSensor;
     private final SysIdRoutine routine;
 
     private AngularVelocity indexVelocity = RPM.of(2000);
-    private final Trigger fuelDetected;
+    private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
+    private final Trigger stuckRoutine;
+
+    private boolean indexingToScore = false;
 
     public Spindexer(
             String subsystemName,
@@ -55,8 +62,16 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                         .withKS(0.00325)
                         .withKV(0.011)));
 
-        fuelSensor = new TimeOfFlightSensor(fuelSensorName, fuelSensorCanId, Inches.of(6));
-        fuelDetected = new Trigger(() -> fuelSensor.atThreshold());
+        fuelSensor = new FuelSensor(
+                fuelSensorName,
+                fuelSensorCanId,
+                FUEL_SENSOR_THRESHOLD,
+                RangingMode.Short,
+                Milliseconds.of(20),
+                this::getIndexingToScore);
+
+        stuckRoutine = new Trigger(() -> indexingToScore
+                && fuelSensor.getElapsedSinceNofuel().gt(Seconds.of(2)));
 
         addChild(this.getName(), motor);
 
@@ -80,13 +95,24 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 this::setIndexTargetVelocity);
     }
 
+    private boolean getIndexingToScore() {
+        return indexingToScore;
+    }
+
     private void hardStop() {
         motor.stop();
+        indexingToScore = false;
     }
 
     private void stop() {
         motor.setPointVelocity(RPM.zero());
+        indexingToScore = false;
     }
+
+    // TODO: Reverse
+    // public Command reverseFuel() {
+
+    // }
 
     public Command indexFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
@@ -120,16 +146,19 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return runEnd(() -> {
             if (!onAllianceSide.getAsBoolean()) {
                 motor.setPointVelocity(RPM.zero());
+                indexingToScore = false;
                 return;
             }
 
             if (unstuckFuel.getAsBoolean()) {
                 motor.setDutyCycle(Percent.of(-10));
+                indexingToScore = false;
                 return;
             }
 
             if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.getAsBoolean()) {
                 motor.setPointVelocity(indexTargetVelocity.get());
+                indexingToScore = true;
             } else {
                 hardStop();
             }

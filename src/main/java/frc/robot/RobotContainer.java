@@ -116,7 +116,8 @@ public class RobotContainer implements Sendable {
     bayDoor = new BayDoor(BayDoor.class.getSimpleName(), BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID,
         LEFT_BAYDOOR_DIO,
         RIGHT_BAYDOOR_DIO);
-    spindexer = new Spindexer(Spindexer.class.getSimpleName(), "Fuel Sensor", SPINDEXER_MOTOR_CAN_ID, TOF_SENSOR_CAN_ID);
+    spindexer = new Spindexer(Spindexer.class.getSimpleName(), "Fuel Sensor", SPINDEXER_MOTOR_CAN_ID,
+        TOF_SENSOR_CAN_ID);
     shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
     kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
@@ -231,17 +232,34 @@ public class RobotContainer implements Sendable {
         drive,
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        operator.start(),
-        drive.isLauncherAlignedToHub,
-        drive.onAllianceSide,
         shooter,
         kicker,
         spindexer,
         launchCalculator,
+        operator.start(),
+        operator.back(),
+        shooter.nearTargetRPM,
+        drive.isLauncherAlignedToHub,
+        drive.onAllianceSide,
         () -> spindexer.getIndexTargetVelocity(),
         () -> getOperatorTriggerAdjustment())
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         .withName("LaunchFuelToHub"));
+
+    // Drive drive,
+    // Supplier<Dimensionless> x,
+    // Supplier<Dimensionless> y,
+    // Shooter shooter,
+    // Kicker kicker,
+    // Spindexer spindexer,
+    // LaunchCalculator launchCalculator,
+    // Trigger manualUnstuckFuel,
+    // Trigger overrideNearLauncherAtTargetRPM,
+    // Trigger nearLauncherTargetRPM,
+    // Trigger isAligned,
+    // Trigger onAllianceSide,
+    // Supplier<AngularVelocity> indexTargetVelocity,
+    // Supplier<Dimensionless> velocityAdjustment
 
     // region toggle outpost angle
     driver.start().toggleOnTrue(
@@ -297,6 +315,8 @@ public class RobotContainer implements Sendable {
             kicker,
             spindexer,
             launchCalculator,
+            shooter.nearTargetRPM,
+            new Trigger(() -> true),
             () -> spindexer.getIndexTargetVelocity(),
             () -> Percent.zero()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());

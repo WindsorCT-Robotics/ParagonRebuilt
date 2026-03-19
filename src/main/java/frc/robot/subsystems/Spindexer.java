@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Millimeters;
 import static edu.wpi.first.units.Units.Milliseconds;
-import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
@@ -21,6 +20,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,8 +41,11 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final SysIdRoutine routine;
 
     private AngularVelocity indexVelocity = RPM.of(2000);
+    private static final AngularVelocity UNSTUCK_VELOCITY = RPM.of(-800);
     private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
     private final Trigger stuckRoutine;
+    private final Timer stuckRoutineTimer = new Timer();
+    private boolean initStuckTimer = false;
 
     private boolean indexingToScore = false;
 
@@ -87,6 +90,11 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     @Override
+    public void periodic() {
+        fuelSensor.update();
+    }
+
+    @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
         builder.addDoubleProperty(
@@ -108,11 +116,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         motor.setPointVelocity(RPM.zero());
         indexingToScore = false;
     }
-
-    // TODO: Reverse
-    // public Command reverseFuel() {
-
-    // }
 
     public Command indexFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
@@ -138,10 +141,10 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
 
     public Command indexFuelAtFlyWheelVelocityToHub(
             Supplier<AngularVelocity> indexTargetVelocity,
-            Supplier<AngularVelocity> flyWheelVelocity,
-            AngularVelocity threshold,
+            Trigger launcherAtTargetRPM,
+            Trigger overrideLauncherAtTargetRPM,
             Trigger isAligned,
-            Trigger unstuckFuel,
+            Trigger manualUnstuckFuel,
             Trigger onAllianceSide) {
         return runEnd(() -> {
             if (!onAllianceSide.getAsBoolean()) {
@@ -150,13 +153,29 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 return;
             }
 
-            if (unstuckFuel.getAsBoolean()) {
-                motor.setDutyCycle(Percent.of(-10));
+            if (manualUnstuckFuel.getAsBoolean()) {
+                motor.setPointVelocity(UNSTUCK_VELOCITY);
                 indexingToScore = false;
                 return;
             }
 
-            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold) && isAligned.getAsBoolean()) {
+            if (!initStuckTimer && stuckRoutine.getAsBoolean()) {
+                stuckRoutineTimer.restart();
+                initStuckTimer = true;
+            }
+
+            if (initStuckTimer) {
+                if (!stuckRoutineTimer.hasElapsed(Seconds.of(0.5))) {
+                    motor.setPointVelocity(UNSTUCK_VELOCITY);
+                    indexingToScore = false;
+                    return;
+                } else {
+                    initStuckTimer = false;
+                }
+            }
+
+            if (launcherAtTargetRPM.and(isAligned).getAsBoolean()
+                    || overrideLauncherAtTargetRPM.getAsBoolean()) {
                 motor.setPointVelocity(indexTargetVelocity.get());
                 indexingToScore = true;
             } else {

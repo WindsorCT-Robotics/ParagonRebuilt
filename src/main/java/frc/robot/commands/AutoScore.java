@@ -33,13 +33,15 @@ public class AutoScore extends ParallelCommandGroup {
                         Drive drive,
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y,
-                        Trigger unstuckFuel,
-                        Trigger isAligned,
-                        Trigger onAllianceSide,
                         Shooter shooter,
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Trigger manualUnstuckFuel,
+                        Trigger overrideNearLauncherAtTargetRPM,
+                        Trigger nearLauncherTargetRPM,
+                        Trigger isAligned,
+                        Trigger onAllianceSide,
                         Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
@@ -47,10 +49,12 @@ public class AutoScore extends ParallelCommandGroup {
                                                 shooter,
                                                 kicker,
                                                 spindexer,
-                                                unstuckFuel,
+                                                launchCalculator,
+                                                manualUnstuckFuel,
+                                                overrideNearLauncherAtTargetRPM,
+                                                nearLauncherTargetRPM,
                                                 isAligned,
                                                 onAllianceSide,
-                                                launchCalculator,
                                                 indexTargetVelocity,
                                                 velocityAdjustment)
                                                 .alongWith(drive.angleToHub(x, y)));
@@ -76,6 +80,9 @@ public class AutoScore extends ParallelCommandGroup {
                         Kicker kicker,
                         Spindexer spindexer,
                         LaunchCalculator launchCalculator,
+                        Trigger manualUnstuckFuel,
+                        Trigger overrideNearLauncherAtTargetRPM,
+                        Trigger nearLauncherTargetRPM,
                         Supplier<AngularVelocity> indexTargetVelocity,
                         Supplier<Dimensionless> velocityAdjustment) {
                 addCommands(
@@ -84,6 +91,9 @@ public class AutoScore extends ParallelCommandGroup {
                                                 kicker,
                                                 spindexer,
                                                 launchCalculator,
+                                                nearLauncherTargetRPM,
+                                                overrideNearLauncherAtTargetRPM,
+                                                manualUnstuckFuel,
                                                 indexTargetVelocity,
                                                 velocityAdjustment)
                                                 .alongWith(drive.angleToHub(x, y)));

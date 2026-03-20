@@ -49,7 +49,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private static final Distance HALF_FIELD = Meters
             .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
-    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(6000);
+    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
     private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(500);
     private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-500);
 

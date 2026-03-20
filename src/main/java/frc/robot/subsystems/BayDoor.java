@@ -5,9 +5,8 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
-
-import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -25,7 +24,6 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -60,9 +58,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
     private final Elastic.Notification homeNotification;
     private final SysIdRoutine routine;
-
-    private boolean wasFuelStuck = false;
-    private final Timer fuelStuckTimer = new Timer();
 
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
@@ -251,28 +246,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 .withName("Close");
     }
 
-    private void agitateFuel(boolean fuelStuck) {
-        if (fuelStuck && !wasFuelStuck) {
-            wasFuelStuck = true;
-            fuelStuckTimer.start();
-        }
-
-        if (!fuelStuck && wasFuelStuck) {
-            fuelStuckTimer.stop();
-            fuelStuckTimer.reset();
-        }
-
-        if (fuelStuckTimer.hasElapsed(0.4)) {
-            setPointPosition(CLOSE_ANGLE);
-        } else {
-            setPointPosition(OPEN_ANGLE);
-        }
-    }
-
-    public Command agitateFuel(BooleanSupplier fuelStuck) {
-        return run(() -> {
-            agitateFuel(fuelStuck.getAsBoolean());
-        }).andThen(close());
+    public Command agitateFuel() {
+        return open().withTimeout(Seconds.of(0.5)).andThen(middle()).repeatedly();
     }
 
     // region SysId

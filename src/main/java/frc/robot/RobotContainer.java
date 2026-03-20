@@ -286,6 +286,8 @@ public class RobotContainer implements Sendable {
 
     driver.y().onTrue(bayDoor.close());
 
+    driver.povRight().onTrue(bayDoor.middle());
+
     // If the Right Axis was greater than 20% then will launch fuel based on percent
     // to meters
     driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,

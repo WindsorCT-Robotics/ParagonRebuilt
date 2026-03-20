@@ -234,19 +234,19 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     public Command open() {
-        return runEnd(() -> setPointPosition(OPEN_ANGLE), this::stop)
+        return run(() -> setPointPosition(OPEN_ANGLE))
                 .until(isBayDoorSoftOpen)
                 .withName("Open");
     }
 
     public Command middle() {
-        return runEnd(() -> setPointPosition(MIDDLE_ANGLE), this::stop)
+        return run(() -> setPointPosition(MIDDLE_ANGLE))
                 .until(isBayDoorMiddle)
                 .withName("Middle");
     }
 
     public Command close() {
-        return runEnd(() -> setPointPosition(CLOSE_ANGLE), this::stop)
+        return run(() -> setPointPosition(CLOSE_ANGLE))
                 .until(isBayDoorClosed.or(isBayDoorSoftClosed))
                 .withName("Close");
     }

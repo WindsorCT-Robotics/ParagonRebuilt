@@ -61,7 +61,7 @@ public class AutoScore extends ParallelCommandGroup {
         }
 
         /**
-         * Attermps to score into the hub REGUARDLESS
+         * Attempts to score into the hub REGUARDLESS
          * 
          * @param drive
          * @param x

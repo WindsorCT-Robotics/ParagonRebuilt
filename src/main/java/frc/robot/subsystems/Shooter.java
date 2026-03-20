@@ -54,7 +54,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-500);
 
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity launcherOffset = RPM.of(-75);
+    private AngularVelocity launcherOffset = RPM.of(0);
 
     public final Trigger nearTargetRPM;
 

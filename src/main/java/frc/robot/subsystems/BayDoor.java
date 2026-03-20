@@ -1,10 +1,13 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
+
+import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -22,6 +25,7 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,9 +61,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     private final Elastic.Notification homeNotification;
     private final SysIdRoutine routine;
 
+    private boolean wasFuelStuck = false;
+    private final Timer fuelStuckTimer = new Timer();
+
     private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
     private static final Angle OPEN_ANGLE = Rotations.of(5.85);
     private static final Angle CLOSE_ANGLE = Rotations.of(0);
+    private static final Angle MIDDLE_ANGLE = OPEN_ANGLE.div(2);
+    private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
 
     private static final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
             .withForwardSoftLimitThreshold(OPEN_ANGLE.plus(Rotations.of(0.4)))
@@ -73,11 +82,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
             .withPeakReverseTorqueCurrent(Amps.of(10));
 
     private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
-    .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-    .withGravityType(GravityTypeValue.Arm_Cosine)
-    .withKG(0.1)
-    .withKS(0.05)
-    .withKP(0.07);
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+            .withGravityType(GravityTypeValue.Arm_Cosine)
+            .withKG(0.1)
+            .withKS(0.05)
+            .withKP(0.07);
 
     public final Trigger atLeftCloseLimit;
     public final Trigger atRightCloseLimit;
@@ -88,6 +97,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     public final Trigger isBayDoorClosed;
     public final Trigger isBayDoorSoftClosed;
     public final Trigger isBayDoorSoftOpen;
+
+    public final Trigger atLeftMiddleLimit;
+    public final Trigger atRightMiddleLimit;
+    public final Trigger isBayDoorMiddle;
 
     public BayDoor(
             String name,
@@ -151,6 +164,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         isBayDoorSoftClosed = new Trigger(atLeftSoftCloseLimit.and(atRightSoftCloseLimit));
         isBayDoorSoftOpen = new Trigger(atLeftSoftOpenLimit.and(atRightSoftOpenLimit));
 
+        atLeftMiddleLimit = new Trigger(() -> leftMotor.getAngle().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
+        atRightMiddleLimit = new Trigger(() -> rightMotor.getAngle().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
+        isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
+
         initSmartDashboard();
     }
 
@@ -192,6 +209,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         rightMotor.configure(rightMotorConfig);
     }
 
+    private void setPointPosition(Angle angle) {
+        leftMotor.setPointPosition(angle);
+        rightMotor.setPointPosition(angle);
+    }
+
     public Command home() {
         return runEnd(
                 () -> {
@@ -212,17 +234,45 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
     }
 
     public Command open() {
-        return runEnd(() -> {
-            leftMotor.setPointPosition(OPEN_ANGLE);
-            rightMotor.setPointPosition(OPEN_ANGLE);
-        }, this::stop).withName("Open");
+        return run(() -> setPointPosition(OPEN_ANGLE))
+                .until(isBayDoorSoftOpen)
+                .withName("Open");
+    }
+
+    public Command middle() {
+        return run(() -> setPointPosition(MIDDLE_ANGLE))
+                .until(isBayDoorMiddle)
+                .withName("Middle");
     }
 
     public Command close() {
-        return runEnd(() -> {
-            leftMotor.setPointPosition(CLOSE_ANGLE);
-            rightMotor.setPointPosition(CLOSE_ANGLE);
-        }, this::stop).withName("Close");
+        return run(() -> setPointPosition(CLOSE_ANGLE))
+                .until(isBayDoorClosed.or(isBayDoorSoftClosed))
+                .withName("Close");
+    }
+
+    private void agitateFuel(boolean fuelStuck) {
+        if (fuelStuck && !wasFuelStuck) {
+            wasFuelStuck = true;
+            fuelStuckTimer.start();
+        }
+
+        if (!fuelStuck && wasFuelStuck) {
+            fuelStuckTimer.stop();
+            fuelStuckTimer.reset();
+        }
+
+        if (fuelStuckTimer.hasElapsed(0.4)) {
+            setPointPosition(CLOSE_ANGLE);
+        } else {
+            setPointPosition(OPEN_ANGLE);
+        }
+    }
+
+    public Command agitateFuel(BooleanSupplier fuelStuck) {
+        return run(() -> {
+            agitateFuel(fuelStuck.getAsBoolean());
+        }).andThen(close());
     }
 
     // region SysId

@@ -74,7 +74,7 @@ import frc.robot.generated.LimelightHelpers.PoseEstimate;
 public class Drive extends GeneratedDrive implements Sendable {
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0.5);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
@@ -196,7 +196,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 targetAngle = targetAngle.plus(new Rotation2d(Radians.of(Math.PI)));
                         }
 
-                        return currentLaunch.isNear(targetAngle.getMeasure(), Degrees.of(15));
+                        return currentLaunch.isNear(targetAngle.getMeasure(), Degrees.of(5));
                 });
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));

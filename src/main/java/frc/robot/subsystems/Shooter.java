@@ -49,12 +49,12 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     private static final Distance HALF_FIELD = Meters
             .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
-    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(6000);
+    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
     private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(500);
     private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-500);
 
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
-    private AngularVelocity launcherOffset = RPM.of(-75);
+    private AngularVelocity launcherOffset = RPM.of(0);
 
     public final Trigger nearTargetRPM;
 
@@ -63,8 +63,9 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         final MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
         final Slot0Configs slot0Configs = new Slot0Configs()
-                .withKS(0.03)
-                .withKV(0.0105);
+                .withKP(0.04)
+                .withKS(0.0185)
+                .withKV(0.0098);
         final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 
         leadMotor = new ShooterMotor("Left Motor", leftMotorId, new TalonFXConfiguration()

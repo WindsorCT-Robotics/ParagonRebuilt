@@ -40,7 +40,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final FuelSensor fuelSensor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity indexVelocity = RPM.of(2000);
+    private AngularVelocity indexVelocity = RPM.of(6000);
     private static final AngularVelocity UNSTUCK_VELOCITY = RPM.of(-800);
     private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
     private final Trigger stuckRoutine;
@@ -61,6 +61,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(900)))
                 .withSlot0(new Slot0Configs()
+                        .withKP(0.03)
                         .withKS(0.03)
                         .withKV(0.009)));
 
@@ -106,13 +107,8 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return indexingToScore;
     }
 
-    private void hardStop() {
-        motor.stop();
-        indexingToScore = false;
-    }
-
     private void stop() {
-        motor.setPointVelocity(RPM.zero());
+        motor.stop();
         indexingToScore = false;
     }
 
@@ -125,7 +121,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             if (isAligned.getAsBoolean()) {
                 motor.setPointVelocity(velocity.get());
             } else {
-                hardStop();
+                stop();
             }
         }, this::stop);
     }
@@ -148,25 +144,28 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return runEnd(() -> {
             if (!onAllianceSide.getAsBoolean()) {
                 motor.setPointVelocity(RPM.zero());
-                indexingToScore = false; // Shouldn't set to false here, since scoring period should just be while command is running
+                indexingToScore = false; // Shouldn't set to false here, since scoring period should just be while
+                                         // command is running
                 return;
             }
 
             if (manualUnstuckFuel.getAsBoolean()) {
                 motor.setPointVelocity(UNSTUCK_VELOCITY);
-                indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of current scoring cycle
+                indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of
+                                         // current scoring cycle
                 return;
             }
 
             if (!initStuckTimer && stuckRoutine.getAsBoolean()) {
                 stuckRoutineTimer.restart();
-                initStuckTimer = true; 
+                initStuckTimer = true;
             }
 
             if (initStuckTimer) {
                 if (!stuckRoutineTimer.hasElapsed(Seconds.of(0.5))) {
                     motor.setPointVelocity(UNSTUCK_VELOCITY);
-                    indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of current scoring cycle
+                    indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part
+                                             // of current scoring cycle
                     return;
                 } else {
                     initStuckTimer = false;
@@ -176,9 +175,10 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             if (launcherAtTargetRPM.and(isAligned).getAsBoolean()
                     || overrideLauncherAtTargetRPM.getAsBoolean()) {
                 motor.setPointVelocity(indexTargetVelocity.get());
-                indexingToScore = true; // Should set to true here, since we are ready to score and so the scoring period is starting
+                indexingToScore = true; // Should set to true here, since we are ready to score and so the scoring
+                                        // period is starting
             } else {
-                hardStop();
+                stop();
             }
         }, this::stop);
     }
@@ -191,7 +191,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
             if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold)) {
                 motor.setPointVelocity(indexTargetVelocity.get());
             } else {
-                hardStop();
+                stop();
             }
         }, this::stop);
     }

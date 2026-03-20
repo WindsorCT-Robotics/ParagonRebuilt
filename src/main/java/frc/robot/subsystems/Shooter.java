@@ -63,8 +63,9 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         final MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
         final Slot0Configs slot0Configs = new Slot0Configs()
-                .withKS(0.03)
-                .withKV(0.0105);
+                .withKP(0.04)
+                .withKS(0.0185)
+                .withKV(0.0098);
         final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 
         leadMotor = new ShooterMotor("Left Motor", leftMotorId, new TalonFXConfiguration()

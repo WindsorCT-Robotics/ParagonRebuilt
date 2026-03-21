@@ -55,6 +55,11 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     @Override
+    public void periodic() {
+        motor.update();
+    }
+
+    @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
         builder.addDoubleProperty("Intake Target Velocity",

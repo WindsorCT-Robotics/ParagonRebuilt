@@ -62,7 +62,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         private final SysIdRoutine routine;
 
         private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
-        private static final Angle OPEN_ANGLE = Rotations.of(5.85);
+        private static final Angle OPEN_ANGLE = Rotations.of(6.15);
         private static final Angle CLOSE_ANGLE = Rotations.of(0);
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);

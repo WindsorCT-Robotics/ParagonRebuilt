@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.utils;
 
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Timer;

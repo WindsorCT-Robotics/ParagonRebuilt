@@ -270,7 +270,7 @@ public class RobotContainer implements Sendable {
         .whileTrue(
             angleToHub()
                 .alongWith(launchHubDistance())
-                .alongWith(indexFuel().onlyWhile(drive.launcherAlignedToHub)));
+                .alongWith(indexFuel().onlyIf(drive.launcherAlignedToHub)));
 
     autoScoreTrigger.and(unjamFuel).whileTrue(
         angleToHub()
@@ -282,7 +282,7 @@ public class RobotContainer implements Sendable {
     snowblowTrigger.whileTrue(angleToSnowblow().alongWith(launchSnowblowDistance())
         .alongWith(
             spindexer.indexFuel()
-                .onlyWhile(drive.launcherAlignedToSnowblow.and(drive.launcherObstructedByHub.negate()))));
+                .onlyIf(drive.launcherAlignedToSnowblow.and(drive.launcherObstructedByHub.negate()))));
   }
 
   private Command launchHubDistance() {

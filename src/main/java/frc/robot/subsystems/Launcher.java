@@ -4,9 +4,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Value;
-
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -20,14 +17,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,11 +32,11 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.motors.ShooterMotor;
+import frc.robot.hardware.motors.LauncherMotor;
 
-public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMotor> {
-    private final ShooterMotor leadMotor;
-    private final ShooterMotor followerMotor;
+public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherMotor> {
+    private final LauncherMotor leadMotor;
+    private final LauncherMotor followerMotor;
     private final SysIdRoutine routine;
 
     private static final Distance HALF_FIELD = Meters
@@ -58,7 +51,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
 
     public final Trigger nearTargetRPM;
 
-    public Shooter(String name, CanId leftMotorId, CanId rightMotorId) {
+    public Launcher(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
         final MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
                 .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
@@ -68,13 +61,13 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
                 .withKV(0.0098);
         final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 
-        leadMotor = new ShooterMotor("Left Motor", leftMotorId, new TalonFXConfiguration()
+        leadMotor = new LauncherMotor("Left Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
                         .withNeutralMode(neutralModeValue))
                 .withMotionMagic(motionMagicConfigs)
                 .withSlot0(slot0Configs));
-        followerMotor = new ShooterMotor("Right Motor", rightMotorId, new TalonFXConfiguration()
+        followerMotor = new LauncherMotor("Right Motor", rightMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(neutralModeValue))
@@ -87,12 +80,10 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
         addChild(getName(), followerMotor);
 
         routine = new SysIdRoutine(new Config(), new Mechanism(this::setSysIdVoltage, log -> {
-            log(log, leadMotor, "Left Shooter Motor");
-            log(log, followerMotor, "Right Shooter Motor");
+            log(log, leadMotor, "Left Launcher Motor");
+            log(log, followerMotor, "Right Launcher Motor");
         }, this));
 
-        // TODO: Ensure this works and the `getTargetVelocity` provides the correct
-        // values.
         nearTargetRPM = new Trigger(
                 () -> leadMotor.getVelocity().isNear(leadMotor.getTargetVelocity(), NEAR_TARGET_VELOCITY_THRESHHOLD));
         initSmartDashboard();
@@ -133,50 +124,17 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     }
 
     public Command launchFuel(Supplier<AngularVelocity> velocity) {
-        return runEnd(() -> leadMotor.setPointVelocity(velocity.get()), this::stop);
+        return runEnd(() -> leadMotor.setPointVelocity(velocity.get().plus(launcherOffset)), this::stop);
     }
 
-    public Command launchFuelAdjustableToHub(
-            Supplier<AngularVelocity> velocity,
-            Supplier<Dimensionless> adjustment,
-            AngularVelocity maxAdjustment,
-            Trigger onAllianceSide) {
-        return runEnd(
-                () -> {
-                    if (onAllianceSide.getAsBoolean()) {
-                        leadMotor.setPointVelocity(
-                                velocity.get()
-                                        .plus(maxAdjustment.times(adjustment.get().in(Value)))
-                                        .plus(getRPMLauncherOffset()));
-                    } else {
-                        leadMotor.setPointVelocity(RPM.zero());
-                    }
-                },
-                this::stop);
+    public Command prepareLaunch() {
+        return runEnd(() -> {
+            leadMotor.setPointVelocity(PREP_ANGULAR_VELOCITY);
+        }, this::stop);
     }
 
     public Command smartDashboardLaunchFuel() {
         return runEnd(() -> leadMotor.setPointVelocity(getSmartDashboardLaunchTargetVelocity()), this::stop);
-    }
-
-    public Command prepareLaunch(Supplier<Pose2d> robotPosition) {
-        return runEnd(() -> {
-            Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-
-            AngularVelocity velocity = RPM.zero();
-
-            velocity = maybeAlliance.map(alliance -> {
-                if (alliance == Alliance.Blue && robotPosition.get().getMeasureX().lt(HALF_FIELD))
-                    return PREP_ANGULAR_VELOCITY;
-
-                if (alliance == Alliance.Red && robotPosition.get().getMeasureX().gt(HALF_FIELD))
-                    return PREP_ANGULAR_VELOCITY;
-
-                return RPM.zero();
-            }).orElse(RPM.zero());
-
-            leadMotor.setPointVelocity(velocity);
-        }, this::stop);
     }
 
     public AngularVelocity getSmartDashboardLaunchTargetVelocity() {
@@ -201,7 +159,7 @@ public class Shooter extends SubsystemBase implements ISystemDynamics<ShooterMot
     }
 
     @Override
-    public void log(SysIdRoutineLog log, ShooterMotor motor, String name) {
+    public void log(SysIdRoutineLog log, LauncherMotor motor, String name) {
         log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
     }
 

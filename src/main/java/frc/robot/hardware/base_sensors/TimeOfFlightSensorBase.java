@@ -1,4 +1,4 @@
-package frc.robot.hardware.sensors;
+package frc.robot.hardware.base_sensors;
 
 import static edu.wpi.first.units.Units.Millimeters;
 import static edu.wpi.first.units.Units.Milliseconds;
@@ -10,6 +10,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.ITimeOfFlightSensor;
 
@@ -33,7 +34,8 @@ public class TimeOfFlightSensorBase implements ITimeOfFlightSensor, Sendable {
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addDoubleProperty("Sensor Distance (Millimeters)", () -> getDistance().in(Millimeters), null);
-        // builder.addBooleanProperty("atThreshold", this::atThreshold, null);
+        builder.addBooleanProperty("pastThreshold", this::pastThreshold, null);
+        builder.addBooleanProperty("belowThreshold", this::belowThreshold, null);
     }
 
     @Override
@@ -53,7 +55,9 @@ public class TimeOfFlightSensorBase implements ITimeOfFlightSensor, Sendable {
 
     @Override
     public boolean atThreshold(Distance leniency) {
-        return getDistance().isNear(threshold, leniency);
+        boolean atThreshold = getDistance().isNear(threshold, leniency);
+        SmartDashboard.putBoolean("atThreshold", atThreshold);
+        return atThreshold;
     }
 
     @Override

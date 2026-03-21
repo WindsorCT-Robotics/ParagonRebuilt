@@ -6,8 +6,6 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.util.function.Supplier;
-
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -20,11 +18,11 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -40,12 +38,13 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final FuelSensor fuelSensor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity indexVelocity = RPM.of(6000);
-    private static final AngularVelocity UNSTUCK_VELOCITY = RPM.of(-800);
+    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(6000);
+    private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
+    private AngularVelocity smartDashboardVelocity = RPM.of(0);
+
     private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
-    private final Trigger stuckRoutine;
-    private final Timer stuckRoutineTimer = new Timer();
-    private boolean initStuckTimer = false;
+    public final Trigger unjamFuel;
+
     private boolean indexingToScore = false;
 
     public Spindexer(
@@ -73,7 +72,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 Milliseconds.of(20),
                 this::getIndexingToScore);
 
-        stuckRoutine = new Trigger(() -> indexingToScore
+        unjamFuel = new Trigger(() -> indexingToScore
                 && fuelSensor.getElapsedSinceNofuel().gt(Seconds.of(2)));
 
         addChild(this.getName(), motor);
@@ -89,6 +88,14 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         SmartDashboard.putData(getName() + "/" + fuelSensor.getSmartDashboardName(), fuelSensor);
     }
 
+    private AngularVelocity getSmartdashBoardVelocity() {
+        return smartDashboardVelocity;
+    }
+
+    private void setSmartdashBoardVelocity(double rpm) {
+        smartDashboardVelocity = RPM.of(rpm);
+    }
+
     @Override
     public void periodic() {
         fuelSensor.update();
@@ -99,8 +106,8 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         super.initSendable(builder);
         builder.addDoubleProperty(
                 "Indexing Target Velocity (RPM)",
-                () -> getIndexTargetVelocity().in(RPM),
-                this::setIndexTargetVelocity);
+                () -> getSmartdashBoardVelocity().in(RPM),
+                this::setSmartdashBoardVelocity);
     }
 
     private boolean getIndexingToScore() {
@@ -112,96 +119,18 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         indexingToScore = false;
     }
 
-    public Command indexFuel(Supplier<AngularVelocity> velocity) {
-        return runEnd(() -> motor.setPointVelocity(velocity.get()), () -> motor.stop());
+    public Command indexFuel() {
+        return runEnd(() -> motor.setPointVelocity(INDEX_FUEL_VELOCITY), this::stop);
     }
 
-    public Command indexFueltoHub(Supplier<AngularVelocity> velocity, Trigger isAligned) {
-        return runEnd(() -> {
-            if (isAligned.getAsBoolean()) {
-                motor.setPointVelocity(velocity.get());
-            } else {
-                stop();
-            }
-        }, this::stop);
-    }
-
-    public Command smartDashboardShuttleFuel() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity().unaryMinus()), () -> motor.stop());
+    public Command agitateFuel() {
+        return run(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY))
+                .raceWith(new WaitCommand(Seconds.of(0.5))
+                        .finallyDo(this::stop));
     }
 
     public Command smartDashboardIndexFuel() {
-        return runEnd(() -> motor.setPointVelocity(getIndexTargetVelocity()), () -> motor.stop());
-    }
-
-    public Command indexFuelAtFlyWheelVelocityToHub(
-            Supplier<AngularVelocity> indexTargetVelocity,
-            Trigger launcherAtTargetRPM,
-            Trigger overrideLauncherAtTargetRPM,
-            Trigger isAligned,
-            Trigger manualUnstuckFuel,
-            Trigger onAllianceSide) {
-        return runEnd(() -> {
-            if (!onAllianceSide.getAsBoolean()) {
-                motor.setPointVelocity(RPM.zero());
-                indexingToScore = false; // Shouldn't set to false here, since scoring period should just be while
-                                         // command is running
-                return;
-            }
-
-            if (manualUnstuckFuel.getAsBoolean()) {
-                motor.setPointVelocity(UNSTUCK_VELOCITY);
-                indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part of
-                                         // current scoring cycle
-                return;
-            }
-
-            if (!initStuckTimer && stuckRoutine.getAsBoolean()) {
-                stuckRoutineTimer.restart();
-                initStuckTimer = true;
-            }
-
-            if (initStuckTimer) {
-                if (!stuckRoutineTimer.hasElapsed(Seconds.of(0.5))) {
-                    motor.setPointVelocity(UNSTUCK_VELOCITY);
-                    indexingToScore = false; // Shouldn't set to false here, since reversing spindexer is still a part
-                                             // of current scoring cycle
-                    return;
-                } else {
-                    initStuckTimer = false;
-                }
-            }
-
-            if (launcherAtTargetRPM.and(isAligned).getAsBoolean()
-                    || overrideLauncherAtTargetRPM.getAsBoolean()) {
-                motor.setPointVelocity(indexTargetVelocity.get());
-                indexingToScore = true; // Should set to true here, since we are ready to score and so the scoring
-                                        // period is starting
-            } else {
-                stop();
-            }
-        }, this::stop);
-    }
-
-    public Command indexFuelAtFlyWheelVelocity(
-            Supplier<AngularVelocity> indexTargetVelocity,
-            Supplier<AngularVelocity> flyWheelVelocity,
-            AngularVelocity threshold) {
-        return runEnd(() -> {
-            if (flyWheelVelocity.get().isNear(flyWheelVelocity.get(), threshold)) {
-                motor.setPointVelocity(indexTargetVelocity.get());
-            } else {
-                stop();
-            }
-        }, this::stop);
-    }
-
-    public AngularVelocity getIndexTargetVelocity() {
-        return indexVelocity;
-    }
-
-    public void setIndexTargetVelocity(double rpm) {
-        indexVelocity = RPM.of(rpm);
+        return runEnd(() -> motor.setPointVelocity(getSmartdashBoardVelocity()), this::stop);
     }
 
     // region SysId

@@ -80,6 +80,8 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
         private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
         private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
+        private static final AprilTagFieldLayout layout = AprilTagFieldLayout
+                        .loadField(AprilTagFields.k2026RebuiltAndymark);
 
         private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
 
@@ -105,7 +107,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private final Supplier<PoseEstimate> poseEstimate;
         public final Trigger onAllianceSide;
-        public final Trigger isLauncherAlignedToHub;
+        public final Trigger launcherAlignedToHub;
         public final Trigger isVisionEstimateInField;
         public final Trigger isVisionEstimateHasTags;
         public final Trigger isVisionMeasurementValid;
@@ -181,7 +183,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return false;
                 });
 
-                isLauncherAlignedToHub = new Trigger(() -> {
+                launcherAlignedToHub = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
                         Optional<Rotation2d> maybeTargetAngle = getLaunchAngleToHub();
 
@@ -246,10 +248,12 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 ".command",
                                 () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
                                 null);
-                builder.addBooleanProperty("Launcher Aligned To Hub", isLauncherAlignedToHub, null);
-                builder.addBooleanProperty("On Alliance Side", isLauncherAlignedToHub, null);
+                builder.addBooleanProperty("Launcher Aligned To Hub", launcherAlignedToHub, null);
+                builder.addBooleanProperty("On Alliance Side", launcherAlignedToHub, null);
                 builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
                 builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
+                builder.addDoubleProperty("Distance To Hub (Meters)",
+                                () -> getDistanceToHub().orElse(Meters.zero()).in(Meters), null);
         }
 
         private void initSmartDashboard() {
@@ -417,7 +421,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         public Translation2d getHubPosition(Alliance alliance) {
-                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
                 Pose3d blueHubYCenter = layout.getTagPose(26).get();
                 Pose3d blueHubXCenter = layout.getTagPose(21).get();
                 Pose3d redHubYCenter = layout.getTagPose(10).get();
@@ -433,39 +436,39 @@ public class Drive extends GeneratedDrive implements Sendable {
                         yHub = redHubYCenter.getMeasureY();
                 }
 
-                SmartDashboard.putNumber("Hub X", xHub.in(Meters));
-                SmartDashboard.putNumber("Hub Y", yHub.in(Meters));
                 return new Translation2d(xHub, yHub);
         }
 
         private Optional<Rotation2d> getLaunchAngleToHub() {
-                Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
+                Optional<Alliance> alliance = DriverStation.getAlliance();
 
-                return maybeAlliance.map(alliance -> {
-                        Translation2d robotPosition = getState().Pose.getTranslation();
-                        Translation2d hubPosition = getHubPosition(alliance);
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
 
-                        Angle launcherOffset = Radians.of(Math.asin(
-                                        LAUNCHER_TANGENT_OFFSET.div(Meters.of(
-                                                        robotPosition.getDistance(hubPosition)))
-                                                        .in(Value)));
+                Translation2d robotPosition = getState().Pose.getTranslation();
+                Translation2d hubPosition = getHubPosition(alliance.get());
 
-                        Translation2d targetTranslation = robotPosition.minus(hubPosition);
+                Angle launcherOffset = Radians.of(Math.asin(
+                                LAUNCHER_TANGENT_OFFSET.div(Meters.of(
+                                                robotPosition.getDistance(hubPosition)))
+                                                .in(Value)));
 
-                        Angle targetAngle;
+                Translation2d targetTranslation = robotPosition.minus(hubPosition);
 
-                        if (alliance == Alliance.Blue) {
-                                targetAngle = Radians
-                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                                .plus(Degrees.of(90)).minus(launcherOffset);
-                        } else {
-                                targetAngle = Radians
-                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                                .plus(Degrees.of(90)).minus(launcherOffset).plus(Radians.of(Math.PI));
-                        }
+                Angle targetAngle;
 
-                        return new Rotation2d(Radians.of(MathUtil.angleModulus(targetAngle.in(Radians))));
-                });
+                if (alliance.get() == Alliance.Blue) {
+                        targetAngle = Radians
+                                        .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                        .plus(Degrees.of(90)).minus(launcherOffset);
+                } else {
+                        targetAngle = Radians
+                                        .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                        .plus(Degrees.of(90)).minus(launcherOffset).plus(Radians.of(Math.PI));
+                }
+
+                return Optional.of(new Rotation2d(Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)))));
         }
 
         public Command angleToHub(
@@ -574,5 +577,22 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void updateLimelightOrientationToRobot() {
                 LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        public Optional<Distance> getDistanceToHub() {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
+
+                Pose2d currentPosition = getState().Pose;
+                Translation2d hubPose = getHubPosition(alliance.get());
+                Distance a = currentPosition.getMeasureX().minus(hubPose.getMeasureX());
+                Distance b = currentPosition.getMeasureY().minus(hubPose.getMeasureY());
+
+                return Optional.of(
+                                Meters.of(
+                                                Math.sqrt(Math.pow(a.in(Meters), 2) + Math.pow(b.in(Meters), 2))));
         }
 }

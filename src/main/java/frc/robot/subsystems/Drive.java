@@ -570,7 +570,6 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 Translation2d robotPosition = getState().Pose.getTranslation();
                 Rotation2d robotRotation = new Rotation2d(getAngle());
-                Distance netLength = UPPER_NET_Y.minus(BOTTOM_NET_Y);
                 Distance launcherPositionX = robotPosition.getMeasureX().plus(LAUNCHER_DISTANCE_FROM_ROBOT
                                 .times(Math.cos(robotRotation.getDegrees() - Degrees.of(135).in(Degrees))));
                 Distance launcherPositionY = robotPosition.getMeasureY().plus(LAUNCHER_DISTANCE_FROM_ROBOT
@@ -587,8 +586,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                         toNetY = launcherPosition.getMeasureY().minus(toNetX)
                                         .times(Math.tan(robotRotation.minus(new Rotation2d(Radians.of(Math.PI)))
                                                         .getDegrees()));
-
-                        return netLength.isNear(toNetY, netLength.div(2));
                 } else {
                         // Distance to robot to net.
                         toNetX = launcherPosition.getMeasureX().minus(redHubBackSideX);
@@ -596,9 +593,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                         // and bottom range of net.
                         toNetY = launcherPosition.getMeasureY().minus(toNetX)
                                         .times(Math.tan(robotRotation.getDegrees()));
-
-                        return netLength.isNear(toNetY, netLength.div(2));
                 }
+
+                return toNetY.gte(BOTTOM_NET_Y) && toNetY.lte(UPPER_NET_Y);
         }
         // endregion
 

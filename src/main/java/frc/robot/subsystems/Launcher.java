@@ -20,6 +20,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -27,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.interfaces.ISystemDynamics;
+import frc.robot.generated.Elastic;
+import frc.robot.generated.Elastic.Notification;
+import frc.robot.generated.Elastic.NotificationLevel;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.LauncherMotor;
 
@@ -37,13 +41,18 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
 
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
-    private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(500);
-    private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-500);
+    private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(200);
+    private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-200);
 
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
     private AngularVelocity launcherOffset = RPM.of(0);
 
     public final Trigger nearTargetRPM;
+
+    private final static String incrementLauncherOffsetTitle = "Launcher Offset increments to: ";
+    private final static String decrementLauncherOffsetTitle = "Launcher Offset decrements to: ";
+    private final Elastic.Notification launcherOffsetNotification = new Notification(NotificationLevel.INFO, "", "")
+            .withDisplaySeconds(0.8);
 
     public Launcher(String name, CanId leftMotorId, CanId rightMotorId) {
         super("Subsystems/" + name);
@@ -80,6 +89,9 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
 
         nearTargetRPM = new Trigger(
                 () -> leadMotor.getVelocity().isNear(leadMotor.getTargetVelocity(), NEAR_TARGET_VELOCITY_THRESHHOLD));
+        
+        launcherOffsetNotification.setWidth(250);
+        launcherOffsetNotification.setHeight(75);
         initSmartDashboard();
     }
 
@@ -111,6 +123,22 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
                         rpm,
                         MIN_USER_VELOCITY_OFFSET.in(RPM),
                         MAX_USER_VELOCITY_OFFSET.in(RPM)));
+    }
+
+    public Command incrementLauncherOffset() {
+        return new InstantCommand(() -> {
+            setRPMLauncherOffset(getRPMLauncherOffset().plus(RPM.of(10)).in(RPM));
+            Elastic.sendNotification(launcherOffsetNotification
+                    .withTitle(incrementLauncherOffsetTitle + getRPMLauncherOffset().in(RPM)));
+        });
+    }
+
+    public Command decrementLauncherOffset() {
+        return new InstantCommand(() -> {
+            setRPMLauncherOffset(getRPMLauncherOffset().minus(RPM.of(10)).in(RPM));
+            Elastic.sendNotification(launcherOffsetNotification
+                    .withTitle(decrementLauncherOffsetTitle + getRPMLauncherOffset().in(RPM)));
+        });
     }
 
     private AngularVelocity getRPMLauncherOffset() {

@@ -174,11 +174,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 initSmartDashboard();
         }
 
-        @Override
-        public void periodic() {
-
-        }
-
         private void initSmartDashboard() {
                 SmartDashboard.putData(getName(), this);
                 SmartDashboard.putData(getName() + "/Left Limit Switch", leftHardLimit);

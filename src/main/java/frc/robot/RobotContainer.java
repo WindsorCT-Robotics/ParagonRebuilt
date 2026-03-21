@@ -88,6 +88,8 @@ public class RobotContainer implements Sendable {
   private final Trigger autoScoreNoCalculationTrigger;
   private final Trigger snowblowTrigger;
   private final Trigger unjamFuel;
+  private final Trigger incrementLauncherOffset;
+  private final Trigger decrementLauncherOffset;
 
   private RelativeReference relativeReference;
 
@@ -153,6 +155,8 @@ public class RobotContainer implements Sendable {
     autoScoreTrigger = driver.rightBumper();
     autoScoreNoCalculationTrigger = operator.povDown();
     unjamFuel = operator.a().or(spindexer.unjamFuel);
+    incrementLauncherOffset = operator.rightBumper();
+    decrementLauncherOffset = operator.leftBumper();
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -209,7 +213,7 @@ public class RobotContainer implements Sendable {
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    bayDoor.hasBayDoorHomed.negate().whileTrue(bayDoor.home());
+    bayDoor.hasBayDoorHomed.whileFalse(bayDoor.home());
 
     intake.setDefaultCommand(intake.stopIntake());
   }
@@ -263,6 +267,9 @@ public class RobotContainer implements Sendable {
 
     // Homes baydoor
     operator.x().onTrue(bayDoor.home());
+
+    incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset());
+    decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
   }
 
   private void bindAutoScore() {

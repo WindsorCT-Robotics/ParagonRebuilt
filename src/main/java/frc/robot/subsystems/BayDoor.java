@@ -27,9 +27,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -57,7 +57,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         private final DigitalInput leftHardLimit;
         private final DigitalInput rightHardLimit;
 
-        private final Elastic.Notification homeNotification;
+        private final Elastic.Notification homeCompletionNotification;
+        private final Elastic.Notification homeIncompletionNotification;
         private final SysIdRoutine routine;
 
         private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
@@ -98,8 +99,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         public final Trigger atRightMiddleLimit;
         public final Trigger isBayDoorMiddle;
 
+        public final Trigger hasBayDoorHomed;
         private boolean hasHomed = false;
-        private boolean isHoming = false;
 
         public BayDoor(
                         String name,
@@ -109,7 +110,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                         DigitalInputOutput rightLimitSwitchDIO) {
                 super("Subsystems/" + name);
 
-                homeNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED", "");
+                homeCompletionNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED.", "");
+                homeIncompletionNotification = new Notification(Elastic.NotificationLevel.WARNING, name + " HOMING INCOMPLETE.", "");
 
                 leftMotor = new BayDoorMotor("Left Bay Door Motor", leftMotorId, new TalonFXConfiguration()
                                 .withMotorOutput(new MotorOutputConfigs()
@@ -167,22 +169,14 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 atRightMiddleLimit = new Trigger(() -> rightMotor.getAngle().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
                 isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
 
+                hasBayDoorHomed = new Trigger(this::hasHomed);
+
                 initSmartDashboard();
         }
 
         @Override
         public void periodic() {
-                if (isHoming)
-                        return;
 
-                if (!hasHomed) {
-                        isHoming = true;
-                        CommandScheduler.getInstance().schedule(home());
-                }
-
-                if (hasHomed && !isHoming) {
-                        Elastic.sendNotification(homeNotification);
-                }
         }
 
         private void initSmartDashboard() {
@@ -211,6 +205,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 builder.addBooleanProperty("isBayDoorSoftOpen", isBayDoorSoftOpen, null);
         }
 
+        private boolean hasHomed() {
+                return hasHomed;
+        }
+
         private void enableSoftLimits(boolean enable) {
                 TalonFXConfiguration leftMotorConfig = leftMotor.getCurrentConfiguration()
                                 .withSoftwareLimitSwitch(leftMotor.getCurrentConfiguration().SoftwareLimitSwitch
@@ -229,24 +227,35 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command home() {
-                return runEnd(
+                return run(
                                 () -> {
                                         leftMotor.home(atLeftCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
                                         rightMotor.home(atRightCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
-                                }, this::onHomingComplete)
+                                })
                                 .withName("Home")
                                 .beforeStarting(() -> enableSoftLimits(false))
                                 .until(isBayDoorClosed)
                                 .handleInterrupt(() -> hasHomed = false)
+                                .finallyDo(interrupted -> {
+                                        if (interrupted) {
+                                                onHomingIncomplete();
+                                        } else {
+                                                onHomingComplete();
+                                        }
+                                })
                                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
         }
 
         private void onHomingComplete() {
-                hasHomed = true;
-                isHoming = false;
                 enableSoftLimits(true);
-                removeDefaultCommand();
-                Elastic.sendNotification(homeNotification);
+                hasHomed = true;
+                Elastic.sendNotification(homeCompletionNotification);
+        }
+
+        private void onHomingIncomplete() {
+                enableSoftLimits(false);
+                hasHomed = false;
+                Elastic.sendNotification(homeIncompletionNotification);
         }
 
         public Command open() {
@@ -268,7 +277,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command agitateFuel() {
-                return open().withTimeout(Seconds.of(0.5)).andThen(middle()).repeatedly();
+                return open().andThen(new WaitCommand(Seconds.of(0.5))).andThen(middle()).repeatedly();
         }
 
         // region SysId

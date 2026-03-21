@@ -179,10 +179,6 @@ public class RobotContainer implements Sendable {
     builder.addStringProperty("Relative Reference", () -> getRelativeReference().toString(), null);
   }
 
-  private Dimensionless getOperatorTriggerAdjustment() {
-    return Value.of(-operator.getLeftTriggerAxis() + operator.getRightTriggerAxis());
-  }
-
   private Dimensionless curveAxis(Dimensionless percent, double exponent) {
     return Value.of(
         Math.abs(Math.pow(
@@ -209,9 +205,11 @@ public class RobotContainer implements Sendable {
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
+    
+    bayDoor.hasBayDoorHomed.negate().whileTrue(bayDoor.home());
 
-    bayDoor.setDefaultCommand(bayDoor.home());
     intake.setDefaultCommand(intake.stopIntake());
+    bindAutoScore();
   }
 
   private void bindDriver() {

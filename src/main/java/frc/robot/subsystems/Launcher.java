@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -14,11 +13,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,8 +35,6 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
     private final LauncherMotor followerMotor;
     private final SysIdRoutine routine;
 
-    private static final Distance HALF_FIELD = Meters
-            .of(AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark).getFieldLength() / 3);
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
     private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(500);

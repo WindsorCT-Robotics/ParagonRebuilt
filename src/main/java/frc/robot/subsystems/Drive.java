@@ -279,7 +279,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 builder.addBooleanProperty("Launcher Aligned To Hub", launcherAlignedToHub, null);
                 builder.addBooleanProperty("Launcher Aligned To Snowblow", launcherAlignedToSnowblow, null);
                 builder.addBooleanProperty("Launcher Obstructed By Hub", launcherObstructedByHub, null);
-                builder.addBooleanProperty("On Alliance Side", launcherAlignedToHub, null);
+                builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
                 builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
                 builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
                 builder.addDoubleProperty("Distance To Hub (Meters)",
@@ -422,7 +422,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command angleToHub(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
-                return runEnd(() -> {
+                return run(() -> {
                         Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
@@ -436,13 +436,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                         targetAngle.get().getMeasure());
-                }, () -> fieldCentricSwerveRequest.withDriveRequestType(DriveRequestType.OpenLoopVoltage));
+                });
         }
 
         public Command angleToSnowblow(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
-                return runEnd(() -> {
+                return run(() -> {
                         Optional<Rotation2d> targetAngle = getLaunchAngleToSnowblow();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
@@ -456,7 +456,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                         targetAngle.get().getMeasure());
-                }, () -> fieldCentricSwerveRequest.withDriveRequestType(DriveRequestType.OpenLoopVoltage));
+                });
+        }
+
+        public Command angleToRedAlliance(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y) {
+                return run(() -> {
+                        Angle targetAngle = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue)
+                                        ? Radians.zero()
+                                        : Radians.of(Math.PI);
+                        moveWithLockedAngle(
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                        targetAngle);
+                });
         }
 
         /**
@@ -562,18 +576,18 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private boolean isLauncherObstructedByHub() {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
+                Optional<Rotation2d> maybeLauncherAngle = getLaunchAngleToSnowblow();
 
-                if (alliance.isEmpty()) {
-                        DriverStation.reportWarning("No Alliance Found.", true);
+                if (alliance.isEmpty() || maybeLauncherAngle.isEmpty()) {
                         return true;
                 }
 
+                Rotation2d launcherAngle = maybeLauncherAngle.get().plus(Rotation2d.kCCW_90deg);
                 Translation2d robotPosition = getState().Pose.getTranslation();
-                Rotation2d robotRotation = new Rotation2d(getAngle());
                 Distance launcherPositionX = robotPosition.getMeasureX().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.cos(robotRotation.getDegrees() - Degrees.of(135).in(Degrees))));
+                                .times(Math.cos(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
                 Distance launcherPositionY = robotPosition.getMeasureY().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.sin(robotRotation.getDegrees() - Degrees.of(135).in(Degrees))));
+                                .times(Math.sin(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
                 Translation2d launcherPosition = new Translation2d(launcherPositionX, launcherPositionY);
                 Distance toNetX;
                 Distance toNetY;
@@ -583,18 +597,19 @@ public class Drive extends GeneratedDrive implements Sendable {
                         toNetX = launcherPosition.getMeasureX().minus(blueHubBackSideX);
                         // Launcher intersection then check if that intersection is with in the upper
                         // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY().minus(toNetX)
-                                        .times(Math.tan(robotRotation.minus(new Rotation2d(Radians.of(Math.PI)))
-                                                        .getDegrees()));
+                        toNetY = launcherPosition.getMeasureY().minus(
+                                        toNetX.times(Math.tan(launcherAngle.minus(new Rotation2d(Radians.of(Math.PI)))
+                                                        .getDegrees())));
                 } else {
                         // Distance to robot to net.
-                        toNetX = launcherPosition.getMeasureX().minus(redHubBackSideX);
+                        toNetX = redHubBackSideX.minus(launcherPosition.getMeasureX());
                         // Launcher intersection then check if that intersection is with in the upper
                         // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY().minus(toNetX)
-                                        .times(Math.tan(robotRotation.getDegrees()));
+                        toNetY = launcherPosition.getMeasureY()
+                                        .minus(toNetX.times(Math.tan(launcherAngle.getDegrees())));
                 }
 
+                SmartDashboard.putNumber("Launcher Y Intersection (Meters)", toNetY.in(Meters));
                 return toNetY.gte(BOTTOM_NET_Y) && toNetY.lte(UPPER_NET_Y);
         }
         // endregion

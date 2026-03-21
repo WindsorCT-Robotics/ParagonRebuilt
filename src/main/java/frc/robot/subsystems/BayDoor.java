@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
@@ -62,7 +64,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         private final SysIdRoutine routine;
 
         private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
-        private static final Angle OPEN_ANGLE = Rotations.of(6.15);
+        private static final Angle OPEN_ANGLE = Rotations.of(7.2);
         private static final Angle CLOSE_ANGLE = Rotations.of(0);
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
@@ -110,8 +112,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                         DigitalInputOutput rightLimitSwitchDIO) {
                 super("Subsystems/" + name);
 
-                homeCompletionNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED.", "");
-                homeIncompletionNotification = new Notification(Elastic.NotificationLevel.WARNING, name + " HOMING INCOMPLETE.", "");
+                homeCompletionNotification = new Notification(Elastic.NotificationLevel.INFO, name + " has been HOMED.",
+                                "");
+                homeIncompletionNotification = new Notification(Elastic.NotificationLevel.WARNING,
+                                name + " HOMING INCOMPLETE.", "");
 
                 leftMotor = new BayDoorMotor("Left Bay Door Motor", leftMotorId, new TalonFXConfiguration()
                                 .withMotorOutput(new MotorOutputConfigs()
@@ -238,7 +242,22 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                                 onHomingComplete();
                                         }
                                 })
-                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                                .andThen(afterHome());
+        }
+
+        private Command afterHome() {
+                return run(() -> {
+                        leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
+                        rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
+                }).withDeadline(new WaitCommand(Seconds.of(0.3)))
+                                .beforeStarting(() -> enableSoftLimits(false))
+                                .finallyDo(() -> {
+                                        leftMotor.resetRelativeEncoder();
+                                        rightMotor.resetRelativeEncoder();
+                                        stop();
+                                        enableSoftLimits(true);
+                                });
         }
 
         private void onHomingComplete() {
@@ -272,7 +291,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command agitateFuel() {
-                return open().andThen(new WaitCommand(Seconds.of(0.5))).andThen(middle()).repeatedly();
+                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(0.5)))
+                                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.5)))));
         }
 
         // region SysId

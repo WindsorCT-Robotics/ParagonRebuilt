@@ -166,10 +166,10 @@ public class RobotContainer implements Sendable {
     SmartDashboard.putData(spindexer);
     SmartDashboard.putData(launcher);
     SmartDashboard.putData(kicker);
-    SmartDashboard.putData("Launch Calculations", launchCalculator);
-    SmartDashboard.putData("Controllers/Driver", driver.getHID());
-    SmartDashboard.putData("Controllers/Operator", operator.getHID());
-    SmartDashboard.putData("Autonomous", autonomousChooser);
+    SmartDashboard.putData("Robot Container/Launch Calculations", launchCalculator);
+    SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
+    SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
+    SmartDashboard.putData("Robot Container/Autonomous", autonomousChooser);
     SmartDashboard.putData(CommandScheduler.getInstance());
     SmartDashboard.putData("Robot Container", this);
   }

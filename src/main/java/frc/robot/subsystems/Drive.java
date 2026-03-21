@@ -217,11 +217,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 FIELD_CENTRIC
         }
 
-        private Angle getAngle() {
-                Angle rawGyroAngle = getPigeon2().getYaw().getValue();
-                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
-        }
-
         @Override
         public void periodic() {
                 super.periodic();
@@ -257,11 +252,10 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void initSmartDashboard() {
-                SmartDashboard.putData(getName(), this);
-                SmartDashboard.putData(getName() + "/" + getPigeon2().getClass().getSimpleName(),
+                SmartDashboard.putData("Subsystems/" + getName() + "/" + getPigeon2().getClass().getSimpleName(),
                                 getPigeon2());
                 // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
-                SmartDashboard.putData(getName() + "/SwerveDrive", new Sendable() {
+                SmartDashboard.putData("Subsystems/" + getName() + "/SwerveDrive", new Sendable() {
                         @Override
                         public void initSendable(SendableBuilder builder) {
                                 builder.setSmartDashboardType("SwerveDrive");
@@ -294,6 +288,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 null);
                         }
                 });
+        }
+
+        private Angle getAngle() {
+                Angle rawGyroAngle = getPigeon2().getYaw().getValue();
+                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
         }
 
         public SwerveModuleState[] getSwerveModuleStates() {

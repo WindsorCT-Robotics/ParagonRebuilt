@@ -96,7 +96,7 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
                 () -> getRPMLauncherOffset().in(RPM),
                 this::setRPMLauncherOffset);
 
-        builder.addBooleanProperty("nearTargetRPM", nearTargetRPM, null);
+        builder.addBooleanProperty("Near Target Velocity (RPM)", nearTargetRPM, null);
     }
 
     private void initSmartDashboard() {

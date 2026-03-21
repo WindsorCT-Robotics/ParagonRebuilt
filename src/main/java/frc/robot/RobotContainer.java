@@ -65,7 +65,7 @@ public class RobotContainer implements Sendable {
   private static final DigitalInputOutput RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
-  private static final CanId TOF_SENSOR_CAN_ID = new CanId((byte) 21);
+  private static final CanId FUEL_SENSOR_CAN_ID = new CanId((byte) 21);
 
   private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
@@ -83,9 +83,10 @@ public class RobotContainer implements Sendable {
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
   private final Supplier<Dimensionless> driverRightTrigger;
-  private final Trigger driverRightTriggered;
 
   private final Trigger autoScoreTrigger;
+  private final Trigger autoScoreNoCalculationTrigger;
+  private final Trigger snowblowTrigger;
   private final Trigger unjamFuel;
 
   private RelativeReference relativeReference;
@@ -120,9 +121,8 @@ public class RobotContainer implements Sendable {
 
     spindexer = new Spindexer(
         Spindexer.class.getSimpleName(),
-        "Fuel Sensor",
         SPINDEXER_MOTOR_CAN_ID,
-        TOF_SENSOR_CAN_ID);
+        FUEL_SENSOR_CAN_ID);
 
     launcher = new Launcher(
         Launcher.class.getSimpleName(),
@@ -138,9 +138,6 @@ public class RobotContainer implements Sendable {
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
-    autoScoreTrigger = driver.rightBumper();
-    unjamFuel = operator.a().or(spindexer.unjamFuel);
-
     registerPathplannerCommands();
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
 
@@ -151,7 +148,11 @@ public class RobotContainer implements Sendable {
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
     driverRightAxisX = () -> Value.of(driver.getRightX());
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
-    driverRightTriggered = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
+
+    snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
+    autoScoreTrigger = driver.rightBumper();
+    autoScoreNoCalculationTrigger = operator.povDown();
+    unjamFuel = operator.a().or(spindexer.unjamFuel);
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -199,17 +200,18 @@ public class RobotContainer implements Sendable {
   private void configureControllerBindings() {
     bindDriver();
     bindOperator();
+    bindAutoScore();
+    bindSnowblow();
 
     drive.setDefaultCommand(drive.moveWithPercentages(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
-    
+
     bayDoor.hasBayDoorHomed.negate().whileTrue(bayDoor.home());
 
     intake.setDefaultCommand(intake.stopIntake());
-    bindAutoScore();
   }
 
   private void bindDriver() {
@@ -251,7 +253,7 @@ public class RobotContainer implements Sendable {
 
   private void bindOperator() {
     // Manual Launch Fuel With Smartdashboard values.
-    operator.povDown().whileTrue(
+    autoScoreNoCalculationTrigger.whileTrue(
         launcher.smartDashboardLaunchFuel()
             .alongWith(kicker.smartDashboardKickFuel())
             .alongWith(spindexer.smartDashboardIndexFuel())
@@ -276,6 +278,13 @@ public class RobotContainer implements Sendable {
             .alongWith(spindexer.agitateFuel()));
   }
 
+  private void bindSnowblow() {
+    snowblowTrigger.whileTrue(angleToSnowblow().alongWith(launchSnowblowDistance())
+        .alongWith(
+            spindexer.indexFuel()
+                .onlyWhile(drive.launcherAlignedToSnowblow.and(drive.launcherObstructedByHub.negate()))));
+  }
+
   private Command launchHubDistance() {
     return launcher.launchFuel(() -> {
       Optional<Distance> hubDistance = drive.getDistanceToHub();
@@ -290,12 +299,34 @@ public class RobotContainer implements Sendable {
     }));
   }
 
+  private Command launchSnowblowDistance() {
+    return launcher.launchFuel(() -> {
+      Optional<Distance> snowblowDistance = drive.getDistanceToSnowblow();
+      if (snowblowDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getLauncherVelocityToDistance(snowblowDistance.get());
+    }).alongWith(kicker.kickFuel(() -> {
+      Optional<Distance> snowblowDistance = drive.getDistanceToHub();
+      if (snowblowDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getKickerVelocityToDistance(snowblowDistance.get());
+    }));
+  }
+
   private Command indexFuel() {
     return spindexer.indexFuel().alongWith(bayDoor.agitateFuel());
   }
 
   private Command angleToHub() {
     return drive.angleToHub(
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED));
+  }
+
+  private Command angleToSnowblow() {
+    return drive.angleToSnowblow(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
             MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,

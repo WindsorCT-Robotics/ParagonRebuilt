@@ -49,7 +49,6 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
 
     public Spindexer(
             String subsystemName,
-            String fuelSensorName,
             CanId motorCanId,
             CanId fuelSensorCanId) {
         super("Subsystems/" + subsystemName);
@@ -65,7 +64,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                         .withKV(0.009)));
 
         fuelSensor = new FuelSensor(
-                fuelSensorName,
+                "Fuel Sensor",
                 fuelSensorCanId,
                 FUEL_SENSOR_THRESHOLD,
                 RangingMode.Short,
@@ -108,6 +107,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 "Indexing Target Velocity (RPM)",
                 () -> getSmartdashBoardVelocity().in(RPM),
                 this::setSmartdashBoardVelocity);
+        builder.addBooleanProperty("Unjam Fuel", unjamFuel, null);
     }
 
     private boolean getIndexingToScore() {

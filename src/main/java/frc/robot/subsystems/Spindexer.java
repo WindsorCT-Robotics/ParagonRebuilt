@@ -120,7 +120,10 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     public Command indexFuel() {
-        return runEnd(() -> motor.setPointVelocity(INDEX_FUEL_VELOCITY), this::stop);
+        return runEnd(() -> {
+            motor.setPointVelocity(INDEX_FUEL_VELOCITY);
+            indexingToScore = true;
+        }, this::stop);
     }
 
     public Command agitateFuel() {
@@ -130,7 +133,10 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     }
 
     public Command smartDashboardIndexFuel() {
-        return runEnd(() -> motor.setPointVelocity(getSmartdashBoardVelocity()), this::stop);
+        return runEnd(() -> {
+            motor.setPointVelocity(getSmartdashBoardVelocity());
+            indexingToScore = true;
+        }, this::stop);
     }
 
     // region SysId

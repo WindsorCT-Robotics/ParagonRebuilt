@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -228,7 +229,7 @@ public class RobotContainer implements Sendable {
     bayDoor.setDefaultCommand(bayDoor.ensuredHome());
 
     intake.setDefaultCommand(intake.stopIntake());
-    drive.onAllianceSide.and(autoScoreTrigger.negate()).and(snowblowTrigger.negate())
+    drive.onAllianceSide.and(() -> DriverStation.isTeleop()).and(autoScoreTrigger.negate()).and(snowblowTrigger.negate())
         .whileTrue(launcher.prepareLaunch().alongWith(kicker.prepareFuel()));
   }
 
@@ -378,7 +379,7 @@ public class RobotContainer implements Sendable {
   }
 
   private void registerPathplannerCommands() {
-    NamedCommands.registerCommand("scorenoalign", launchHubDistance().alongWith(indexFuel()));
+    NamedCommands.registerCommand("score", angleToHub().alongWith(launchHubDistance()).alongWith(indexFuel()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
     NamedCommands.registerCommand("baydoorhome", bayDoor.ensuredHome());

@@ -43,7 +43,21 @@ public class IntakeRollerMotor extends KrakenMotorBase {
                 super.setPointVelocity(angularVelocity);
         }
 
-        public void update() {
+        private void setIntakeStateColor(Color color) {
+                intakeMotorStateColor = color;
+        }
+
+        private String getIntakeStateColor() {
+                return intakeMotorStateColor.toHexString();
+        }
+
+        private IntakeMotorState getIntakeMotorState() {
+                return intakeMotorState;
+        }
+
+        public void setState(IntakeMotorState motorState) {
+                intakeMotorState = motorState;
+
                 switch (getIntakeMotorState()) {
                         case IDLE:
                                 setIntakeStateColor(intakeMotorStateIdle);
@@ -55,18 +69,6 @@ public class IntakeRollerMotor extends KrakenMotorBase {
                                 setIntakeStateColor(intakeMotorStateShuttling);
                                 break;
                 }
-        }
-
-        private void setIntakeStateColor(Color color) {
-                intakeMotorStateColor = color;
-        }
-
-        private String getIntakeStateColor() {
-                return intakeMotorStateColor.toHexString();
-        }
-
-        private IntakeMotorState getIntakeMotorState() {
-                return intakeMotorState;
         }
 
         private AngularVelocity getTargetVelocity() {

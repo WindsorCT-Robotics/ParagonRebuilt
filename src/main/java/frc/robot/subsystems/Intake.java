@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.IntakeMotorState;
 import frc.robot.hardware.motors.IntakeRollerMotor;
 import frc.robot.interfaces.ISystemDynamics;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -57,17 +58,12 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     @Override
-    public void periodic() {
-        motor.update();
-    }
-
-    @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
         builder.addDoubleProperty("Intake Target Velocity",
                 () -> getIntakeTargetVelocity().in(RotationsPerSecond),
                 this::setIntakeTargetVelocity);
-                
+
         builder.addDoubleProperty("Shuttle Target Velocity",
                 () -> getShuttleTargetVelocity().in(RotationsPerSecond),
                 this::setShuttleTargetVelocity);
@@ -89,7 +85,10 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     public Command stopIntake() {
-        return runOnce(() -> motor.setPointVelocity(RotationsPerSecond.zero()))
+        return runOnce(() -> {
+            motor.setPointVelocity(RotationsPerSecond.zero());
+            motor.setState(IntakeMotorState.IDLE);
+        })
                 .withName(getSubsystem() + "/stopIntake");
     }
 

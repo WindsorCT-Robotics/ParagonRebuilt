@@ -231,7 +231,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 return run(() -> {
                         leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
                         rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                }).withDeadline(new WaitCommand(Seconds.of(0.5)))
+                }).withDeadline(new WaitCommand(Seconds.of(1)))
                                 .finallyDo(() -> {
                                         leftMotor.resetRelativeEncoder();
                                         rightMotor.resetRelativeEncoder();

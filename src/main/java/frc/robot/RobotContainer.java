@@ -88,7 +88,8 @@ public class RobotContainer implements Sendable {
   private final Trigger autoScoreTrigger;
   private final Trigger autoScoreNoCalculationTrigger;
   private final Trigger snowblowTrigger;
-  private final Trigger unjamFuel;
+  private final Trigger autoUnjamTrigger;
+  private final Trigger manualUnjamTrigger;
   private final Trigger incrementLauncherOffset;
   private final Trigger decrementLauncherOffset;
   private final Trigger faceRedAlliance;
@@ -156,7 +157,8 @@ public class RobotContainer implements Sendable {
     snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
     autoScoreTrigger = driver.rightBumper();
     autoScoreNoCalculationTrigger = operator.povDown();
-    unjamFuel = operator.a().or(spindexer.unjamFuel);
+    autoUnjamTrigger = spindexer.autoUnjamTrigger;
+    manualUnjamTrigger = operator.a();
     incrementLauncherOffset = operator.rightBumper();
     decrementLauncherOffset = operator.leftBumper();
     faceRedAlliance = new Trigger(driver.leftStick());
@@ -191,7 +193,7 @@ public class RobotContainer implements Sendable {
     builder.addBooleanProperty("decrementLauncherOffset", decrementLauncherOffset, null);
     builder.addBooleanProperty("faceRedAlliance", faceRedAlliance, null);
     builder.addBooleanProperty("snowblowTrigger", snowblowTrigger, null);
-    builder.addBooleanProperty("unjamFuel", unjamFuel, null);
+    builder.addBooleanProperty("autoUnjamTrigger", autoUnjamTrigger, null);
   }
 
   private Dimensionless curveAxis(Dimensionless percent, double exponent) {
@@ -284,18 +286,30 @@ public class RobotContainer implements Sendable {
     decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
 
     operator.start().whileTrue(bayDoor.agitateFuel());
+
+    manualUnjamTrigger.and(drive.onAllianceSide.negate()).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel())));
+
+    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel())));
+
+    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel()))
+        .alongWith(launchHubDistance()));
   }
 
   private void bindAutoScore() {
-    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub.negate())
-        .whileTrue(angleToHub().alongWith(launchHubDistance()));
-    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub)
-        .whileTrue(angleToHub().alongWith(launchHubDistance()).alongWith(indexFuel()));
+    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub.negate()).and(autoUnjamTrigger.negate()).and(manualUnjamTrigger.negate())
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance())));
 
-    autoScoreTrigger.and(unjamFuel).whileTrue(
-        angleToHub()
-            .alongWith(launchHubDistance())
-            .alongWith(spindexer.agitateFuel()));
+    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub).and(autoUnjamTrigger.negate()).and(manualUnjamTrigger.negate())
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexFuel())));
+
+    autoScoreTrigger.and(autoUnjamTrigger).and(manualUnjamTrigger.negate()).whileTrue(
+        new RepeatCommand(
+            angleToHub()
+                .alongWith(launchHubDistance())
+                .alongWith(spindexer.agitateFuel())));
   }
 
   private void bindSnowblow() {

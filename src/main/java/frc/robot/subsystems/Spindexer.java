@@ -43,7 +43,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private AngularVelocity smartDashboardVelocity = RPM.of(0);
 
     private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
-    public final Trigger unjamFuel;
+    public final Trigger autoUnjamTrigger;
 
     private boolean indexingToScore = false;
 
@@ -71,7 +71,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 Milliseconds.of(20),
                 this::getIndexingToScore);
 
-        unjamFuel = new Trigger(() -> indexingToScore
+        autoUnjamTrigger = new Trigger(() -> indexingToScore
                 && fuelSensor.getElapsedSinceNofuel().gt(Seconds.of(2)));
 
         addChild(this.getName(), motor);
@@ -107,7 +107,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 "Indexing Target Velocity (RPM)",
                 () -> getSmartdashBoardVelocity().in(RPM),
                 this::setSmartdashBoardVelocity);
-        builder.addBooleanProperty("Unjam Fuel", unjamFuel, null);
+        builder.addBooleanProperty("Unjam Fuel", autoUnjamTrigger, null);
     }
 
     private boolean getIndexingToScore() {
@@ -130,6 +130,10 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
         return run(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY))
                 .raceWith(new WaitCommand(Seconds.of(0.5))
                         .finallyDo(this::stop));
+    }
+
+    public Command manualAgitateFuel() {
+        return runEnd(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY), this::stop);
     }
 
     public Command smartDashboardIndexFuel() {

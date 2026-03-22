@@ -3,67 +3,72 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.45,
-        "y": 0.459
+        "x": 7.785579545454546,
+        "y": 3.529965909090909
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.395908305515932,
-        "y": 0.4693021570750229
+        "x": 7.785579545454546,
+        "y": 2.6112126444933472
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "[NZR FUEL]"
     },
     {
       "anchor": {
-        "x": 7.652,
-        "y": 1.261
+        "x": 7.125943181818181,
+        "y": 1.0151022727272732
       },
       "prevControl": {
-        "x": 7.210364432676147,
-        "y": 0.8175415892142577
+        "x": 7.589749999999999,
+        "y": 1.4686022727272734
       },
       "nextControl": {
-        "x": 7.828412251081483,
-        "y": 1.4381403897149485
+        "x": 6.53014192102974,
+        "y": 0.4325410399563513
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.765,
-        "y": 2.138326
+        "x": 3.2815,
+        "y": 0.8605000000000007
       },
       "prevControl": {
-        "x": 7.765,
-        "y": 1.6637644526849202
+        "x": 4.642000000000001,
+        "y": 0.6337500000000011
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Fuel Start"
+      "linkedName": "[TR SCORE]"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.7097625329815314,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
-    "maxAcceleration": 4.0,
-    "maxAngularVelocity": 360.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 90.0
+    "velocity": 0,
+    "rotation": -26.73209379275891
   },
   "reversed": false,
   "folder": "Right Paths",
   "idealStartingState": {
-    "velocity": 0.0,
+    "velocity": 0,
     "rotation": 90.0
   },
   "useDefaultConstraints": true

@@ -378,17 +378,11 @@ public class RobotContainer implements Sendable {
   }
 
   private void registerPathplannerCommands() {
-    NamedCommands.registerCommand("shoothubdistance", launchHubDistance());
-    // TODO: Use spindexer sensor to determine if 20 fuel has past.
-    // TODO: Compare the average amount of fuel in hopper vs the flow of balls to
-    // determine good fuel value.
-    NamedCommands.registerCommand("shoothubdistancetil20", launchHubDistance());
+    NamedCommands.registerCommand("scorenoalign", launchHubDistance().alongWith(indexFuel()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
-    NamedCommands.registerCommand("baydoormiddle", bayDoor.middle());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
-    NamedCommands.registerCommand("baydoorhome", bayDoor.home());
+    NamedCommands.registerCommand("baydoorhome", bayDoor.ensuredHome());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
-    NamedCommands.registerCommand("shuttlefuel", intake.shuttleFuel());
   }
 
   public Command getAutonomousCommand() {

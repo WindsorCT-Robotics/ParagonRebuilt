@@ -142,7 +142,7 @@ public class RobotContainer implements Sendable {
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
-    registerPathplannerCommands();
+    // registerPathplannerCommands();
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
 
     // logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
@@ -223,7 +223,7 @@ public class RobotContainer implements Sendable {
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    bayDoor.hasBayDoorHomed.whileFalse(bayDoor.home());
+    bayDoor.setDefaultCommand(bayDoor.ensuredHome());
 
     intake.setDefaultCommand(intake.stopIntake());
     drive.onAllianceSide.and(autoScoreTrigger.negate()).and(snowblowTrigger.negate())
@@ -344,7 +344,7 @@ public class RobotContainer implements Sendable {
   }
 
   private Command indexFuel() {
-    return spindexer.indexFuel().alongWith(bayDoor.agitateFuel());
+    return spindexer.indexFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel());
   }
 
   private Command angleToHub() {

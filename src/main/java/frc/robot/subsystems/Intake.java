@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
@@ -29,8 +30,9 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity intakeVelocity = RotationsPerSecond.of(80);
-    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-80);
+    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(1000); // TODO: Determine agitation speed.
+    private AngularVelocity intakeVelocity = RPM.of(6000);
+    private AngularVelocity shuttleVelocity = RPM.of(-4800);
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
@@ -89,6 +91,10 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     public Command stopIntake() {
         return runOnce(() -> motor.setPointVelocity(RotationsPerSecond.zero()))
                 .withName(getSubsystem() + "/stopIntake");
+    }
+
+    public Command agitateFuel() {
+        return runEnd(() -> motor.setPointVelocity(AGITATION_VELOCITY), this::stopIntake);
     }
 
     private AngularVelocity getIntakeTargetVelocity() {

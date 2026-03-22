@@ -202,6 +202,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 builder.addBooleanProperty("isBayDoorClosed", isBayDoorClosed, null);
                 builder.addBooleanProperty("isBayDoorSoftClosed", isBayDoorSoftClosed, null);
                 builder.addBooleanProperty("isBayDoorSoftOpen", isBayDoorSoftOpen, null);
+
+                builder.addBooleanProperty("hasBayDoorHomed", hasBayDoorHomed, null);
         }
 
         private boolean hasHomed() {
@@ -242,11 +244,10 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                                 onHomingComplete();
                                         }
                                 })
-                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                                .andThen(afterHome());
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
         }
 
-        private Command afterHome() {
+        private Command hardHome() {
                 return run(() -> {
                         leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
                         rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
@@ -260,13 +261,25 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                 });
         }
 
+        public Command ensuredHome() {
+                return home().andThen(hardHome()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).finallyDo(interrupted -> {
+                        if (interrupted) {
+                                onHomingIncomplete();
+                        } else {
+                                onHomingComplete();
+                        }
+                });
+        }
+
         private void onHomingComplete() {
+                removeDefaultCommand();
                 enableSoftLimits(true);
                 hasHomed = true;
                 Elastic.sendNotification(homeCompletionNotification);
         }
 
         private void onHomingIncomplete() {
+                setDefaultCommand(ensuredHome());
                 enableSoftLimits(false);
                 hasHomed = false;
                 Elastic.sendNotification(homeIncompletionNotification);

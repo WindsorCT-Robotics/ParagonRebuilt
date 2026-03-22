@@ -11,7 +11,6 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -64,16 +63,12 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         private final SysIdRoutine routine;
 
         private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
-        private static final Angle OPEN_ANGLE = Rotations.of(7.2);
-        private static final Angle CLOSE_ANGLE = Rotations.of(0);
-        private static final Angle MIDDLE_ANGLE = OPEN_ANGLE.div(2);
+        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(6.3);
+        private static final Angle OPEN_ANGLE_SETPOINT = Rotations.of(7.3);
+        private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0);
+        private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
-
-        private static final SoftwareLimitSwitchConfigs softwareLimitSwitchConfigs = new SoftwareLimitSwitchConfigs()
-                        .withForwardSoftLimitThreshold(OPEN_ANGLE.plus(Rotations.of(0.4)))
-                        .withReverseSoftLimitThreshold(CLOSE_ANGLE)
-                        .withForwardSoftLimitEnable(true)
-                        .withReverseSoftLimitEnable(true);
+        
         private static final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
                         .withStatorCurrentLimit(Amps.of(25));
         private static final TorqueCurrentConfigs torqueCurrentConfigs = new TorqueCurrentConfigs()
@@ -122,7 +117,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                                 .withInverted(InvertedValue.CounterClockwise_Positive)
                                                 .withNeutralMode(NeutralModeValue.Brake))
                                 .withSlot0(SLOT0_CONFIGS)
-                                .withSoftwareLimitSwitch(softwareLimitSwitchConfigs)
                                 .withCurrentLimits(currentLimitsConfigs)
                                 .withTorqueCurrent(torqueCurrentConfigs));
                 rightMotor = new BayDoorMotor("Right Bay Door Motor", rightMotorId, new TalonFXConfiguration()
@@ -130,7 +124,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                                 .withInverted(InvertedValue.Clockwise_Positive)
                                                 .withNeutralMode(NeutralModeValue.Brake))
                                 .withSlot0(SLOT0_CONFIGS)
-                                .withSoftwareLimitSwitch(softwareLimitSwitchConfigs)
                                 .withCurrentLimits(currentLimitsConfigs)
                                 .withTorqueCurrent(torqueCurrentConfigs));
 
@@ -153,16 +146,16 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 atRightCloseLimit = new Trigger(() -> rightHardLimit.get())
                                 .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
 
-                atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().lt(CLOSE_ANGLE))
+                atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().lt(CLOSE_ANGLE_SETPOINT))
                                 .onTrue(new InstantCommand(() -> leftMotor.setBayMotorState(BayMotorState.CLOSE)));
 
-                atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().lt(CLOSE_ANGLE))
+                atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().lt(CLOSE_ANGLE_SETPOINT))
                                 .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
 
-                atLeftSoftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE))
+                atLeftSoftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE_THRESHOLD))
                                 .onTrue(new InstantCommand(() -> leftMotor.setBayMotorState(BayMotorState.CLOSE)));
 
-                atRightSoftOpenLimit = new Trigger(() -> rightMotor.getAngle().gte(OPEN_ANGLE))
+                atRightSoftOpenLimit = new Trigger(() -> rightMotor.getAngle().gte(OPEN_ANGLE_THRESHOLD))
                                 .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
 
                 isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
@@ -210,18 +203,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 return hasHomed;
         }
 
-        private void enableSoftLimits(boolean enable) {
-                TalonFXConfiguration leftMotorConfig = leftMotor.getCurrentConfiguration()
-                                .withSoftwareLimitSwitch(leftMotor.getCurrentConfiguration().SoftwareLimitSwitch
-                                                .withForwardSoftLimitEnable(enable).withReverseSoftLimitEnable(enable));
-                TalonFXConfiguration rightMotorConfig = rightMotor.getCurrentConfiguration()
-                                .withSoftwareLimitSwitch(rightMotor.getCurrentConfiguration().SoftwareLimitSwitch
-                                                .withForwardSoftLimitEnable(enable).withReverseSoftLimitEnable(enable));
-
-                leftMotor.configure(leftMotorConfig);
-                rightMotor.configure(rightMotorConfig);
-        }
-
         private void setPointPosition(Angle angle) {
                 leftMotor.setPointPosition(angle);
                 rightMotor.setPointPosition(angle);
@@ -234,7 +215,6 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                         rightMotor.home(atRightCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
                                 })
                                 .withName("Home")
-                                .beforeStarting(() -> enableSoftLimits(false))
                                 .until(isBayDoorClosed)
                                 .handleInterrupt(() -> hasHomed = false)
                                 .finallyDo(interrupted -> {
@@ -251,13 +231,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 return run(() -> {
                         leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
                         rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                }).withDeadline(new WaitCommand(Seconds.of(0.3)))
-                                .beforeStarting(() -> enableSoftLimits(false))
+                }).withDeadline(new WaitCommand(Seconds.of(0.5)))
                                 .finallyDo(() -> {
                                         leftMotor.resetRelativeEncoder();
                                         rightMotor.resetRelativeEncoder();
                                         stop();
-                                        enableSoftLimits(true);
                                 });
         }
 
@@ -273,20 +251,18 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
 
         private void onHomingComplete() {
                 removeDefaultCommand();
-                enableSoftLimits(true);
                 hasHomed = true;
                 Elastic.sendNotification(homeCompletionNotification);
         }
 
         private void onHomingIncomplete() {
                 setDefaultCommand(ensuredHome());
-                enableSoftLimits(false);
                 hasHomed = false;
                 Elastic.sendNotification(homeIncompletionNotification);
         }
 
         public Command open() {
-                return run(() -> setPointPosition(OPEN_ANGLE))
+                return run(() -> setPointPosition(OPEN_ANGLE_SETPOINT))
                                 .until(isBayDoorSoftOpen)
                                 .withName("Open");
         }
@@ -298,7 +274,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command close() {
-                return run(() -> setPointPosition(CLOSE_ANGLE))
+                return run(() -> setPointPosition(CLOSE_ANGLE_SETPOINT))
                                 .until(isBayDoorClosed.or(isBayDoorSoftClosed))
                                 .withName("Close");
         }

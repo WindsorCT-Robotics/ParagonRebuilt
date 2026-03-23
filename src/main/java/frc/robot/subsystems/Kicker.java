@@ -13,7 +13,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -97,15 +96,9 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
         }, this::hardStop);
     }
 
-    public Command prepareFuel(Supplier<Pose2d> robotPosition, Trigger onAllianceSide) {
+    public Command prepareFuel() {
         return runEnd(() -> {
-            AngularVelocity velocity = RPM.zero();
-
-            if (onAllianceSide.getAsBoolean()) {
-                velocity = PREP_ANGULAR_VELOCITY;
-            }
-
-            motor.setPointVelocity(velocity);
+            motor.setPointVelocity(PREP_ANGULAR_VELOCITY);
         }, this::stop);
     }
 

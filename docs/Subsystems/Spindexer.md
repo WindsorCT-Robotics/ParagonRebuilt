@@ -8,11 +8,11 @@ Requires a motor that can control its duty cycle and the ability to stop.
 
 ### Commands
 
-#### indexBallIntoShooter
+#### indexBallIntoLauncher
 
-`indexBallIntoShooter` will index fuel into the shooter so that the shooter can shoot the ball.
+`indexBallIntoLauncher` will index fuel into the launcher so that the launcher can shoot the ball.
 
-`indexBallIntoShooter` doesn't require any parameters.
+`indexBallIntoLauncher` doesn't require any parameters.
 
 ### Triggers
 

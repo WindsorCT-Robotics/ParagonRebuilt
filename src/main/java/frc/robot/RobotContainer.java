@@ -5,12 +5,12 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
@@ -20,22 +20,19 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AutoScore;
-import frc.robot.commands.LaunchFuelToHub;
-import frc.robot.commands.LaunchFuelToTargetDistance;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.DigitalInputOutput;
@@ -43,7 +40,7 @@ import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Kicker;
-import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
 import frc.robot.utils.LaunchCalculator;
@@ -54,49 +51,54 @@ public class RobotContainer implements Sendable {
   // private final Telemetry logger;
 
   private final Drive drive;
-
   private final Intake intake;
-
   private final BayDoor bayDoor;
-
   private final Spindexer spindexer;
-
-  private final Shooter shooter;
-
+  private final Launcher launcher;
   private final Kicker kicker;
 
+  private final LaunchCalculator launchCalculator;
+
   private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
+
   private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
   private static final CanId BAYDOOR_MOTOR_RIGHT_CAN_ID = new CanId((byte) 15);
   private static final DigitalInputOutput LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
   private static final DigitalInputOutput RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
 
   private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
-  private static final CanId TOF_SENSOR_CAN_ID = new CanId((byte) 21);
+  private static final CanId FUEL_SENSOR_CAN_ID = new CanId((byte) 21);
 
   private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
 
-  private static final CanId SHOOTER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
-  private static final CanId SHOOTER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
+  private static final CanId LAUNCHER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
+  private static final CanId LAUNCHER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
 
-  private final CommandXboxController driver;
-  private final CommandXboxController operator;
-  private static final Dimensionless REDUCE_SPEED = Percent.of(65);
+  private static final Dimensionless REDUCE_SPEED = Percent.of(50);
   private static final double MOVE_ROBOT_CURVE = 2.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
-
   private static final Dimensionless DEADBAND = Percent.of(5);
-  private RelativeReference relativeReference;
+  private final CommandXboxController driver;
+  private final CommandXboxController operator;
 
-  private final LaunchCalculator launchCalculator;
-
-  private final SendableChooser<Command> autonomousChooser;
-  private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
   private final Supplier<Dimensionless> driverLeftAxisX;
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
   private final Supplier<Dimensionless> driverRightTrigger;
-  private final Trigger driverRightTriggered;
+
+  private final Trigger autoScoreTrigger;
+  private final Trigger autoScoreNoCalculationTrigger;
+  private final Trigger snowblowTrigger;
+  private final Trigger autoUnjamTrigger;
+  private final Trigger manualUnjamTrigger;
+  private final Trigger incrementLauncherOffset;
+  private final Trigger decrementLauncherOffset;
+  private final Trigger faceRedAlliance;
+
+  private RelativeReference relativeReference;
+
+  private final SendableChooser<Command> autonomousChooser;
+  private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
 
   public RobotContainer() {
     try {
@@ -112,27 +114,38 @@ public class RobotContainer implements Sendable {
       throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
     }
 
-    intake = new Intake(Intake.class.getSimpleName(), INTAKE_ROLLER_MOTOR_CAN_ID);
-    bayDoor = new BayDoor(BayDoor.class.getSimpleName(), BAYDOOR_MOTOR_LEFT_CAN_ID, BAYDOOR_MOTOR_RIGHT_CAN_ID,
+    intake = new Intake(
+        Intake.class.getSimpleName(),
+        INTAKE_ROLLER_MOTOR_CAN_ID);
+
+    bayDoor = new BayDoor(
+        BayDoor.class.getSimpleName(),
+        BAYDOOR_MOTOR_LEFT_CAN_ID,
+        BAYDOOR_MOTOR_RIGHT_CAN_ID,
         LEFT_BAYDOOR_DIO,
         RIGHT_BAYDOOR_DIO);
-    spindexer = new Spindexer(Spindexer.class.getSimpleName(), "Fuel Sensor", SPINDEXER_MOTOR_CAN_ID,
-        TOF_SENSOR_CAN_ID);
-    shooter = new Shooter(Shooter.class.getSimpleName(), SHOOTER_MOTOR_LEFT_CAN_ID, SHOOTER_MOTOR_RIGHT_CAN_ID);
-    kicker = new Kicker(Kicker.class.getSimpleName(), KICKER_MOTOR_CAN_ID);
 
-    launchCalculator = new LaunchCalculator(
-        () -> drive.getState().Pose,
-        () -> drive.getHubPosition(DriverStation.getAlliance().orElse(Alliance.Blue)));
+    spindexer = new Spindexer(
+        Spindexer.class.getSimpleName(),
+        SPINDEXER_MOTOR_CAN_ID,
+        FUEL_SENSOR_CAN_ID);
 
-    relativeReference = RelativeReference.FIELD_CENTRIC;
+    launcher = new Launcher(
+        Launcher.class.getSimpleName(),
+        LAUNCHER_MOTOR_LEFT_CAN_ID,
+        LAUNCHER_MOTOR_RIGHT_CAN_ID);
+
+    kicker = new Kicker(
+        Kicker.class.getSimpleName(),
+        KICKER_MOTOR_CAN_ID);
+
+    launchCalculator = new LaunchCalculator();
 
     driver = new CommandXboxController(0);
     operator = new CommandXboxController(1);
 
     registerPathplannerCommands();
     autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
-    SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
 
     // logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
     // drive.registerTelemetry(logger::telemeterize);
@@ -141,7 +154,18 @@ public class RobotContainer implements Sendable {
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
     driverRightAxisX = () -> Value.of(driver.getRightX());
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
-    driverRightTriggered = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
+
+    snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
+    autoScoreTrigger = driver.rightBumper();
+    autoScoreNoCalculationTrigger = operator.povDown();
+    autoUnjamTrigger = spindexer.autoUnjamTrigger;
+    manualUnjamTrigger = operator.a();
+    incrementLauncherOffset = operator.rightBumper();
+    decrementLauncherOffset = operator.leftBumper();
+    faceRedAlliance = new Trigger(driver.leftStick());
+
+    relativeReference = RelativeReference.FIELD_CENTRIC;
+
     initSmartDashboard();
     configureControllerBindings();
   }
@@ -151,23 +175,26 @@ public class RobotContainer implements Sendable {
     SmartDashboard.putData(intake);
     SmartDashboard.putData(bayDoor);
     SmartDashboard.putData(spindexer);
-    SmartDashboard.putData(shooter);
+    SmartDashboard.putData(launcher);
     SmartDashboard.putData(kicker);
-    SmartDashboard.putData("Launch Calculations", launchCalculator);
-    SmartDashboard.putData("Controllers/Driver", driver.getHID());
-    SmartDashboard.putData("Controllers/Operator", operator.getHID());
-    SmartDashboard.putData("Autonomous", autonomousChooser);
+    SmartDashboard.putData("Robot Container/Launch Calculations", launchCalculator);
+    SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
+    SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
+    SmartDashboard.putData("Robot Container/Autonomous", autonomousChooser);
     SmartDashboard.putData(CommandScheduler.getInstance());
     SmartDashboard.putData("Robot Container", this);
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
-
-  }
-
-  private Dimensionless getOperatorTriggerAdjustment() {
-    return Value.of(-operator.getLeftTriggerAxis() + operator.getRightTriggerAxis());
+    builder.addStringProperty("Relative Reference", () -> getRelativeReference().toString(), null);
+    builder.addBooleanProperty("autoScoreTrigger", autoScoreTrigger, null);
+    builder.addBooleanProperty("autoScoreNoCalculationTrigger", autoScoreNoCalculationTrigger, null);
+    builder.addBooleanProperty("incrementLauncherOffset", incrementLauncherOffset, null);
+    builder.addBooleanProperty("decrementLauncherOffset", decrementLauncherOffset, null);
+    builder.addBooleanProperty("faceRedAlliance", faceRedAlliance, null);
+    builder.addBooleanProperty("snowblowTrigger", snowblowTrigger, null);
+    builder.addBooleanProperty("autoUnjamTrigger", autoUnjamTrigger, null);
   }
 
   private Dimensionless curveAxis(Dimensionless percent, double exponent) {
@@ -190,6 +217,8 @@ public class RobotContainer implements Sendable {
   private void configureControllerBindings() {
     bindDriver();
     bindOperator();
+    bindAutoScore();
+    bindSnowblow();
 
     drive.setDefaultCommand(drive.moveWithPercentages(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
@@ -197,12 +226,11 @@ public class RobotContainer implements Sendable {
         () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
         this::getRelativeReference));
 
-    bayDoor.setDefaultCommand(bayDoor.home());
-    intake.setDefaultCommand(intake.stopIntake());
+    bayDoor.setDefaultCommand(bayDoor.ensuredHome());
 
-    shooter.setDefaultCommand(shooter.prepareLaunch(() -> drive.getState().Pose).withName("Launcher Prepare Launch"));
-    kicker.setDefaultCommand(
-        kicker.prepareFuel(() -> drive.getState().Pose, drive.onAllianceSide).withName("Kicker Prepare Launch"));
+    intake.setDefaultCommand(intake.stopIntake());
+    drive.onAllianceSide.and(() -> DriverStation.isTeleop()).and(autoScoreTrigger.negate()).and(snowblowTrigger.negate())
+        .whileTrue(launcher.prepareLaunch().alongWith(kicker.prepareFuel()));
   }
 
   private void bindDriver() {
@@ -212,61 +240,7 @@ public class RobotContainer implements Sendable {
       } else {
         relativeReference = RelativeReference.ROBOT_CENTRIC;
       }
-
-      SmartDashboard.putString("Relative Reference", getRelativeReference().toString());
     }));
-
-    driver.rightBumper().whileTrue(drive.moveWithPercentages(
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
-        () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE).times(REDUCE_SPEED),
-        this::getRelativeReference));
-
-    // Angles launcher
-    // If within the RPM range then spindexer indexes the fuel
-    // If within angle range it launches fuel
-    // Calculates shooter and kicker speed based off of distance
-    // If speed of shooter and kicker was off then operator can adjust with right
-    // trigger
-    driver.rightStick().toggleOnTrue(new AutoScore(
-        drive,
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        shooter,
-        kicker,
-        spindexer,
-        launchCalculator,
-        operator.start(),
-        operator.back(),
-        shooter.nearTargetRPM,
-        drive.isLauncherAlignedToHub,
-        drive.onAllianceSide,
-        () -> spindexer.getIndexTargetVelocity(),
-        () -> getOperatorTriggerAdjustment())
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-        .withName("LaunchFuelToHub"));
-
-    // Drive drive,
-    // Supplier<Dimensionless> x,
-    // Supplier<Dimensionless> y,
-    // Shooter shooter,
-    // Kicker kicker,
-    // Spindexer spindexer,
-    // LaunchCalculator launchCalculator,
-    // Trigger manualUnstuckFuel,
-    // Trigger overrideNearLauncherAtTargetRPM,
-    // Trigger nearLauncherTargetRPM,
-    // Trigger isAligned,
-    // Trigger onAllianceSide,
-    // Supplier<AngularVelocity> indexTargetVelocity,
-    // Supplier<Dimensionless> velocityAdjustment
-
-    // region toggle outpost angle
-    driver.start().toggleOnTrue(
-        drive.angleToOutpost(
-            () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-            () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)));
-    // endregion
 
     // Opens Baydoor and Intakes Fuel
     driver.x().toggleOnTrue(
@@ -286,20 +260,20 @@ public class RobotContainer implements Sendable {
 
     driver.y().onTrue(bayDoor.close());
 
-    driver.povRight().onTrue(bayDoor.middle());
-
-    // If the Right Axis was greater than 20% then will launch fuel based on percent
-    // to meters
-    driverRightTriggered.whileTrue(new LaunchFuelToTargetDistance(launchCalculator,
-        () -> Meters.of(driver.getRightTriggerAxis() * 5), RPM.of(100), shooter, kicker, spindexer));
+    // This command should run automatically when baydoor is no longer targeting the
+    // open and close setpoints.
+    // driver.onTrue(bayDoor.middle());
 
     driver.povDown().onTrue(drive.resetGyroCommand());
+    faceRedAlliance.whileTrue(drive.angleToRedAlliance(
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)));
   }
 
   private void bindOperator() {
     // Manual Launch Fuel With Smartdashboard values.
-    operator.povDown().whileTrue(
-        shooter.smartDashboardLaunchFuel()
+    autoScoreNoCalculationTrigger.whileTrue(
+        launcher.smartDashboardLaunchFuel()
             .alongWith(kicker.smartDashboardKickFuel())
             .alongWith(spindexer.smartDashboardIndexFuel())
             .alongWith(drive.angleToHub(
@@ -308,23 +282,112 @@ public class RobotContainer implements Sendable {
 
     // Homes baydoor
     operator.x().onTrue(bayDoor.home());
+
+    incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset());
+    decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
+
+    operator.start().whileTrue(bayDoor.agitateFuel());
+
+    manualUnjamTrigger.and(drive.onAllianceSide.negate()).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel())));
+
+    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel())));
+
+    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger).whileTrue(new RepeatCommand(
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel()))
+        .alongWith(launchHubDistance()));
+  }
+
+  private void bindAutoScore() {
+    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub.negate()).and(autoUnjamTrigger.negate()).and(manualUnjamTrigger.negate())
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance())));
+
+    autoScoreTrigger.and(drive.onAllianceSide).and(drive.launcherAlignedToHub).and(autoUnjamTrigger.negate()).and(manualUnjamTrigger.negate())
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexFuel())));
+
+    autoScoreTrigger.and(autoUnjamTrigger).and(manualUnjamTrigger.negate()).whileTrue(
+        new RepeatCommand(
+            angleToHub()
+                .alongWith(launchHubDistance())
+                .alongWith(spindexer.agitateFuel())));
+  }
+
+  private void bindSnowblow() {
+    snowblowTrigger.whileTrue(new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())));
+    snowblowTrigger.and(drive.launcherAlignedToSnowblow.and(drive.launcherObstructedByHub))
+        .whileTrue(new RepeatCommand(
+            angleToSnowblow()
+                .alongWith(launchSnowblowDistance())
+                .alongWith(intake.intakeFuel())
+                .alongWith(bayDoor.open())));
+    snowblowTrigger.and(drive.launcherAlignedToSnowblow.and(drive.launcherObstructedByHub.negate()))
+        .whileTrue(new RepeatCommand(
+            angleToSnowblow()
+                .alongWith(launchSnowblowDistance())
+                .alongWith(spindexer.indexFuel())
+                .alongWith(intake.intakeFuel())
+                .alongWith(bayDoor.open())));
+  }
+
+  private Command launchHubDistance() {
+    return launcher.launchFuel(() -> {
+      Optional<Distance> hubDistance = drive.getDistanceToHub();
+      if (hubDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getLauncherVelocityToDistance(hubDistance.get());
+    }).alongWith(kicker.kickFuel(() -> {
+      Optional<Distance> hubDistance = drive.getDistanceToHub();
+      if (hubDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getKickerVelocityToDistance(hubDistance.get());
+    }));
+  }
+
+  private Command launchSnowblowDistance() {
+    return launcher.launchFuel(() -> {
+      Optional<Distance> snowblowDistance = drive.getDistanceToSnowblow();
+      if (snowblowDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getLauncherVelocityToDistance(snowblowDistance.get());
+    }).alongWith(kicker.kickFuel(() -> {
+      Optional<Distance> snowblowDistance = drive.getDistanceToHub();
+      if (snowblowDistance.isEmpty())
+        return RPM.zero();
+      return launchCalculator.getKickerVelocityToDistance(snowblowDistance.get());
+    }));
+  }
+
+  private Command indexFuel() {
+    return spindexer.indexFuel().alongWith(bayDoor.agitateFuel()).alongWith(intake.agitateFuel());
+  }
+
+  private Command angleToHub() {
+    return drive.angleToHub(
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED));
+  }
+
+  private Command angleToSnowblow() {
+    return drive.angleToSnowblow(
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,
+            MOVE_ROBOT_CURVE).times(REDUCE_SPEED));
   }
 
   private void registerPathplannerCommands() {
-    NamedCommands.registerCommand("shoothubdistance",
-        new LaunchFuelToHub(
-            shooter,
-            kicker,
-            spindexer,
-            launchCalculator,
-            shooter.nearTargetRPM,
-            new Trigger(() -> true),
-            () -> spindexer.getIndexTargetVelocity(),
-            () -> Percent.zero()));
+    NamedCommands.registerCommand("score", angleToHub().alongWith(launchHubDistance()).alongWith(indexFuel()));
     NamedCommands.registerCommand("baydooropen", bayDoor.open());
     NamedCommands.registerCommand("baydoorclose", bayDoor.close());
-    NamedCommands.registerCommand("baydoorhome", bayDoor.home());
+    NamedCommands.registerCommand("baydoorhome", bayDoor.ensuredHome());
     NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
+  }
+
+  public Command getAutonomousCommand() {
+    return autonomousChooser.getSelected();
   }
 
   // region SysId
@@ -364,11 +427,11 @@ public class RobotContainer implements Sendable {
   }
 
   @SuppressWarnings("unused")
-  private void bindShooterSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(shooter.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(shooter.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(shooter.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(shooter.sysIdQuasistatic(Direction.kReverse));
+  private void bindlauncherSystemDynamics() {
+    driver.back().and(driver.y()).whileTrue(launcher.sysIdDynamic(Direction.kForward));
+    driver.back().and(driver.x()).whileTrue(launcher.sysIdDynamic(Direction.kReverse));
+    driver.start().and(driver.y()).whileTrue(launcher.sysIdQuasistatic(Direction.kForward));
+    driver.start().and(driver.x()).whileTrue(launcher.sysIdQuasistatic(Direction.kReverse));
   }
 
   @SuppressWarnings("unused")
@@ -380,7 +443,4 @@ public class RobotContainer implements Sendable {
   }
   // endregion
 
-  public Command getAutonomousCommand() {
-    return autonomousChooser.getSelected();
-  }
 }

@@ -3,37 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.800000000000001,
-        "y": 3.261988636363636
+        "x": 3.941136363636363,
+        "y": 0.6955909090909096
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.788647727272727,
-        "y": 0.0874886363636369
+        "x": 7.880367375685195,
+        "y": 0.000998198423188379
       },
       "isLocked": false,
-      "linkedName": "Right Trench Score To Middle To Hub"
+      "linkedName": "[TR SCORE]"
     },
     {
       "anchor": {
-        "x": 4.2,
-        "y": 0.67
+        "x": 7.785579545454546,
+        "y": 3.529965909090909
       },
       "prevControl": {
-        "x": 5.197682127487517,
-        "y": 0.6699999999999999
+        "x": 7.785579545454546,
+        "y": 0.529965909090909
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trench Shot From Hub"
+      "linkedName": "[NZR FUEL]"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.33773087071240127,
-      "rotationDegrees": -5.000168243958081
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -46,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": -10.477649757423844
+    "velocity": 0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Right Paths",
   "idealStartingState": {
-    "velocity": 0.3,
-    "rotation": 90.0
+    "velocity": 0,
+    "rotation": -14.931417178137554
   },
   "useDefaultConstraints": true
 }

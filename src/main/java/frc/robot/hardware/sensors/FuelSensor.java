@@ -11,6 +11,7 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.base_sensors.TimeOfFlightSensorBase;
 
 public class FuelSensor extends TimeOfFlightSensorBase {
     private final BooleanSupplier isIndexingToScore;

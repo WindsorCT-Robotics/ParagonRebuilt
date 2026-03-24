@@ -279,9 +279,17 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                                 .withName("Close");
         }
 
-        public Command agitateFuel() {
-                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(0.5)))
-                                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.5)))));
+        private Command agitateFuel() {
+                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(1)))
+                                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.3)))));
+        }
+
+        public Command agitateHighFuel() {
+                return open().andThen(new WaitCommand(Seconds.of(2.5))).andThen(agitateFuel());
+        }
+
+        public Command agitateLowFuel() {
+                return agitateFuel();
         }
 
         // region SysId

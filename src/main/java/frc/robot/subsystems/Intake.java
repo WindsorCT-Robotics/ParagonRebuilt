@@ -31,7 +31,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(400); // TODO: Determine agitation speed.
+    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(400);
     private AngularVelocity intakeVelocity = RPM.of(6000);
     private AngularVelocity shuttleVelocity = RPM.of(-4800);
 

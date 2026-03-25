@@ -230,7 +230,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return isNearTargetAngle(targetAngle.get());
                 });
 
-                // TODO: Should determine if launcher is intersecting the hub.
                 launcherObstructedByHub = new Trigger(this::isLauncherObstructedByHub);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));

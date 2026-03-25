@@ -99,7 +99,7 @@ public class RobotContainer implements Sendable {
   private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
-  private static final String DEFAULT_AUTO = ""; // TODO: Once formed autos pick an auto to default to.
+  private static final String DEFAULT_AUTO = "";
 
   public RobotContainer() {
     try {
@@ -311,7 +311,8 @@ public class RobotContainer implements Sendable {
         .and(manualUnjamTrigger.negate())
         .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance())));
 
-    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating LOW fuel.
+    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
+    // LOW fuel.
     autoScoreTrigger
         .and(agitateHighFuelTrigger.negate())
         .and(drive.onAllianceSide)
@@ -320,7 +321,8 @@ public class RobotContainer implements Sendable {
         .and(manualUnjamTrigger.negate())
         .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel())));
 
-    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating HIGH fuel.
+    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
+    // HIGH fuel.
     autoScoreTrigger
         .and(agitateHighFuelTrigger)
         .and(drive.onAllianceSide)

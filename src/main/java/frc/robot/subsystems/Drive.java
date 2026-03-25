@@ -86,11 +86,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final AprilTagFieldLayout layout = AprilTagFieldLayout
                         .loadField(AprilTagFields.k2026RebuiltAndymark);
         private static final Distance HALF_FIELD_Y = Meters.of(layout.getFieldWidth()).div(2);
-        private static final Distance UPPER_NET_Y = Inches.of(188.045);
-        private static final Distance BOTTOM_NET_Y = Inches.of(129.635);
-
-        private final Distance blueHubBackSideX = Inches.of(216.13);
-        private final Distance redHubBackSideX = Inches.of(435.09);
         private final Pose3d blueHubYCenter = layout.getTagPose(26).get();
         private final Pose3d blueHubXCenter = layout.getTagPose(21).get();
         private final Pose3d redHubYCenter = layout.getTagPose(10).get();
@@ -135,7 +130,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         public final Trigger onAllianceSide;
         public final Trigger launcherAlignedToHub;
         public final Trigger launcherAlignedToSnowblow;
-        public final Trigger launcherObstructedByHub;
         public final Trigger isVisionEstimateInField;
         public final Trigger isVisionEstimateHasTags;
         public final Trigger isVisionMeasurementValid;
@@ -230,8 +224,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return isNearTargetAngle(targetAngle.get());
                 });
 
-                launcherObstructedByHub = new Trigger(this::isLauncherObstructedByHub);
-
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
                                 FACING_ANGLE_PID.kP,
@@ -277,7 +269,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 null);
                 builder.addBooleanProperty("Launcher Aligned To Hub", launcherAlignedToHub, null);
                 builder.addBooleanProperty("Launcher Aligned To Snowblow", launcherAlignedToSnowblow, null);
-                builder.addBooleanProperty("Launcher Obstructed By Hub", launcherObstructedByHub, null);
                 builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
                 builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
                 builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
@@ -571,45 +562,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 }
 
                 return currentLaunch.isNear(target.getMeasure(), Degrees.of(5));
-        }
-
-        private boolean isLauncherObstructedByHub() {
-                Optional<Alliance> alliance = DriverStation.getAlliance();
-                Optional<Rotation2d> maybeLauncherAngle = getLaunchAngleToSnowblow();
-
-                if (alliance.isEmpty() || maybeLauncherAngle.isEmpty()) {
-                        return true;
-                }
-
-                Rotation2d launcherAngle = maybeLauncherAngle.get().plus(Rotation2d.kCCW_90deg);
-                Translation2d robotPosition = getState().Pose.getTranslation();
-                Distance launcherPositionX = robotPosition.getMeasureX().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.cos(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
-                Distance launcherPositionY = robotPosition.getMeasureY().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.sin(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
-                Translation2d launcherPosition = new Translation2d(launcherPositionX, launcherPositionY);
-                Distance toNetX;
-                Distance toNetY;
-
-                if (alliance.get() == Alliance.Blue) {
-                        // Distance to robot to net.
-                        toNetX = launcherPosition.getMeasureX().minus(blueHubBackSideX);
-                        // Launcher intersection then check if that intersection is with in the upper
-                        // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY().minus(
-                                        toNetX.times(Math.tan(launcherAngle.minus(new Rotation2d(Radians.of(Math.PI)))
-                                                        .getDegrees())));
-                } else {
-                        // Distance to robot to net.
-                        toNetX = redHubBackSideX.minus(launcherPosition.getMeasureX());
-                        // Launcher intersection then check if that intersection is with in the upper
-                        // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY()
-                                        .minus(toNetX.times(Math.tan(launcherAngle.getDegrees())));
-                }
-
-                SmartDashboard.putNumber("Launcher Y Intersection (Meters)", toNetY.in(Meters));
-                return toNetY.gte(BOTTOM_NET_Y) && toNetY.lte(UPPER_NET_Y);
         }
         // endregion
 

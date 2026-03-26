@@ -68,6 +68,7 @@ import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.LimelightHelpers.LimelightTarget_Fiducial;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
 import frc.robot.utils.AngleUtil;
 
@@ -109,12 +110,19 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final NetworkTable driveTable = NT_INSTANCE.getTable("SmartDashboard/Subsystems/Drive");
         private final StructPublisher<Pose2d> robotPosition = driveTable
                         .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
-        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
-                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+
         private final StructPublisher<Pose2d> validvisionPosition = driveTable
                         .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
+                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructArrayPublisher<Pose2d> perceptedTags = driveTable
+                        .getStructArrayTopic("Percepted Tags Position 2D", Pose2d.struct).publish();
+
         private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
                         .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+
         private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
                         .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
 
@@ -661,6 +669,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                 double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
 
+                perceptedTags.set(getPercivedTags());
+
                 if (!isVisionMeasurementValid.getAsBoolean()) {
                         invalidVisionPosition.set(positionEstimate.pose);
                         return;
@@ -676,6 +686,19 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void updateLimelightOrientationToRobot() {
                 LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        private Pose2d[] getPercivedTags() {
+                LimelightTarget_Fiducial[] fiducials = LimelightHelpers
+                                .getLatestResults(limelightName).targets_Fiducials;
+
+                Pose2d[] tags = new Pose2d[fiducials.length];
+
+                for (int i = 0; i < tags.length; i++) {
+                        tags[i] = fiducials[i].getTargetPose_RobotSpace2D();
+                }
+
+                return tags;
         }
         // endregion
 

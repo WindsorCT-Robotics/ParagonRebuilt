@@ -37,7 +37,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -320,7 +319,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // region Getters
         private Angle getAngle() {
                 Angle rawGyroAngle = getPigeon2().getYaw().getValue();
-                return wrapAngle(rawGyroAngle);
+                return AngleUtil.wrap(rawGyroAngle);
         }
 
         public SwerveModuleState[] getSwerveModuleStates() {
@@ -687,15 +686,5 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command resetGyroCommand() {
                 return Commands.runOnce(() -> resetGyro())
                                 .withName("Subsystems/" + getName() + "/resetGyro");
-        }
-
-        /**
-         * Wraps the angle within [-pi, pi].
-         * 
-         * @param angle
-         * @return A wrapped angle between [-pi, pi].
-         */
-        private Angle wrapAngle(Angle angle) {
-                return Radians.of(MathUtil.angleModulus(angle.in(Radians)));
         }
 }

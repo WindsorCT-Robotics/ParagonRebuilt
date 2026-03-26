@@ -70,6 +70,7 @@ import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
+import frc.robot.utils.AngleUtil;
 
 public class Drive extends GeneratedDrive implements Sendable {
         // region
@@ -207,36 +208,21 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
 
                 launcherAlignedToHub = new Trigger(() -> {
-                        Optional<Alliance> alliance = DriverStation.getAlliance();
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
-
-                        if (targetAngle.isEmpty() || alliance.isEmpty()) {
-                                return false;
-                        }
-
-                        SmartDashboard.putNumber("Latest Target Rotation2d", targetAngle.get().getMeasure().in(Degrees));
-                        Rotation2d angle = new Rotation2d(Radians.of(MathUtil.angleModulus(targetAngle.get().getRadians())));
-                        Angle currentLaunch = getAngle();
-                        SmartDashboard.putNumber("Latest Target Angle", angle.getMeasure().in(Degrees));
-                        SmartDashboard.putNumber("Latest Launch Angle", currentLaunch.in(Degrees));
-
-                        if (alliance.get() == Alliance.Red) {
-                                System.out.println("?");
-                                angle = angle.plus(new Rotation2d(Radians.of(Math.PI)));
-                        }
-
-                        SmartDashboard.putNumber("Latest After Red Check Target Angle", angle.getMeasure().in(Degrees));
-                        SmartDashboard.putNumber("Latest After Red Check Launch Angle", currentLaunch.in(Degrees));
-                        return currentLaunch.isNear(angle.getMeasure(), Degrees.of(5));
-                });
-
-                launcherAlignedToSnowblow = new Trigger(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToSnowblow();
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        return isNearTargetAngle(targetAngle.get());
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
+                });
+
+                launcherAlignedToSnowblow = new Trigger(() -> {
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
+                        if (targetAngle.isEmpty()) {
+                                return false;
+                        }
+
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
                 });
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
@@ -334,7 +320,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // region Getters
         private Angle getAngle() {
                 Angle rawGyroAngle = getPigeon2().getYaw().getValue();
-                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
+                return wrapAngle(rawGyroAngle);
         }
 
         public SwerveModuleState[] getSwerveModuleStates() {
@@ -428,7 +414,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
                                                 x,
@@ -440,7 +426,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle.get().getMeasure());
+                                        targetAngle.get());
                 });
         }
 
@@ -448,7 +434,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToSnowblow();
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
                                                 x,
@@ -460,7 +446,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle.get().getMeasure());
+                                        targetAngle.get());
                 });
         }
 
@@ -491,7 +477,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
                                                 .withTargetDirection(
-                                                                new Rotation2d(targetAngle.in(Radians))));
+                                                                new Rotation2d(targetAngle)));
 
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
         }
@@ -522,7 +508,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                 }
         }
 
-        private Optional<Rotation2d> getLaunchAngleToSnowblow() {
+        private Optional<Angle> getLaunchAngleToSnowblow() {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
@@ -532,20 +518,20 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return Optional.of(getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get()));
         }
 
-        private Optional<Rotation2d> getLaunchAngleToHub() {
+        private Optional<Angle> getLaunchAngleToHub() {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
                         return Optional.empty();
                 }
 
-                Optional<Rotation2d> angle = Optional
+                Optional<Angle> angle = Optional
                                 .of(getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get()));
-                SmartDashboard.putNumber("Launch Angle To Hubbb", angle.get().getDegrees());
                 return angle;
         }
 
-        private Rotation2d getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
+        // .
+        private Angle getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
                 Translation2d robotPosition = getState().Pose.getTranslation();
 
                 Angle launcherOffset = Radians.of(Math.asin(
@@ -563,26 +549,24 @@ public class Drive extends GeneratedDrive implements Sendable {
                         targetAngle = targetAngle.plus(Radians.of(Math.PI));
                 }
 
-                return new Rotation2d(targetAngle);
+                return targetAngle;
         }
 
-        private boolean isNearTargetAngle(Rotation2d target) {
+        private boolean isNearTargetAngle(Angle target) {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
                         return false;
                 }
 
-                Angle currentLaunch = getAngle();
+                Angle targetAngle = target;
 
                 if (alliance.get() == Alliance.Red) {
-                        System.out.println("?");
-                        target = target.plus(new Rotation2d(Radians.of(Math.PI)));
+                        targetAngle = AngleUtil.wrap(targetAngle.plus(Radians.of(Math.PI)));
                 }
 
-                // SmartDashboard.putNumber("Launch angel", currentLaunch.in(Degrees));
-                // SmartDashboard.putNumber("Target angel", target.getDegrees());
-                return currentLaunch.isNear(Degrees.of(target.getDegrees()), Degrees.of(5));
+                Angle currentLaunch = getAngle();
+                return currentLaunch.isNear(targetAngle, Degrees.of(5));
         }
         // endregion
 
@@ -703,5 +687,15 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command resetGyroCommand() {
                 return Commands.runOnce(() -> resetGyro())
                                 .withName("Subsystems/" + getName() + "/resetGyro");
+        }
+
+        /**
+         * Wraps the angle within [-pi, pi].
+         * 
+         * @param angle
+         * @return A wrapped angle between [-pi, pi].
+         */
+        private Angle wrapAngle(Angle angle) {
+                return Radians.of(MathUtil.angleModulus(angle.in(Radians)));
         }
 }

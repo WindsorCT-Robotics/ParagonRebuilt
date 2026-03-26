@@ -207,12 +207,27 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
 
                 launcherAlignedToHub = new Trigger(() -> {
+                        Optional<Alliance> alliance = DriverStation.getAlliance();
                         Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
-                        if (targetAngle.isEmpty()) {
+
+                        if (targetAngle.isEmpty() || alliance.isEmpty()) {
                                 return false;
                         }
 
-                        return isNearTargetAngle(targetAngle.get());
+                        SmartDashboard.putNumber("Latest Target Rotation2d", targetAngle.get().getMeasure().in(Degrees));
+                        Rotation2d angle = new Rotation2d(Radians.of(MathUtil.angleModulus(targetAngle.get().getRadians())));
+                        Angle currentLaunch = getAngle();
+                        SmartDashboard.putNumber("Latest Target Angle", angle.getMeasure().in(Degrees));
+                        SmartDashboard.putNumber("Latest Launch Angle", currentLaunch.in(Degrees));
+
+                        if (alliance.get() == Alliance.Red) {
+                                System.out.println("?");
+                                angle = angle.plus(new Rotation2d(Radians.of(Math.PI)));
+                        }
+
+                        SmartDashboard.putNumber("Latest After Red Check Target Angle", angle.getMeasure().in(Degrees));
+                        SmartDashboard.putNumber("Latest After Red Check Launch Angle", currentLaunch.in(Degrees));
+                        return currentLaunch.isNear(angle.getMeasure(), Degrees.of(5));
                 });
 
                 launcherAlignedToSnowblow = new Trigger(() -> {
@@ -494,9 +509,9 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 if (alliance == Alliance.Blue) {
                         if (robotPositionY.gt(HALF_FIELD_Y)) {
-                                return blueSnowblowRight;
-                        } else {
                                 return blueSnowblowLeft;
+                        } else {
+                                return blueSnowblowRight;
                         }
                 } else {
                         if (robotPositionY.gt(HALF_FIELD_Y)) {
@@ -524,7 +539,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return Optional.empty();
                 }
 
-                return Optional.of(getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get()));
+                Optional<Rotation2d> angle = Optional
+                                .of(getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get()));
+                SmartDashboard.putNumber("Launch Angle To Hubbb", angle.get().getDegrees());
+                return angle;
         }
 
         private Rotation2d getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
@@ -558,10 +576,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                 Angle currentLaunch = getAngle();
 
                 if (alliance.get() == Alliance.Red) {
+                        System.out.println("?");
                         target = target.plus(new Rotation2d(Radians.of(Math.PI)));
                 }
 
-                return currentLaunch.isNear(target.getMeasure(), Degrees.of(5));
+                // SmartDashboard.putNumber("Launch angel", currentLaunch.in(Degrees));
+                // SmartDashboard.putNumber("Target angel", target.getDegrees());
+                return currentLaunch.isNear(Degrees.of(target.getDegrees()), Degrees.of(5));
         }
         // endregion
 

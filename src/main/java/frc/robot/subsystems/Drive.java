@@ -515,7 +515,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return Optional.empty();
                 }
 
-                return Optional.of(getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get()));
+                Angle angle = getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
         }
 
         private Optional<Angle> getLaunchAngleToHub() {
@@ -525,9 +526,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return Optional.empty();
                 }
 
-                Optional<Angle> angle = Optional
-                                .of(getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get()));
-                return angle;
+                Angle angle = getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
         }
 
         // .
@@ -546,7 +546,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .minus(launcherOffset);
 
                 if (alliance == Alliance.Red) {
-                        targetAngle = targetAngle.plus(Radians.of(Math.PI));
+                        targetAngle = AngleUtil.invert(targetAngle);
                 }
 
                 return targetAngle;

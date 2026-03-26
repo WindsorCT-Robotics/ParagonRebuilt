@@ -9,4 +9,8 @@ public class AngleUtil {
     public static Angle wrap(Angle angle) {
         return Radians.of(MathUtil.angleModulus(angle.in(Radians)));
     }
+
+    public static Angle invert(Angle angle) {
+        return wrap(angle.plus(Radians.of(Math.PI)));
+    }
 }

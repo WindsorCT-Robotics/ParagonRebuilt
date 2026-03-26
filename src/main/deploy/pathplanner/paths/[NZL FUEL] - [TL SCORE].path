@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.785579545454546,
-        "y": 7.539
+        "x": 7.674685430463576,
+        "y": 6.474337748344372
       },
       "isLocked": false,
       "linkedName": "[NZL FUEL]"
@@ -30,7 +30,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5,
+      "waypointRelativePos": 0.8899713467048779,
       "rotationDegrees": 180.0
     }
   ],

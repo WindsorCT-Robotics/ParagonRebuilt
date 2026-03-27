@@ -85,7 +85,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[TR SCORE] - [NZR FUEL]"
+                        "pathName": "[TR SCORE] - [NZR MIDDLE FUEL]"
                       }
                     },
                     {
@@ -109,7 +109,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "[NZR FUEL] - [TR SCORE]"
+            "pathName": "[NZR MIDDLE FUEL] - [TR SCORE]"
           }
         },
         {

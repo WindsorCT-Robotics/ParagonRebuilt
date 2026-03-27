@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.286,
+        "y": 3.529965909090909
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.286,
+        "y": 0.529965909090909
+      },
+      "isLocked": false,
+      "linkedName": "[NZR MIDDLE FUEL]"
+    },
+    {
+      "anchor": {
+        "x": 3.941136363636363,
+        "y": 0.6955909090909096
+      },
+      "prevControl": {
+        "x": 6.941136363636363,
+        "y": 0.6955909090909093
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "[TR SCORE]"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8131805157593168,
+      "rotationDegrees": 0.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.7446949602121985,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 1.75,
+        "maxAcceleration": 4.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -14.931417178137554
+  },
+  "reversed": false,
+  "folder": "Right Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}

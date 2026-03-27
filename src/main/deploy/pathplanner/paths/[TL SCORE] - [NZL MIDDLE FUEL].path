@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.059238410596026,
+        "y": 7.418129139072849
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.997750650667337,
+        "y": 7.418129139072849
+      },
+      "isLocked": false,
+      "linkedName": "[TL SCORE]"
+    },
+    {
+      "anchor": {
+        "x": 8.286,
+        "y": 4.539
+      },
+      "prevControl": {
+        "x": 8.286,
+        "y": 7.539
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "[NZL MIDDLE FUEL]"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.6939313984168862,
+      "rotationDegrees": -90.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.7245949926362292,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 1.75,
+        "maxAcceleration": 4.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -90.0
+  },
+  "reversed": false,
+  "folder": "Left Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -173.884
+  },
+  "useDefaultConstraints": true
+}

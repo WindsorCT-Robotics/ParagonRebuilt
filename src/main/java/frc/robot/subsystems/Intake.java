@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
@@ -20,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.hardware.CanId;
+import frc.robot.hardware.IntakeMotorState;
 import frc.robot.hardware.motors.IntakeRollerMotor;
 import frc.robot.interfaces.ISystemDynamics;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -29,8 +31,9 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     private final IntakeRollerMotor motor;
     private final SysIdRoutine routine;
 
-    private AngularVelocity intakeVelocity = RotationsPerSecond.of(80);
-    private AngularVelocity shuttleVelocity = RotationsPerSecond.of(-80);
+    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(400);
+    private AngularVelocity intakeVelocity = RPM.of(6000);
+    private AngularVelocity shuttleVelocity = RPM.of(-4800);
 
     public Intake(String name, CanId motorCanId) {
         super("Subsystems/" + name);
@@ -54,6 +57,23 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
         initSmartDashboard();
     }
 
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty("Intake Target Velocity",
+                () -> getIntakeTargetVelocity().in(RotationsPerSecond),
+                this::setIntakeTargetVelocity);
+
+        builder.addDoubleProperty("Shuttle Target Velocity",
+                () -> getShuttleTargetVelocity().in(RotationsPerSecond),
+                this::setShuttleTargetVelocity);
+    }
+
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getSubsystem(), this);
+        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
+    }
+
     public Command intakeFuel() {
         return runEnd(() -> motor.setPointVelocity(getIntakeTargetVelocity()), this::stopIntake)
                 .withName(getSubsystem() + "/intakeFuel");
@@ -65,13 +85,15 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
     }
 
     public Command stopIntake() {
-        return runOnce(() -> motor.setPointVelocity(RotationsPerSecond.zero()))
+        return runOnce(() -> {
+            motor.setPointVelocity(RotationsPerSecond.zero());
+            motor.setState(IntakeMotorState.IDLE);
+        })
                 .withName(getSubsystem() + "/stopIntake");
     }
 
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getSubsystem(), this);
-        SmartDashboard.putData(getSubsystem() + "/" + motor.getSmartDashboardName(), motor);
+    public Command agitateFuel() {
+        return runEnd(() -> motor.setPointVelocity(AGITATION_VELOCITY), this::stopIntake);
     }
 
     private AngularVelocity getIntakeTargetVelocity() {
@@ -88,15 +110,6 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
 
     private void setShuttleTargetVelocity(double RPS) {
         shuttleVelocity = RotationsPerSecond.of(-RPS);
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty("Intake Target Velocity", () -> getIntakeTargetVelocity().in(RotationsPerSecond),
-                this::setIntakeTargetVelocity);
-        builder.addDoubleProperty("Shuttle Target Velocity", () -> getShuttleTargetVelocity().in(RotationsPerSecond),
-                this::setShuttleTargetVelocity);
     }
 
     // region SysId

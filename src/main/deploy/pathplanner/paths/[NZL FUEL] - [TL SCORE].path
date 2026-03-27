@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.786,
+        "y": 4.539
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.786,
+        "y": 7.539
+      },
+      "isLocked": false,
+      "linkedName": "[NZL FUEL]"
+    },
+    {
+      "anchor": {
+        "x": 4.059238410596026,
+        "y": 7.418129139072849
+      },
+      "prevControl": {
+        "x": 7.059238410596027,
+        "y": 7.418129139072849
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "[TL SCORE]"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7796833773087073,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.7327586206896559,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 1.75,
+        "maxAcceleration": 4.0,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -173.884
+  },
+  "reversed": false,
+  "folder": "Left Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -90.0
+  },
+  "useDefaultConstraints": true
+}

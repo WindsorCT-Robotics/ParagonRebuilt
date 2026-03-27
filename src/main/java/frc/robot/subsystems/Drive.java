@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
-import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -38,7 +37,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -46,6 +44,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -65,26 +68,86 @@ import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.LimelightHelpers.LimelightTarget_Fiducial;
+import frc.robot.generated.LimelightHelpers.PoseEstimate;
+import frc.robot.utils.AngleUtil;
 
 public class Drive extends GeneratedDrive implements Sendable {
+        // region
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
-        private static final Distance LAUNCHER_TANGENT_OFFSET = Inches.of(11.3 * Math.cos(Degrees.of(45).in(Radians)));
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0.5);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
-        private static final Angle ALLIANCE_BLUE_SIDE = Degrees.of(0.0);
-        private static final Angle ALLIANCE_RED_SIDE = Degrees.of(180.0);
+        private static final Distance LAUNCHER_DISTANCE_FROM_ROBOT = Inches.of(11.3);
+        private static final Distance LAUNCHER_TANGENT_OFFSET = LAUNCHER_DISTANCE_FROM_ROBOT
+                        .times(Math.cos(Degrees.of(45).in(Radians)));
+        private static final Angle LAUNCHER_ANGLE_OFFSET = Degrees.of(90);
+
+        private static final AprilTagFieldLayout layout = AprilTagFieldLayout
+                        .loadField(AprilTagFields.k2026RebuiltAndymark);
+        private static final Distance HALF_FIELD_Y = Meters.of(layout.getFieldWidth()).div(2);
+        private final Pose3d blueHubYCenter = layout.getTagPose(26).get();
+        private final Pose3d blueHubXCenter = layout.getTagPose(21).get();
+        private final Pose3d redHubYCenter = layout.getTagPose(10).get();
+        private final Pose3d redHubXCenter = layout.getTagPose(5).get();
+        private final Translation2d blueHub = new Translation2d(blueHubXCenter.getMeasureX(),
+                        blueHubYCenter.getMeasureY());
+        private final Translation2d redHub = new Translation2d(redHubXCenter.getMeasureX(),
+                        redHubYCenter.getMeasureY());
+
+        private final Pose3d redOffsetOutpost = layout.getTagPose(14).get();
+        private final Pose3d blueOffsetOutpost = layout.getTagPose(30).get();
+
+        private final Translation2d blueSnowblowLeft = new Translation2d(blueOffsetOutpost.getMeasureX(),
+                        redOffsetOutpost.getMeasureY()).minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d blueSnowblowRight = blueOffsetOutpost.toPose2d().getTranslation()
+                        .plus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d redSnowblowLeft = redOffsetOutpost.toPose2d().getTranslation()
+                        .minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d redSnowblowRight = new Translation2d(redOffsetOutpost.getMeasureX(),
+                        blueOffsetOutpost.getMeasureY()).plus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
+
+        private final NetworkTable driveTable = NT_INSTANCE.getTable("SmartDashboard/Subsystems/Drive");
+        private final StructPublisher<Pose2d> robotPosition = driveTable
+                        .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
+
+        private final StructPublisher<Pose2d> validvisionPosition = driveTable
+                        .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
+                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructArrayPublisher<Pose2d> perceptedTags = driveTable
+                        .getStructArrayTopic("Percepted Tags Position 2D", Pose2d.struct).publish();
+
+        private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
+                        .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+
+        private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
+                        .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
+
         private final String limelightName;
         private final RectanglePoseArea field;
-
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
-        private final Trigger onAllianceSide;
-        private final Trigger isLauncherAlignedToHub;
+
+        private final Supplier<PoseEstimate> poseEstimate;
+        public final Trigger onAllianceSide;
+        public final Trigger launcherAlignedToHub;
+        public final Trigger launcherAlignedToSnowblow;
+        public final Trigger isVisionEstimateInField;
+        public final Trigger isVisionEstimateHasTags;
+        public final Trigger isVisionMeasurementValid;
+        // endregion
 
         public Drive(
                         String name,
@@ -95,7 +158,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
-                // TODO: Properly set GUI Settings in PathPlanner
                 robotConfiguration = RobotConfig.fromGUISettings();
 
                 AutoBuilder.configure(
@@ -109,12 +171,15 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 robotConfiguration,
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
+
                 this.limelightName = limelightName;
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                this.field = new RectanglePoseArea(Translation2d.kZero,
-                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
-                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
 
+                this.field = new RectanglePoseArea(
+                                Translation2d.kZero,
+                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
+
+                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
                 LimelightHelpers.setCameraPose_RobotSpace(
                                 limelightName,
                                 Inches.of(-8).in(Meters),
@@ -131,6 +196,48 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 0.0,
                                 0.0);
 
+                poseEstimate = () -> LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+
+                isVisionEstimateInField = new Trigger(() -> field.isPoseWithinArea(poseEstimate.get().pose));
+                isVisionEstimateHasTags = new Trigger(() -> poseEstimate.get().tagCount > 0);
+                isVisionMeasurementValid = isVisionEstimateHasTags.and(isVisionEstimateInField);
+
+                onAllianceSide = new Trigger(() -> {
+                        Optional<Alliance> alliance = DriverStation.getAlliance();
+                        Pose2d robotPosition = getState().Pose;
+
+                        if (alliance.isEmpty())
+                                return false;
+
+                        Distance robotXMeasure = robotPosition.getMeasureX();
+                        Distance hubXMeasure = getHubTarget(alliance.get()).getMeasureX();
+                        if (alliance.get() == Alliance.Blue)
+                                return robotXMeasure.lte(hubXMeasure);
+
+                        if (alliance.get() == Alliance.Red)
+                                return robotXMeasure.gte(hubXMeasure);
+
+                        return false;
+                });
+
+                launcherAlignedToHub = new Trigger(() -> {
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
+                        if (targetAngle.isEmpty()) {
+                                return false;
+                        }
+
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
+                });
+
+                launcherAlignedToSnowblow = new Trigger(() -> {
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
+                        if (targetAngle.isEmpty()) {
+                                return false;
+                        }
+
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
+                });
+
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
                                 FACING_ANGLE_PID.kP,
@@ -138,59 +245,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 FACING_ANGLE_PID.kD);
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
-                onAllianceSide = new Trigger(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-                        Pose2d robotPosition = getState().Pose;
-
-                        return maybeAlliance.map(alliance -> {
-                                Distance hubPositionFromBlueAlliance = getHubPosition(alliance).getMeasureX();
-
-                                if (alliance == Alliance.Blue) {
-                                        if (robotPosition.getMeasureX().lt(hubPositionFromBlueAlliance)) {
-                                                return true;
-                                        }
-                                        return false;
-                                }
-
-                                if (alliance == Alliance.Red) {
-                                        if (robotPosition.getMeasureX().gt(hubPositionFromBlueAlliance)) {
-                                                return true;
-                                        }
-                                        return false;
-                                }
-                                return false;
-                        }).orElse(false);
-                });
-
-                isLauncherAlignedToHub = new Trigger(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-                        Optional<Angle> targetAngle = getLaunchAngleToHub();
-                        Angle currentLaunch = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-
-                        if (targetAngle.isEmpty()) {
-                                return false;
-                        }
-
-                        Angle validTargetAngle = targetAngle.get();
-                        final Angle offset = maybeAlliance.map(alliance -> {
-                                if (alliance == Alliance.Red) {
-                                        return Radians.of(MathUtil.angleModulus(
-                                                        validTargetAngle.plus(Radians.of(Math.PI)).in(Radians)));
-                                }
-                                return validTargetAngle;
-                        }).orElse(validTargetAngle);
-
-                        return currentLaunch.isNear(offset, Degrees.of(15));
-                });
+                resetGyro();
                 initSmartDashboard();
-        }
-
-        public Trigger onAllianceSide() {
-                return onAllianceSide;
-        }
-
-        public Trigger isLauncherAlignedToHub() {
-                return isLauncherAlignedToHub;
         }
 
         public enum RelativeReference {
@@ -198,25 +254,47 @@ public class Drive extends GeneratedDrive implements Sendable {
                 FIELD_CENTRIC
         }
 
-        private Angle getAngle() {
-                return getPigeon2().getYaw().getValue();
-        }
-
         @Override
         public void periodic() {
                 super.periodic();
                 updateLimelightOrientationToRobot();
                 addVisionMeasurements();
-                SmartDashboard.putBoolean("On Alliance Side", onAllianceSide.getAsBoolean());
-                Logger.recordOutput("Drive/Gyro", getAngle());
+
+                SwerveDriveState robotState = getState();
+                robotPosition.set(robotState.Pose);
+                currentModulesStates.set(robotState.ModuleStates);
+                targetModuleStates.set(robotState.ModuleTargets);
+        }
+
+        // region Senables
+        @Override
+        public void initSendable(SendableBuilder builder) {
+                builder.setSmartDashboardType("Subsystem");
+
+                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
+                builder.addStringProperty(
+                                ".default",
+                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
+                builder.addStringProperty(
+                                ".command",
+                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
+                                null);
+                builder.addBooleanProperty("Launcher Aligned To Hub", launcherAlignedToHub, null);
+                builder.addBooleanProperty("Launcher Aligned To Snowblow", launcherAlignedToSnowblow, null);
+                builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
+                builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
+                builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
+                builder.addDoubleProperty("Distance To Hub (Meters)",
+                                () -> getDistanceToHub().orElse(Meters.zero()).in(Meters), null);
         }
 
         private void initSmartDashboard() {
-                SmartDashboard.putData(getName(), this);
-                SmartDashboard.putData(getName() + "/" + getPigeon2().getClass().getSimpleName(),
+                SmartDashboard.putData("Subsystems/" + getName() + "/" + getPigeon2().getClass().getSimpleName(),
                                 getPigeon2());
                 // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
-                SmartDashboard.putData(getName() + "/SwerveDrive", new Sendable() {
+                SmartDashboard.putData("Subsystems/" + getName() + "/SwerveDrive", new Sendable() {
                         @Override
                         public void initSendable(SendableBuilder builder) {
                                 builder.setSmartDashboardType("SwerveDrive");
@@ -249,64 +327,25 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 null);
                         }
                 });
+        }
+        // endregion
 
-                SmartDashboard.putData("Facing Angle PID", new Sendable() {
-                        @Override
-                        public void initSendable(SendableBuilder builder) {
-                                builder.setSmartDashboardType("PIDController");
-                                builder.addDoubleProperty("p", () -> getP(), (input) -> setP(input));
-                                builder.addDoubleProperty("i", () -> getI(), (input) -> setI(input));
-                                builder.addDoubleProperty("d", () -> getD(), (input) -> setD(input));
-                        }
-                });
+        // region Getters
+        private Angle getAngle() {
+                Angle rawGyroAngle = getPigeon2().getYaw().getValue();
+                return AngleUtil.wrap(rawGyroAngle);
         }
 
-        private double getP() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getP();
+        public SwerveModuleState[] getSwerveModuleStates() {
+                return getState().ModuleStates;
         }
 
-        private double getI() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getI();
+        public SwerveModuleState[] getSwerveModuleTargetStates() {
+                return getState().ModuleTargets;
         }
+        // endregion
 
-        private double getD() {
-                return fieldCentricFacingAngleSwerveRequest.HeadingController.getD();
-        }
-
-        private void setP(double p) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(p,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setI(double i) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(), i,
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getD());
-        }
-
-        private void setD(double d) {
-                fieldCentricFacingAngleSwerveRequest.withHeadingPID(
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getP(),
-                                fieldCentricFacingAngleSwerveRequest.HeadingController.getI(), d);
-        }
-
-        @Override
-        public void initSendable(SendableBuilder builder) {
-                builder.setSmartDashboardType("Subsystem");
-
-                builder.addBooleanProperty(".hasDefault", () -> getDefaultCommand() != null, null);
-                builder.addStringProperty(
-                                ".default",
-                                () -> getDefaultCommand() != null ? getDefaultCommand().getName() : "none",
-                                null);
-                builder.addBooleanProperty(".hasCommand", () -> getCurrentCommand() != null, null);
-                builder.addStringProperty(
-                                ".command",
-                                () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
-                                null);
-        }
-
+        // region General Moving
         private void robotCentricChassisSpeedsMove(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
                 setControl(pathPlannerSwerveRequest
                                 .withSpeeds(speeds)
@@ -381,106 +420,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 reference).withName("Subsystems/" + getName() + "/moveWithPercentages");
         }
 
-        /**
-         * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
-         * CENTRIC.
-         */
-        private void moveWithLockedAngle(
-                        LinearVelocity x,
-                        LinearVelocity y,
-                        Angle targetAngle) {
-                Angle robotHeading = Radians.of(MathUtil.angleModulus(getAngle().in(Radians)));
-                setControl(
-                                fieldCentricFacingAngleSwerveRequest
-                                                .withVelocityX(y)
-                                                .withVelocityY(x)
-                                                .withTargetDirection(
-                                                                new Rotation2d(targetAngle.in(Radians))));
+        // endregion
 
-                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
-                SmartDashboard.putNumber("Robot Heading", robotHeading.in(Degrees));
-        }
-
-        public Command angleToOutpost(
-                        Supplier<Dimensionless> x,
-                        Supplier<Dimensionless> y) {
-                return run(() -> {
-                        Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-
-                        maybeAlliance.ifPresent(alliance -> {
-                                Angle targetAngle;
-
-                                if (maybeAlliance.get().equals(Alliance.Blue)) {
-                                        targetAngle = ALLIANCE_BLUE_SIDE;
-                                } else {
-                                        targetAngle = ALLIANCE_RED_SIDE;
-                                }
-
-                                moveWithLockedAngle(
-                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                                targetAngle);
-                        });
-                }).withName("Subsystems/" + getName() + "/angleToOutpost")
-                                .unless(DriverStation.getAlliance()::isEmpty);
-        }
-
-        public Translation2d getHubPosition(Alliance alliance) {
-                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-                Pose3d blueHubYCenter = layout.getTagPose(26).get();
-                Pose3d blueHubXCenter = layout.getTagPose(21).get();
-                Pose3d redHubYCenter = layout.getTagPose(10).get();
-                Pose3d redHubXCenter = layout.getTagPose(5).get();
-
-                Distance xHub;
-                Distance yHub;
-                if (alliance.equals(Alliance.Blue)) {
-                        xHub = blueHubXCenter.getMeasureX();
-                        yHub = blueHubYCenter.getMeasureY();
-                } else {
-                        xHub = redHubXCenter.getMeasureX();
-                        yHub = redHubYCenter.getMeasureY();
-                }
-
-                SmartDashboard.putNumber("Hub X", xHub.in(Meters));
-                SmartDashboard.putNumber("Hub Y", yHub.in(Meters));
-                return new Translation2d(xHub, yHub);
-        }
-
-        private Optional<Angle> getLaunchAngleToHub() {
-                Optional<Alliance> maybeAlliance = DriverStation.getAlliance();
-
-                return maybeAlliance.map(alliance -> {
-                        Translation2d robotPosition = getState().Pose.getTranslation();
-                        Translation2d hubPosition = getHubPosition(alliance);
-
-                        Angle launcherOffset = Radians.of(Math.asin(
-                                        LAUNCHER_TANGENT_OFFSET.div(Meters.of(
-                                                        robotPosition.getDistance(hubPosition)))
-                                                        .in(Value)));
-
-                        Translation2d targetTranslation = robotPosition.minus(hubPosition);
-
-                        Angle targetAngle;
-
-                        if (alliance == Alliance.Blue) {
-                                targetAngle = Radians
-                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                                .plus(Degrees.of(90)).minus(launcherOffset);
-                        } else {
-                                targetAngle = Radians
-                                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
-                                                .plus(Degrees.of(90)).minus(launcherOffset).plus(Radians.of(Math.PI));
-                        }
-
-                        return Radians.of(MathUtil.angleModulus(targetAngle.in(Radians)));
-                });
-        }
-
+        // region Angle Targeting
         public Command angleToHub(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
-                return runEnd(() -> {
+                return run(() -> {
                         Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
@@ -494,9 +440,176 @@ public class Drive extends GeneratedDrive implements Sendable {
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                         targetAngle.get());
-                }, () -> fieldCentricSwerveRequest.withDriveRequestType(DriveRequestType.OpenLoopVoltage));
+                });
         }
 
+        public Command angleToSnowblow(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y) {
+                return run(() -> {
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
+                        if (targetAngle.isEmpty()) {
+                                moveWithPercentages(
+                                                x,
+                                                y,
+                                                () -> Percent.of(0),
+                                                () -> RelativeReference.FIELD_CENTRIC);
+                                return;
+                        }
+                        moveWithLockedAngle(
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                        targetAngle.get());
+                });
+        }
+
+        public Command angleToRedAlliance(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y) {
+                return run(() -> {
+                        Angle targetAngle = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue)
+                                        ? Radians.zero()
+                                        : Radians.of(Math.PI);
+                        moveWithLockedAngle(
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                        targetAngle);
+                });
+        }
+
+        /**
+         * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
+         * CENTRIC.
+         */
+        private void moveWithLockedAngle(
+                        LinearVelocity x,
+                        LinearVelocity y,
+                        Angle targetAngle) {
+                setControl(
+                                fieldCentricFacingAngleSwerveRequest
+                                                .withVelocityX(y)
+                                                .withVelocityY(x)
+                                                .withTargetDirection(
+                                                                new Rotation2d(targetAngle)));
+
+                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
+        }
+
+        private Translation2d getHubTarget(Alliance alliance) {
+                if (alliance.equals(Alliance.Blue)) {
+                        return blueHub;
+                } else {
+                        return redHub;
+                }
+        }
+
+        private Translation2d getSnowblowTarget(Alliance alliance) {
+                Distance robotPositionY = getState().Pose.getMeasureY();
+
+                if (alliance == Alliance.Blue) {
+                        if (robotPositionY.gt(HALF_FIELD_Y)) {
+                                return blueSnowblowLeft;
+                        } else {
+                                return blueSnowblowRight;
+                        }
+                } else {
+                        if (robotPositionY.gt(HALF_FIELD_Y)) {
+                                return redSnowblowLeft;
+                        } else {
+                                return redSnowblowRight;
+                        }
+                }
+        }
+
+        private Optional<Angle> getLaunchAngleToSnowblow() {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
+
+                Angle angle = getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
+        }
+
+        private Optional<Angle> getLaunchAngleToHub() {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
+
+                Angle angle = getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
+        }
+
+        // .
+        private Angle getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
+                Translation2d robotPosition = getState().Pose.getTranslation();
+
+                Angle launcherOffset = Radians.of(Math.asin(
+                                LAUNCHER_TANGENT_OFFSET.div(Meters.of(robotPosition.getDistance(target)))
+                                                .in(Value)))
+                                .minus(LAUNCHER_ANGLE_OFFSET);
+
+                Translation2d targetTranslation = robotPosition.minus(target);
+
+                Angle targetAngle = Radians
+                                .of(Math.atan2(targetTranslation.getY(), targetTranslation.getX()))
+                                .minus(launcherOffset);
+
+                if (alliance == Alliance.Red) {
+                        targetAngle = AngleUtil.invert(targetAngle);
+                }
+
+                return targetAngle;
+        }
+
+        private boolean isNearTargetAngle(Angle target) {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return false;
+                }
+
+                Angle targetAngle = target;
+
+                if (alliance.get() == Alliance.Red) {
+                        targetAngle = AngleUtil.wrap(targetAngle.plus(Radians.of(Math.PI)));
+                }
+
+                Angle currentLaunch = getAngle();
+                return currentLaunch.isNear(targetAngle, Degrees.of(5));
+        }
+        // endregion
+
+        // region Distance Targets
+        public Distance getDistanceToTarget(Translation2d target) {
+                return Meters.of(getState().Pose.getTranslation().getDistance(target));
+        }
+
+        public Optional<Distance> getDistanceToHub() {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
+
+                return Optional.of(getDistanceToTarget(getHubTarget(alliance.get())));
+        }
+
+        public Optional<Distance> getDistanceToSnowblow() {
+                Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                if (alliance.isEmpty()) {
+                        return Optional.empty();
+                }
+
+                return Optional.of(getDistanceToTarget(getSnowblowTarget(alliance.get())));
+        }
+        // endregion
+
+        // region PathPlanner
         private PathPlannerPath createPathToPosition(
                         Pose3d endPosition3d,
                         PathConstraints constraints,
@@ -553,6 +666,48 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .withName("Subsystems/" + getName() + "/pathToPosition");
         }
 
+        // endregion
+
+        // region Vision
+        private void addVisionMeasurements() {
+                double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
+                                .getDistance(new Translation3d());
+                double confidence = (targetDistance - 1) / 6;
+                LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
+
+                perceptedTags.set(getPercivedTags());
+
+                if (!isVisionMeasurementValid.getAsBoolean()) {
+                        invalidVisionPosition.set(positionEstimate.pose);
+                        return;
+                }
+
+                addVisionMeasurement(
+                                positionEstimate.pose,
+                                positionEstimate.timestampSeconds,
+                                VecBuilder.fill(confidence, confidence, 0.1));
+                validvisionPosition.set(positionEstimate.pose);
+        }
+
+        private void updateLimelightOrientationToRobot() {
+                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
+                                0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        private Pose2d[] getPercivedTags() {
+                LimelightTarget_Fiducial[] fiducials = LimelightHelpers
+                                .getLatestResults(limelightName).targets_Fiducials;
+
+                Pose2d[] tags = new Pose2d[fiducials.length];
+
+                for (int i = 0; i < tags.length; i++) {
+                        tags[i] = fiducials[i].getTargetPose_RobotSpace2D();
+                }
+
+                return tags;
+        }
+        // endregion
+
         public void resetGyro() {
                 getPigeon2().setYaw(Degrees.of(0.0));
         }
@@ -560,35 +715,5 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Command resetGyroCommand() {
                 return Commands.runOnce(() -> resetGyro())
                                 .withName("Subsystems/" + getName() + "/resetGyro");
-        }
-
-        private LimelightHelpers.PoseEstimate getPositionEstimate() {
-                return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
-        }
-
-        private boolean isVisionMeasurementValid(LimelightHelpers.PoseEstimate poseEstimate) {
-                return poseEstimate.tagCount > 0
-                                && field.isPoseWithinArea(poseEstimate.pose);
-        }
-
-        private void addVisionMeasurements() {
-                double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
-                                .getDistance(new Translation3d());
-                double confidence = (targetDistance - 1) / 6;
-                LimelightHelpers.PoseEstimate positionEstimate = getPositionEstimate();
-                SmartDashboard.putBoolean("Is not in AREA", !field.isPoseWithinArea(positionEstimate.pose));
-                SmartDashboard.putBoolean("No Tags", getPositionEstimate().tagCount <= 0);
-
-                if (!isVisionMeasurementValid(positionEstimate))
-                        return;
-                
-                Logger.recordOutput("Vision/Pose2D", positionEstimate.pose);
-                addVisionMeasurement(positionEstimate.pose, positionEstimate.timestampSeconds,
-                                VecBuilder.fill(confidence, confidence, 0.1));
-        }
-
-        private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
-                                0.0, 0.0, 0.0, 0.0, 0.0);
         }
 }

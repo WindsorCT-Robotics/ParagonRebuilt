@@ -4,26 +4,24 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
+
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
-
   private final RobotContainer m_robotContainer;
 
   public Robot() {
+    SignalLogger.enableAutoLogging(false);
     m_robotContainer = new RobotContainer();
-    m_robotContainer.resetGyro();
-    DataLogManager.start();    
+    DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
   }
-
-  // @Override
-  // public void driverStationConnected() {
-    
-  // }
 
   @Override
   public void robotPeriodic() {

@@ -27,11 +27,10 @@ public class BayDoorMotor extends KrakenMotorBase implements IHomingMotor {
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addStringProperty("Bay Motor State", () -> getBayMotorState().toString(), null);
-        builder.addBooleanProperty("Is Moving", this::isMoving, null);
+        builder.addStringProperty("motorBayDoorState", () -> getBayMotorState().toString(), null);
     }
 
-    public BayMotorState getBayMotorState() {
+    private BayMotorState getBayMotorState() {
         return motorBayDoorState;
     }
 

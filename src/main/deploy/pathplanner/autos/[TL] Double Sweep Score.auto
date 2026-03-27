@@ -19,12 +19,6 @@
                       }
                     },
                     {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.2
-                      }
-                    },
-                    {
                       "type": "named",
                       "data": {
                         "name": "baydooropen"
@@ -40,7 +34,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[TR] - [NZ] - [FUEL]"
+                        "pathName": "[TL] - [NZL FUEL]"
                       }
                     },
                     {
@@ -58,7 +52,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "[NZR FUEL] - [TR SCORE]"
+            "pathName": "[NZL FUEL] - [TL SCORE]"
           }
         },
         {
@@ -91,7 +85,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[TR SCORE] - [NZR FUEL]"
+                        "pathName": "[TL SCORE] - [NZL MIDDLE FUEL]"
                       }
                     },
                     {
@@ -115,57 +109,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "[NZR FUEL] - [TR SCORE]"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "score"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "[TR SCORE] - [NZR FUEL]"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "baydooropen"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intakefuel"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "[NZR FUEL] - [TR SCORE]"
+            "pathName": "[NZL MIDDLE FUEL] - [TL SCORE]"
           }
         },
         {

@@ -3,44 +3,55 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.941136363636363,
-        "y": 0.6955909090909096
+        "x": 4.059238410596026,
+        "y": 7.418129139072849
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.925915156003345,
-        "y": 0.346967938100277
+        "x": 3.059238410596026,
+        "y": 7.418129139072849
       },
       "isLocked": false,
-      "linkedName": "[TR SCORE]"
+      "linkedName": "[TL SCORE]"
     },
     {
       "anchor": {
-        "x": 7.785579545454546,
-        "y": 3.529965909090909
+        "x": 2.3546192052980133,
+        "y": 6.690564569536424
       },
       "prevControl": {
-        "x": 7.785579545454546,
-        "y": 0.529965909090909
+        "x": 2.70692880794702,
+        "y": 7.054346854304637
+      },
+      "nextControl": {
+        "x": 2.0023096026490066,
+        "y": 6.326782284768212
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.65,
+        "y": 5.963
+      },
+      "prevControl": {
+        "x": 1.65,
+        "y": 5.963
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[NZR FUEL]"
+      "linkedName": "[DEPOT]"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.8131805157593168,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7446949602121985,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 1.7705570291777093,
+      "maxWaypointRelativePos": 2.0,
       "constraints": {
-        "maxVelocity": 1.75,
+        "maxVelocity": 0.75,
         "maxAcceleration": 4.0,
         "maxAngularVelocity": 360.0,
         "maxAngularAcceleration": 720.0,
@@ -61,13 +72,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Right Paths",
+  "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -14.931417178137554
+    "rotation": -173.884
   },
   "useDefaultConstraints": true
 }

@@ -37,7 +37,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -69,7 +68,9 @@ import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.LimelightHelpers.LimelightTarget_Fiducial;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
+import frc.robot.utils.AngleUtil;
 
 public class Drive extends GeneratedDrive implements Sendable {
         // region
@@ -86,11 +87,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final AprilTagFieldLayout layout = AprilTagFieldLayout
                         .loadField(AprilTagFields.k2026RebuiltAndymark);
         private static final Distance HALF_FIELD_Y = Meters.of(layout.getFieldWidth()).div(2);
-        private static final Distance UPPER_NET_Y = Inches.of(188.045);
-        private static final Distance BOTTOM_NET_Y = Inches.of(129.635);
-
-        private final Distance blueHubBackSideX = Inches.of(216.13);
-        private final Distance redHubBackSideX = Inches.of(435.09);
         private final Pose3d blueHubYCenter = layout.getTagPose(26).get();
         private final Pose3d blueHubXCenter = layout.getTagPose(21).get();
         private final Pose3d redHubYCenter = layout.getTagPose(10).get();
@@ -102,24 +98,37 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private final Pose3d redOffsetOutpost = layout.getTagPose(14).get();
         private final Pose3d blueOffsetOutpost = layout.getTagPose(30).get();
+
         private final Translation2d blueSnowblowLeft = new Translation2d(blueOffsetOutpost.getMeasureX(),
-                        redOffsetOutpost.getMeasureY());
-        private final Translation2d blueSnowblowRight = blueOffsetOutpost.toPose2d().getTranslation();
-        private final Translation2d redSnowblowLeft = redOffsetOutpost.toPose2d().getTranslation();
+                        redOffsetOutpost.getMeasureY()).minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d blueSnowblowRight = blueOffsetOutpost.toPose2d().getTranslation()
+                        .plus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d redSnowblowLeft = redOffsetOutpost.toPose2d().getTranslation()
+                        .minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
         private final Translation2d redSnowblowRight = new Translation2d(redOffsetOutpost.getMeasureX(),
-                        blueOffsetOutpost.getMeasureY());
+                        blueOffsetOutpost.getMeasureY()).plus(new Translation2d(Meters.zero(), Meters.of(1)));
 
         private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
 
         private final NetworkTable driveTable = NT_INSTANCE.getTable("SmartDashboard/Subsystems/Drive");
         private final StructPublisher<Pose2d> robotPosition = driveTable
                         .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
-        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
-                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+
         private final StructPublisher<Pose2d> validvisionPosition = driveTable
                         .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
+                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
+
+        private final StructArrayPublisher<Pose2d> perceptedTags = driveTable
+                        .getStructArrayTopic("Percepted Tags Position 2D", Pose2d.struct).publish();
+
         private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
                         .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
+
         private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
                         .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
 
@@ -135,7 +144,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         public final Trigger onAllianceSide;
         public final Trigger launcherAlignedToHub;
         public final Trigger launcherAlignedToSnowblow;
-        public final Trigger launcherObstructedByHub;
         public final Trigger isVisionEstimateInField;
         public final Trigger isVisionEstimateHasTags;
         public final Trigger isVisionMeasurementValid;
@@ -213,25 +221,22 @@ public class Drive extends GeneratedDrive implements Sendable {
                 });
 
                 launcherAlignedToHub = new Trigger(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        return isNearTargetAngle(targetAngle.get());
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
                 });
 
                 launcherAlignedToSnowblow = new Trigger(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToSnowblow();
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
                         if (targetAngle.isEmpty()) {
                                 return false;
                         }
 
-                        return isNearTargetAngle(targetAngle.get());
+                        return isNearTargetAngle(AngleUtil.wrap(targetAngle.get()));
                 });
-
-                // TODO: Should determine if launcher is intersecting the hub.
-                launcherObstructedByHub = new Trigger(this::isLauncherObstructedByHub);
 
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
@@ -278,7 +283,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 null);
                 builder.addBooleanProperty("Launcher Aligned To Hub", launcherAlignedToHub, null);
                 builder.addBooleanProperty("Launcher Aligned To Snowblow", launcherAlignedToSnowblow, null);
-                builder.addBooleanProperty("Launcher Obstructed By Hub", launcherObstructedByHub, null);
                 builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
                 builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
                 builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
@@ -329,7 +333,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // region Getters
         private Angle getAngle() {
                 Angle rawGyroAngle = getPigeon2().getYaw().getValue();
-                return Radians.of(MathUtil.angleModulus(rawGyroAngle.in(Radians)));
+                return AngleUtil.wrap(rawGyroAngle);
         }
 
         public SwerveModuleState[] getSwerveModuleStates() {
@@ -423,7 +427,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToHub();
+                        Optional<Angle> targetAngle = getLaunchAngleToHub();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
                                                 x,
@@ -435,7 +439,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle.get().getMeasure());
+                                        targetAngle.get());
                 });
         }
 
@@ -443,7 +447,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Optional<Rotation2d> targetAngle = getLaunchAngleToSnowblow();
+                        Optional<Angle> targetAngle = getLaunchAngleToSnowblow();
                         if (targetAngle.isEmpty()) {
                                 moveWithPercentages(
                                                 x,
@@ -455,7 +459,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle.get().getMeasure());
+                                        targetAngle.get());
                 });
         }
 
@@ -486,7 +490,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
                                                 .withTargetDirection(
-                                                                new Rotation2d(targetAngle.in(Radians))));
+                                                                new Rotation2d(targetAngle)));
 
                 SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
         }
@@ -504,9 +508,9 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 if (alliance == Alliance.Blue) {
                         if (robotPositionY.gt(HALF_FIELD_Y)) {
-                                return blueSnowblowRight;
-                        } else {
                                 return blueSnowblowLeft;
+                        } else {
+                                return blueSnowblowRight;
                         }
                 } else {
                         if (robotPositionY.gt(HALF_FIELD_Y)) {
@@ -517,27 +521,30 @@ public class Drive extends GeneratedDrive implements Sendable {
                 }
         }
 
-        private Optional<Rotation2d> getLaunchAngleToSnowblow() {
+        private Optional<Angle> getLaunchAngleToSnowblow() {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
                         return Optional.empty();
                 }
 
-                return Optional.of(getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get()));
+                Angle angle = getLaunchAngleToPosition(getSnowblowTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
         }
 
-        private Optional<Rotation2d> getLaunchAngleToHub() {
+        private Optional<Angle> getLaunchAngleToHub() {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
                         return Optional.empty();
                 }
 
-                return Optional.of(getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get()));
+                Angle angle = getLaunchAngleToPosition(getHubTarget(alliance.get()), alliance.get());
+                return Optional.of(angle);
         }
 
-        private Rotation2d getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
+        // .
+        private Angle getLaunchAngleToPosition(Translation2d target, Alliance alliance) {
                 Translation2d robotPosition = getState().Pose.getTranslation();
 
                 Angle launcherOffset = Radians.of(Math.asin(
@@ -552,65 +559,27 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 .minus(launcherOffset);
 
                 if (alliance == Alliance.Red) {
-                        targetAngle = targetAngle.plus(Radians.of(Math.PI));
+                        targetAngle = AngleUtil.invert(targetAngle);
                 }
 
-                return new Rotation2d(targetAngle);
+                return targetAngle;
         }
 
-        private boolean isNearTargetAngle(Rotation2d target) {
+        private boolean isNearTargetAngle(Angle target) {
                 Optional<Alliance> alliance = DriverStation.getAlliance();
 
                 if (alliance.isEmpty()) {
                         return false;
                 }
 
-                Angle currentLaunch = getAngle();
+                Angle targetAngle = target;
 
                 if (alliance.get() == Alliance.Red) {
-                        target = target.plus(new Rotation2d(Radians.of(Math.PI)));
+                        targetAngle = AngleUtil.wrap(targetAngle.plus(Radians.of(Math.PI)));
                 }
 
-                return currentLaunch.isNear(target.getMeasure(), Degrees.of(5));
-        }
-
-        private boolean isLauncherObstructedByHub() {
-                Optional<Alliance> alliance = DriverStation.getAlliance();
-                Optional<Rotation2d> maybeLauncherAngle = getLaunchAngleToSnowblow();
-
-                if (alliance.isEmpty() || maybeLauncherAngle.isEmpty()) {
-                        return true;
-                }
-
-                Rotation2d launcherAngle = maybeLauncherAngle.get().plus(Rotation2d.kCCW_90deg);
-                Translation2d robotPosition = getState().Pose.getTranslation();
-                Distance launcherPositionX = robotPosition.getMeasureX().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.cos(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
-                Distance launcherPositionY = robotPosition.getMeasureY().plus(LAUNCHER_DISTANCE_FROM_ROBOT
-                                .times(Math.sin(launcherAngle.getDegrees() - Degrees.of(135).in(Degrees))));
-                Translation2d launcherPosition = new Translation2d(launcherPositionX, launcherPositionY);
-                Distance toNetX;
-                Distance toNetY;
-
-                if (alliance.get() == Alliance.Blue) {
-                        // Distance to robot to net.
-                        toNetX = launcherPosition.getMeasureX().minus(blueHubBackSideX);
-                        // Launcher intersection then check if that intersection is with in the upper
-                        // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY().minus(
-                                        toNetX.times(Math.tan(launcherAngle.minus(new Rotation2d(Radians.of(Math.PI)))
-                                                        .getDegrees())));
-                } else {
-                        // Distance to robot to net.
-                        toNetX = redHubBackSideX.minus(launcherPosition.getMeasureX());
-                        // Launcher intersection then check if that intersection is with in the upper
-                        // and bottom range of net.
-                        toNetY = launcherPosition.getMeasureY()
-                                        .minus(toNetX.times(Math.tan(launcherAngle.getDegrees())));
-                }
-
-                SmartDashboard.putNumber("Launcher Y Intersection (Meters)", toNetY.in(Meters));
-                return toNetY.gte(BOTTOM_NET_Y) && toNetY.lte(UPPER_NET_Y);
+                Angle currentLaunch = getAngle();
+                return currentLaunch.isNear(targetAngle, Degrees.of(5));
         }
         // endregion
 
@@ -706,6 +675,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                 double confidence = (targetDistance - 1) / 6;
                 LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
 
+                perceptedTags.set(getPercivedTags());
+
                 if (!isVisionMeasurementValid.getAsBoolean()) {
                         invalidVisionPosition.set(positionEstimate.pose);
                         return;
@@ -721,6 +692,19 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void updateLimelightOrientationToRobot() {
                 LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
                                 0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        private Pose2d[] getPercivedTags() {
+                LimelightTarget_Fiducial[] fiducials = LimelightHelpers
+                                .getLatestResults(limelightName).targets_Fiducials;
+
+                Pose2d[] tags = new Pose2d[fiducials.length];
+
+                for (int i = 0; i < tags.length; i++) {
+                        tags[i] = fiducials[i].getTargetPose_RobotSpace2D();
+                }
+
+                return tags;
         }
         // endregion
 

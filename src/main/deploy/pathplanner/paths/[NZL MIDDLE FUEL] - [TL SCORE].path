@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.466784090909091,
-        "y": 0.46884090909090903
+        "x": 8.286,
+        "y": 4.539
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.466784090909091,
-        "y": 0.718840909090909
+        "x": 8.286,
+        "y": 7.539
       },
       "isLocked": false,
-      "linkedName": "[TR]"
+      "linkedName": "[NZL MIDDLE FUEL]"
     },
     {
       "anchor": {
-        "x": 4.466784090909091,
-        "y": 0.46884090909090903
+        "x": 4.059238410596026,
+        "y": 7.418129139072849
       },
       "prevControl": {
-        "x": 4.466784090909091,
-        "y": 0.718840909090909
+        "x": 7.059238410596027,
+        "y": 7.418129139072849
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[TR]"
+      "linkedName": "[TL SCORE]"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8311345646437991,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -173.884
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

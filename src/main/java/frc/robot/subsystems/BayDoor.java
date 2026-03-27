@@ -68,6 +68,8 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0);
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
+        private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(5);
+        private static final Dimensionless CLOSE_PRESSURE_DUTY_CYCLE = Percent.of(-5);
         
         private static final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
                         .withStatorCurrentLimit(Amps.of(25));
@@ -208,6 +210,11 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 rightMotor.setPointPosition(angle);
         }
 
+        private void setDutyCycle(Dimensionless percent) {
+                leftMotor.setDutyCycle(percent);
+                rightMotor.setDutyCycle(percent);
+        }
+
         public Command home() {
                 return run(
                                 () -> {
@@ -231,7 +238,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
                 return run(() -> {
                         leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
                         rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                }).withDeadline(new WaitCommand(Seconds.of(1)))
+                }).withDeadline(new WaitCommand(Seconds.of(0.5)))
                                 .finallyDo(() -> {
                                         leftMotor.resetRelativeEncoder();
                                         rightMotor.resetRelativeEncoder();
@@ -262,7 +269,7 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command open() {
-                return run(() -> setPointPosition(OPEN_ANGLE_SETPOINT))
+                return runEnd(() -> setPointPosition(OPEN_ANGLE_SETPOINT), () -> setDutyCycle(OPEN_PRESSURE_DUTY_CYCLE))
                                 .until(isBayDoorSoftOpen)
                                 .withName("Open");
         }
@@ -274,14 +281,22 @@ public class BayDoor extends SubsystemBase implements ISystemDynamics<BayDoorMot
         }
 
         public Command close() {
-                return run(() -> setPointPosition(CLOSE_ANGLE_SETPOINT))
+                return runEnd(() -> setPointPosition(CLOSE_ANGLE_SETPOINT), () -> setDutyCycle(CLOSE_PRESSURE_DUTY_CYCLE))
                                 .until(isBayDoorClosed.or(isBayDoorSoftClosed))
                                 .withName("Close");
         }
 
-        public Command agitateFuel() {
-                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(0.5)))
-                                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.5)))));
+        private Command agitateFuel() {
+                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(1)))
+                                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.3)))));
+        }
+
+        public Command agitateHighFuel() {
+                return open().andThen(new WaitCommand(Seconds.of(2.5))).andThen(agitateFuel());
+        }
+
+        public Command agitateLowFuel() {
+                return agitateFuel();
         }
 
         // region SysId

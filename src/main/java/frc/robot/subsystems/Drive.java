@@ -98,12 +98,18 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         private final Pose3d redOffsetOutpost = layout.getTagPose(14).get();
         private final Pose3d blueOffsetOutpost = layout.getTagPose(30).get();
+
         private final Translation2d blueSnowblowLeft = new Translation2d(blueOffsetOutpost.getMeasureX(),
-                        redOffsetOutpost.getMeasureY());
-        private final Translation2d blueSnowblowRight = blueOffsetOutpost.toPose2d().getTranslation();
-        private final Translation2d redSnowblowLeft = redOffsetOutpost.toPose2d().getTranslation();
+                        redOffsetOutpost.getMeasureY()).minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d blueSnowblowRight = blueOffsetOutpost.toPose2d().getTranslation()
+                        .plus(new Translation2d(Meters.zero(), Meters.of(1)));
+
+        private final Translation2d redSnowblowLeft = redOffsetOutpost.toPose2d().getTranslation()
+                        .minus(new Translation2d(Meters.zero(), Meters.of(1)));
+
         private final Translation2d redSnowblowRight = new Translation2d(redOffsetOutpost.getMeasureX(),
-                        blueOffsetOutpost.getMeasureY());
+                        blueOffsetOutpost.getMeasureY()).plus(new Translation2d(Meters.zero(), Meters.of(1)));
 
         private static final NetworkTableInstance NT_INSTANCE = NetworkTableInstance.getDefault();
 

@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.786,
+        "x": 8.286,
         "y": 4.539
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.786,
+        "x": 8.286,
         "y": 7.539
       },
       "isLocked": false,
-      "linkedName": "[NZL FUEL]"
+      "linkedName": "[NZL MIDDLE FUEL]"
     },
     {
       "anchor": {
@@ -30,25 +30,11 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.7796833773087073,
+      "waypointRelativePos": 0.8311345646437991,
       "rotationDegrees": 180.0
     }
   ],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7327586206896559,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 1.75,
-        "maxAcceleration": 4.0,
-        "maxAngularVelocity": 360.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {

@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -41,6 +43,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
+                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(80)))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                 .withSlot0(new Slot0Configs()

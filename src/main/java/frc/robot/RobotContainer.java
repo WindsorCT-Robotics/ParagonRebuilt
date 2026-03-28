@@ -103,7 +103,6 @@ public class RobotContainer implements Sendable {
   private final Trigger faceRedAlliance;
 
   private final Trigger manualCloseScoreTrigger;
-  private final Trigger manualTrenchScoreTrigger;
 
   private final Trigger bayDoorHomeTrigger;
   private final Trigger bayDoorOpenTrigger;
@@ -174,7 +173,6 @@ public class RobotContainer implements Sendable {
     autoScoreTrigger = driver.rightBumper();
     autoScoreNoCalculationTrigger = operator.povLeft();
     manualCloseScoreTrigger = operator.b();
-    manualTrenchScoreTrigger = operator.y();
     autoUnjamTrigger = spindexer.autoUnjamTrigger;
     manualUnjamTrigger = operator.a();
     incrementLauncherOffset = operator.rightBumper();
@@ -308,12 +306,6 @@ public class RobotContainer implements Sendable {
         launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
             .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))
             .alongWith(spindexer.indexFuel()).withName("Manual Score Close"));
-
-    // Manual Score Trench
-    manualTrenchScoreTrigger.whileTrue(
-        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_TRENCH_DISTANCE))
-            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_TRENCH_DISTANCE)))
-            .alongWith(spindexer.indexFuel()).withName("Manual Score Trench"));
 
     // Homes baydoor
     bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));

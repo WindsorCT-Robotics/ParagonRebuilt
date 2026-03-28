@@ -5,6 +5,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
@@ -75,6 +76,9 @@ public class RobotContainer implements Sendable {
   private static final CanId LAUNCHER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
   private static final CanId LAUNCHER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
 
+  private static final Distance LAUNCHER_CLOSE_DISTANCE = Meters.of(1.5);
+  private static final Distance LAUNCHER_TRENCH_DISTANCE = Inches.of(158.84).minus(Inches.of(49.84).div(2));
+
   private static final Dimensionless REDUCE_SPEED = Percent.of(50);
   private static final double MOVE_ROBOT_CURVE = 2.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
@@ -97,7 +101,8 @@ public class RobotContainer implements Sendable {
   private final Trigger decrementLauncherOffset;
   private final Trigger faceRedAlliance;
 
-  private final Trigger manualScoreTrigger;
+  private final Trigger manualCloseScoreTrigger;
+  private final Trigger manualTrenchScoreTrigger;
 
   private RelativeReference relativeReference;
 
@@ -162,7 +167,8 @@ public class RobotContainer implements Sendable {
     snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
     autoScoreTrigger = driver.rightBumper();
     autoScoreNoCalculationTrigger = operator.povDown();
-    manualScoreTrigger = operator.b();
+    manualCloseScoreTrigger = operator.b();
+    manualTrenchScoreTrigger = operator.y();
     autoUnjamTrigger = spindexer.autoUnjamTrigger;
     manualUnjamTrigger = operator.a();
     incrementLauncherOffset = operator.rightBumper();
@@ -289,10 +295,16 @@ public class RobotContainer implements Sendable {
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)))
             .withName("Score With Fixed Values"));
 
-    // Manual Score
-    manualScoreTrigger.whileTrue(
-        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(Meters.of(1.5)))
-            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(Meters.of(1.5))))
+    // Manual Score Close
+    manualCloseScoreTrigger.whileTrue(
+        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
+            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))
+            .alongWith(spindexer.indexFuel()));
+
+    // Manual Score Trench
+    manualTrenchScoreTrigger.whileTrue(
+        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_TRENCH_DISTANCE))
+            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_TRENCH_DISTANCE)))
             .alongWith(spindexer.indexFuel()));
 
     // Homes baydoor

@@ -277,8 +277,6 @@ public class RobotContainer implements Sendable {
             .until(driver.x().or(driver.y()))
             .withName("Open Bay Door & Shuttle Fuel"));
 
-    driver.a().and(autoScoreTrigger.negate()).onTrue(bayDoor.open().withName("Open Baydoor"));
-
     driver.y().onTrue(bayDoor.close().withName("Close Baydoor"));
 
     // This command should run automatically when baydoor is no longer targeting the

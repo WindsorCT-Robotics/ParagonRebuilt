@@ -302,13 +302,13 @@ public class RobotContainer implements Sendable {
     manualCloseScoreTrigger.whileTrue(
         launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
             .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))
-            .alongWith(spindexer.indexFuel()));
+            .alongWith(spindexer.indexFuel()).withName("Manual Score Close"));
 
     // Manual Score Trench
     manualTrenchScoreTrigger.whileTrue(
         launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_TRENCH_DISTANCE))
             .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_TRENCH_DISTANCE)))
-            .alongWith(spindexer.indexFuel()));
+            .alongWith(spindexer.indexFuel()).withName("Manual Score Trench"));
 
     // Homes baydoor
     bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));

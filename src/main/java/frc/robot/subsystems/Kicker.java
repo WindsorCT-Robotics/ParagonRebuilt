@@ -43,7 +43,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
-                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(80)))
+                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                 .withSlot0(new Slot0Configs()

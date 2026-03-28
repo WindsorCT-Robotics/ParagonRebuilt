@@ -104,6 +104,8 @@ public class RobotContainer implements Sendable {
   private final Trigger manualCloseScoreTrigger;
   private final Trigger manualTrenchScoreTrigger;
 
+  private final Trigger bayDoorHomeTrigger;
+
   private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
@@ -175,6 +177,7 @@ public class RobotContainer implements Sendable {
     decrementLauncherOffset = operator.leftBumper();
     faceRedAlliance = new Trigger(driver.leftStick());
     agitateHighFuelTrigger = new Trigger(driver.a());
+    bayDoorHomeTrigger = operator.leftStick().and(operator.rightStick());
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -308,7 +311,7 @@ public class RobotContainer implements Sendable {
             .alongWith(spindexer.indexFuel()));
 
     // Homes baydoor
-    operator.x().onTrue(bayDoor.home().withName("Home Baydoor"));
+    bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));
 
     incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset().withName("Increase Launcher Offset"));
     decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset().withName("Decrease Launcher Offset"));

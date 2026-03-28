@@ -5,6 +5,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.RPM;
@@ -96,6 +97,8 @@ public class RobotContainer implements Sendable {
   private final Trigger decrementLauncherOffset;
   private final Trigger faceRedAlliance;
 
+  private final Trigger manualScoreTrigger;
+
   private RelativeReference relativeReference;
 
   private final SendableChooser<Command> autonomousChooser;
@@ -159,6 +162,7 @@ public class RobotContainer implements Sendable {
     snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
     autoScoreTrigger = driver.rightBumper();
     autoScoreNoCalculationTrigger = operator.povDown();
+    manualScoreTrigger = operator.b();
     autoUnjamTrigger = spindexer.autoUnjamTrigger;
     manualUnjamTrigger = operator.a();
     incrementLauncherOffset = operator.rightBumper();
@@ -270,7 +274,8 @@ public class RobotContainer implements Sendable {
     driver.povDown().onTrue(drive.resetGyroCommand().withName("Reset Gyro"));
     faceRedAlliance.whileTrue(drive.angleToRedAlliance(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)).withName("Angle To Red Alliance"));
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))
+        .withName("Angle To Red Alliance"));
   }
 
   private void bindOperator() {
@@ -281,7 +286,14 @@ public class RobotContainer implements Sendable {
             .alongWith(spindexer.smartDashboardIndexFuel())
             .alongWith(drive.angleToHub(
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))).withName("Score With Fixed Values"));
+                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)))
+            .withName("Score With Fixed Values"));
+
+    // Manual Score
+    manualScoreTrigger.whileTrue(
+        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(Meters.of(1.5)))
+            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(Meters.of(1.5))))
+            .alongWith(spindexer.indexFuel()));
 
     // Homes baydoor
     operator.x().onTrue(bayDoor.home().withName("Home Baydoor"));
@@ -292,10 +304,12 @@ public class RobotContainer implements Sendable {
     operator.start().whileTrue(bayDoor.agitateLowFuel().withName("Manual Baydoor Fuel Agitation"));
 
     manualUnjamTrigger.and(drive.onAllianceSide.negate()).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel())).withName("Manual Unjam"));
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
+        .withName("Manual Unjam"));
 
     manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel())).withName("Manual Unjam"));
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
+        .withName("Manual Unjam"));
 
     manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger).whileTrue(new RepeatCommand(
         spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
@@ -319,7 +333,8 @@ public class RobotContainer implements Sendable {
         .and(drive.launcherAlignedToHub)
         .and(autoUnjamTrigger.negate())
         .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel())).withName("Auto Score: Aligned & Index Fast"));
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
+            .withName("Auto Score: Aligned & Index Fast"));
 
     // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
     // HIGH fuel.
@@ -329,7 +344,8 @@ public class RobotContainer implements Sendable {
         .and(drive.launcherAlignedToHub)
         .and(autoUnjamTrigger.negate())
         .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel())).withName("Auto Score: Aligned & Intake Fuel Wait"));
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
+            .withName("Auto Score: Aligned & Intake Fuel Wait"));
 
     autoScoreTrigger
         .and(autoUnjamTrigger)
@@ -338,11 +354,13 @@ public class RobotContainer implements Sendable {
             new RepeatCommand(
                 angleToHub()
                     .alongWith(launchHubDistance())
-                    .alongWith(spindexer.agitateFuel())).withName("Auto Score: Auto Unjam"));
+                    .alongWith(spindexer.agitateFuel()))
+                .withName("Auto Score: Auto Unjam"));
   }
 
   private void bindSnowblow() {
-    snowblowTrigger.whileTrue(new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())).withName("Snowblow: Not Aligned"));
+    snowblowTrigger.whileTrue(
+        new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())).withName("Snowblow: Not Aligned"));
 
     snowblowTrigger.and(drive.launcherAlignedToSnowblow)
         .whileTrue(new RepeatCommand(
@@ -350,7 +368,8 @@ public class RobotContainer implements Sendable {
                 .alongWith(launchSnowblowDistance())
                 .alongWith(spindexer.indexFuel())
                 .alongWith(intake.intakeFuel())
-                .alongWith(bayDoor.open())).withName("Snowblow: Aligned"));
+                .alongWith(bayDoor.open()))
+            .withName("Snowblow: Aligned"));
   }
 
   private Command launchHubDistance() {

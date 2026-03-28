@@ -303,7 +303,7 @@ public class RobotContainer implements Sendable {
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)))
             .withName("Score With Fixed Values"));
 
-    // Manual Score Close.
+    // Manual Score Close
     manualCloseScoreTrigger.whileTrue(
         launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
             .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))

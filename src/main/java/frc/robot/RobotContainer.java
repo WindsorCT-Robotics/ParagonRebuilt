@@ -318,8 +318,8 @@ public class RobotContainer implements Sendable {
     // Homes baydoor
     bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));
 
-    bayDoorOpenTrigger.onTrue(bayDoor.open());
-    bayDoorCloseTrigger.onTrue(bayDoor.close());
+    bayDoorOpenTrigger.onTrue(bayDoor.open().withName("Manual Open Bay Door"));
+    bayDoorCloseTrigger.onTrue(bayDoor.close().withName("Manual Close Bay Door"));
 
     incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset().withName("Increase Launcher Offset"));
     decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset().withName("Decrease Launcher Offset"));

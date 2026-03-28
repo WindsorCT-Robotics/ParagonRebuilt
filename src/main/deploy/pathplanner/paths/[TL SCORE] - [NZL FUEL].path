@@ -16,11 +16,11 @@
     },
     {
       "anchor": {
-        "x": 7.786,
+        "x": 7.286,
         "y": 4.539
       },
       "prevControl": {
-        "x": 7.786,
+        "x": 7.286,
         "y": 7.539
       },
       "nextControl": null,
@@ -65,7 +65,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -45.0
   },
   "reversed": false,
   "folder": "Left Paths",

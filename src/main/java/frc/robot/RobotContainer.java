@@ -90,6 +90,7 @@ public class RobotContainer implements Sendable {
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
   private final Supplier<Dimensionless> driverRightTrigger;
+  private final Supplier<Dimensionless> driverLeftTrigger;
 
   private final Trigger autoScoreTrigger;
   private final Trigger autoScoreNoCalculationTrigger;
@@ -167,10 +168,11 @@ public class RobotContainer implements Sendable {
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
     driverRightAxisX = () -> Value.of(driver.getRightX());
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
+    driverLeftTrigger = () -> Value.of(driver.getLeftTriggerAxis());
 
     snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
     autoScoreTrigger = driver.rightBumper();
-    autoScoreNoCalculationTrigger = operator.povDown();
+    autoScoreNoCalculationTrigger = operator.povLeft();
     manualCloseScoreTrigger = operator.b();
     manualTrenchScoreTrigger = operator.y();
     autoUnjamTrigger = spindexer.autoUnjamTrigger;
@@ -178,7 +180,7 @@ public class RobotContainer implements Sendable {
     incrementLauncherOffset = operator.rightBumper();
     decrementLauncherOffset = operator.leftBumper();
     faceRedAlliance = new Trigger(driver.leftStick());
-    agitateHighFuelTrigger = new Trigger(driver.a());
+    agitateHighFuelTrigger = new Trigger(() -> driverLeftTrigger.get().gt(Percent.of(20)));
 
     bayDoorHomeTrigger = operator.leftStick().and(operator.rightStick());
     bayDoorOpenTrigger = operator.povUp();

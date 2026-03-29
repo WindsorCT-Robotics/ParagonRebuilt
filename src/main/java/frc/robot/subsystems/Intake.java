@@ -43,7 +43,7 @@ public class Intake extends SubsystemBase implements ISystemDynamics<IntakeRolle
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
-                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(80)))
+                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(90)))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                 .withSlot0(new Slot0Configs()

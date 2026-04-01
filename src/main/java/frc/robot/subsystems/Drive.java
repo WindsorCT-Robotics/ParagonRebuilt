@@ -17,8 +17,6 @@ import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
-import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
@@ -149,12 +147,13 @@ public class Drive extends GeneratedDrive implements Sendable {
         public final Trigger isVisionMeasurementValid;
         // endregion
 
-        public Drive(
-                        String name,
-                        String limelightName,
-                        SwerveDrivetrainConstants drivetrainConstants,
-                        SwerveModuleConstants<?, ?, ?>... modules) throws IOException, ParseException {
-                super(drivetrainConstants, modules);
+        public Drive(String name) throws IOException, ParseException {
+                super(
+                        TunerConstants.DrivetrainConstants,
+                        TunerConstants.FrontLeft,
+                        TunerConstants.FrontRight,
+                        TunerConstants.BackLeft,
+                        TunerConstants.BackRight);
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
@@ -172,7 +171,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
 
-                this.limelightName = limelightName;
+                limelightName = "limelight";
                 AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 
                 this.field = new RectanglePoseArea(

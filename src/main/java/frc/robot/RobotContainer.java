@@ -217,19 +217,6 @@ public class RobotContainer implements Sendable {
     builder.addBooleanProperty("autoUnjamTrigger", autoUnjamTrigger, null);
   }
 
-  private Dimensionless curveAxis(Dimensionless percent, double exponent) {
-    return Value.of(
-        Math.abs(Math.pow(
-            percent.in(Value), exponent - 1)) * percent.unaryMinus().in(Value));
-  }
-
-  private Dimensionless getAxisWithDeadBandAndCurve(Dimensionless value, Dimensionless deadband, double curve) {
-    return curveAxis(Value.of(MathUtil.applyDeadband(
-        value.in(Value),
-        deadband.in(Value))),
-        curve);
-  }
-
   private RelativeReference getRelativeReference() {
     return relativeReference;
   }

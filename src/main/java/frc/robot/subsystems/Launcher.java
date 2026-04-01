@@ -1,10 +1,12 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -63,17 +65,20 @@ public class Launcher extends SubsystemBase implements ISystemDynamics<LauncherM
                 .withKS(0.0185)
                 .withKV(0.0098);
         final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
+        final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(80));
 
         leadMotor = new LauncherMotor("Left Motor", leftMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.Clockwise_Positive)
                         .withNeutralMode(neutralModeValue))
+                .withCurrentLimits(currentLimitsConfigs)
                 .withMotionMagic(motionMagicConfigs)
                 .withSlot0(slot0Configs));
         followerMotor = new LauncherMotor("Right Motor", rightMotorId, new TalonFXConfiguration()
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(neutralModeValue))
+                .withCurrentLimits(currentLimitsConfigs)
                 .withMotionMagic(motionMagicConfigs)
                 .withSlot0(slot0Configs));
 

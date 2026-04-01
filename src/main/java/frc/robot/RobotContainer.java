@@ -5,6 +5,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.RPM;
@@ -74,6 +76,9 @@ public class RobotContainer implements Sendable {
   private static final CanId LAUNCHER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
   private static final CanId LAUNCHER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
 
+  private static final Distance LAUNCHER_CLOSE_DISTANCE = Meters.of(1.5);
+  private static final Distance LAUNCHER_TRENCH_DISTANCE = Inches.of(158.84).minus(Inches.of(49.84).div(2));
+
   private static final Dimensionless REDUCE_SPEED = Percent.of(50);
   private static final double MOVE_ROBOT_CURVE = 2.0;
   private static final double TURN_ROBOT_CURVE = 2.0;
@@ -85,6 +90,7 @@ public class RobotContainer implements Sendable {
   private final Supplier<Dimensionless> driverLeftAxisY;
   private final Supplier<Dimensionless> driverRightAxisX;
   private final Supplier<Dimensionless> driverRightTrigger;
+  private final Supplier<Dimensionless> driverLeftTrigger;
 
   private final Trigger autoScoreTrigger;
   private final Trigger autoScoreNoCalculationTrigger;
@@ -95,6 +101,12 @@ public class RobotContainer implements Sendable {
   private final Trigger incrementLauncherOffset;
   private final Trigger decrementLauncherOffset;
   private final Trigger faceRedAlliance;
+
+  private final Trigger manualCloseScoreTrigger;
+
+  private final Trigger bayDoorHomeTrigger;
+  private final Trigger bayDoorOpenTrigger;
+  private final Trigger bayDoorCloseTrigger;
 
   private RelativeReference relativeReference;
 
@@ -155,16 +167,22 @@ public class RobotContainer implements Sendable {
     driverLeftAxisY = () -> Value.of(driver.getLeftY());
     driverRightAxisX = () -> Value.of(driver.getRightX());
     driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
+    driverLeftTrigger = () -> Value.of(driver.getLeftTriggerAxis());
 
     snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
     autoScoreTrigger = driver.rightBumper();
-    autoScoreNoCalculationTrigger = operator.povDown();
+    autoScoreNoCalculationTrigger = operator.povLeft();
+    manualCloseScoreTrigger = operator.b();
     autoUnjamTrigger = spindexer.autoUnjamTrigger;
     manualUnjamTrigger = operator.a();
     incrementLauncherOffset = operator.rightBumper();
     decrementLauncherOffset = operator.leftBumper();
     faceRedAlliance = new Trigger(driver.leftStick());
-    agitateHighFuelTrigger = new Trigger(driver.a());
+    agitateHighFuelTrigger = new Trigger(() -> driverLeftTrigger.get().gt(Percent.of(20)));
+
+    bayDoorHomeTrigger = operator.leftStick().and(operator.rightStick());
+    bayDoorOpenTrigger = operator.povUp();
+    bayDoorCloseTrigger = operator.povDown();
 
     relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -259,8 +277,6 @@ public class RobotContainer implements Sendable {
             .until(driver.x().or(driver.y()))
             .withName("Open Bay Door & Shuttle Fuel"));
 
-    driver.a().and(autoScoreTrigger.negate()).onTrue(bayDoor.open().withName("Open Baydoor"));
-
     driver.y().onTrue(bayDoor.close().withName("Close Baydoor"));
 
     // This command should run automatically when baydoor is no longer targeting the
@@ -270,7 +286,8 @@ public class RobotContainer implements Sendable {
     driver.povDown().onTrue(drive.resetGyroCommand().withName("Reset Gyro"));
     faceRedAlliance.whileTrue(drive.angleToRedAlliance(
         () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)).withName("Angle To Red Alliance"));
+        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))
+        .withName("Angle To Red Alliance"));
   }
 
   private void bindOperator() {
@@ -281,10 +298,20 @@ public class RobotContainer implements Sendable {
             .alongWith(spindexer.smartDashboardIndexFuel())
             .alongWith(drive.angleToHub(
                 () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))).withName("Score With Fixed Values"));
+                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)))
+            .withName("Score With Fixed Values"));
+
+    // Manual Score Close
+    manualCloseScoreTrigger.whileTrue(
+        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
+            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))
+            .alongWith(spindexer.indexFuel()).withName("Manual Score Close"));
 
     // Homes baydoor
-    operator.x().onTrue(bayDoor.home().withName("Home Baydoor"));
+    bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));
+
+    bayDoorOpenTrigger.onTrue(bayDoor.open().withName("Manual Open Bay Door"));
+    bayDoorCloseTrigger.onTrue(bayDoor.close().withName("Manual Close Bay Door"));
 
     incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset().withName("Increase Launcher Offset"));
     decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset().withName("Decrease Launcher Offset"));
@@ -292,10 +319,12 @@ public class RobotContainer implements Sendable {
     operator.start().whileTrue(bayDoor.agitateLowFuel().withName("Manual Baydoor Fuel Agitation"));
 
     manualUnjamTrigger.and(drive.onAllianceSide.negate()).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel())).withName("Manual Unjam"));
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
+        .withName("Manual Unjam"));
 
     manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel())).withName("Manual Unjam"));
+        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
+        .withName("Manual Unjam"));
 
     manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger).whileTrue(new RepeatCommand(
         spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
@@ -319,7 +348,8 @@ public class RobotContainer implements Sendable {
         .and(drive.launcherAlignedToHub)
         .and(autoUnjamTrigger.negate())
         .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel())).withName("Auto Score: Aligned & Index Fast"));
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
+            .withName("Auto Score: Aligned & Index Fast"));
 
     // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
     // HIGH fuel.
@@ -329,7 +359,8 @@ public class RobotContainer implements Sendable {
         .and(drive.launcherAlignedToHub)
         .and(autoUnjamTrigger.negate())
         .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel())).withName("Auto Score: Aligned & Intake Fuel Wait"));
+        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
+            .withName("Auto Score: Aligned & Intake Fuel Wait"));
 
     autoScoreTrigger
         .and(autoUnjamTrigger)
@@ -338,11 +369,13 @@ public class RobotContainer implements Sendable {
             new RepeatCommand(
                 angleToHub()
                     .alongWith(launchHubDistance())
-                    .alongWith(spindexer.agitateFuel())).withName("Auto Score: Auto Unjam"));
+                    .alongWith(spindexer.agitateFuel()))
+                .withName("Auto Score: Auto Unjam"));
   }
 
   private void bindSnowblow() {
-    snowblowTrigger.whileTrue(new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())).withName("Snowblow: Not Aligned"));
+    snowblowTrigger.whileTrue(
+        new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())).withName("Snowblow: Not Aligned"));
 
     snowblowTrigger.and(drive.launcherAlignedToSnowblow)
         .whileTrue(new RepeatCommand(
@@ -350,7 +383,8 @@ public class RobotContainer implements Sendable {
                 .alongWith(launchSnowblowDistance())
                 .alongWith(spindexer.indexFuel())
                 .alongWith(intake.intakeFuel())
-                .alongWith(bayDoor.open())).withName("Snowblow: Aligned"));
+                .alongWith(bayDoor.open()))
+            .withName("Snowblow: Aligned"));
   }
 
   private Command launchHubDistance() {

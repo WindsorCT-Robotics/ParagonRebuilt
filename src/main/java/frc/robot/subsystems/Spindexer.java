@@ -1,11 +1,13 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Millimeters;
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -38,7 +40,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
     private final FuelSensor fuelSensor;
     private final SysIdRoutine routine;
 
-    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(6000);
+    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(4800);
     private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
     private AngularVelocity smartDashboardVelocity = RPM.of(0);
 
@@ -56,6 +58,7 @@ public class Spindexer extends SubsystemBase implements ISystemDynamics<Spindext
                 .withMotorOutput(new MotorOutputConfigs()
                         .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withNeutralMode(NeutralModeValue.Brake))
+                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(900)))
                 .withSlot0(new Slot0Configs()

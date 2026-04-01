@@ -1,28 +1,15 @@
-
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Value;
-import static edu.wpi.first.units.Units.RPM;
 
 import java.io.IOException;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Dimensionless;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,14 +17,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.generated.TunerConstants;
-import frc.robot.hardware.CanId;
-import frc.robot.hardware.DigitalInputOutput;
 import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
@@ -45,450 +27,253 @@ import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.Drive.RelativeReference;
-import frc.robot.utils.LaunchCalculator;
+import frc.robot.utils.ControllerUtil;
 
 public class RobotContainer implements Sendable {
-  // private static final LinearVelocity MAX_SPEED =
-  // TunerConstants.kSpeedAt12Volts;
-  // private final Telemetry logger;
+    private static final Dimensionless DRIVER_CONTROLLER_DEADBAND = Percent.of(5);
+    private static final double MOVE_CURVE = 2.0;
+    private static final double TURN_CURVE = 2.0;
 
-  private final Drive drive;
-  private final Intake intake;
-  private final BayDoor bayDoor;
-  private final Spindexer spindexer;
-  private final Launcher launcher;
-  private final Kicker kicker;
+    // Controller Triggers
+    private final Trigger t_autoScore;
+    private final Trigger t_manualScore;
+    private final Trigger t_partialManualScore;
+    private final Trigger t_autoSnowBlow;
+    private final Trigger t_unjam;
+    private final Trigger t_incrementLauncherOffset;
+    private final Trigger t_decrementLauncherOffset;
+    private final Trigger t_faceRedAlliance;
+    private final Trigger t_autoIntake;
+    private final Trigger t_autoShuttle;
+    private final Trigger t_homeBayDoor;
+    private final Trigger t_openBayDoor;
+    private final Trigger t_closeBayDoor;
+    private final Trigger t_switchRelativeReference;
 
-  private final LaunchCalculator launchCalculator;
+    // Command Triggers
+    private final Trigger t_autoScore_aligned;
+    private final Trigger t_autoScore_notAligned;
+    private final Trigger t_autoSnowBlow_aligned;
+    private final Trigger t_autoSnowBlow_notAligned;
+    private final Trigger t_partialManualScore_aligned;
+    private final Trigger t_partialManualScore_notAligned;
 
-  private static final CanId INTAKE_ROLLER_MOTOR_CAN_ID = new CanId((byte) 16);
+    private final Drive drive;
+    private final Spindexer spindexer;
+    private final BayDoor bayDoor;
+    private final Intake intake;
+    private final Kicker kicker;
+    private final Launcher launcher;
 
-  private static final CanId BAYDOOR_MOTOR_LEFT_CAN_ID = new CanId((byte) 14);
-  private static final CanId BAYDOOR_MOTOR_RIGHT_CAN_ID = new CanId((byte) 15);
-  private static final DigitalInputOutput LEFT_BAYDOOR_DIO = new DigitalInputOutput((byte) 0);
-  private static final DigitalInputOutput RIGHT_BAYDOOR_DIO = new DigitalInputOutput((byte) 1);
+    private final CommandXboxController driver = new CommandXboxController(0);
+    private final CommandXboxController operator = new CommandXboxController(1);
 
-  private static final CanId SPINDEXER_MOTOR_CAN_ID = new CanId((byte) 13);
-  private static final CanId FUEL_SENSOR_CAN_ID = new CanId((byte) 21);
+    private final SendableChooser<Command> autoChooser;
 
-  private static final CanId KICKER_MOTOR_CAN_ID = new CanId((byte) 17);
+    private RelativeReference relativeReference;
 
-  private static final CanId LAUNCHER_MOTOR_LEFT_CAN_ID = new CanId((byte) 18);
-  private static final CanId LAUNCHER_MOTOR_RIGHT_CAN_ID = new CanId((byte) 19);
+    public RobotContainer() {
+        try {
+            drive = new Drive(Drive.class.getSimpleName());
+        } catch (IOException | ParseException e) {
+            throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
+        }
 
-  private static final Distance LAUNCHER_CLOSE_DISTANCE = Meters.of(1.5);
-  private static final Distance LAUNCHER_TRENCH_DISTANCE = Inches.of(158.84).minus(Inches.of(49.84).div(2));
+        intake = new Intake(Intake.class.getSimpleName());
+        bayDoor = new BayDoor(BayDoor.class.getSimpleName());
+        spindexer = new Spindexer(Spindexer.class.getSimpleName());
+        launcher = new Launcher(Launcher.class.getSimpleName());
+        kicker = new Kicker(Kicker.class.getSimpleName());
 
-  private static final Dimensionless REDUCE_SPEED = Percent.of(50);
-  private static final double MOVE_ROBOT_CURVE = 2.0;
-  private static final double TURN_ROBOT_CURVE = 2.0;
-  private static final Dimensionless DEADBAND = Percent.of(5);
-  private final CommandXboxController driver;
-  private final CommandXboxController operator;
+        relativeReference = RelativeReference.FIELD_CENTRIC;
 
-  private final Supplier<Dimensionless> driverLeftAxisX;
-  private final Supplier<Dimensionless> driverLeftAxisY;
-  private final Supplier<Dimensionless> driverRightAxisX;
-  private final Supplier<Dimensionless> driverRightTrigger;
-  private final Supplier<Dimensionless> driverLeftTrigger;
+        // Controller Triggers
+        t_autoScore = driver.rightBumper();
+        t_manualScore = operator.b();
+        t_partialManualScore = operator.povLeft();
+        t_autoSnowBlow = driver.rightTrigger(Percent.of(0.2).in(Value));
+        t_unjam = operator.a();
+        t_incrementLauncherOffset = operator.rightBumper();
+        t_decrementLauncherOffset = operator.leftBumper();
+        t_faceRedAlliance = driver.leftStick();
+        t_autoIntake = driver.x();
+        t_autoShuttle = driver.b();
+        t_homeBayDoor = operator.leftStick().and(operator.rightStick());
+        t_openBayDoor = operator.povDown();
+        t_closeBayDoor = operator.povUp();
+        t_switchRelativeReference = driver.leftBumper();
 
-  private final Trigger autoScoreTrigger;
-  private final Trigger autoScoreNoCalculationTrigger;
-  private final Trigger agitateHighFuelTrigger;
-  private final Trigger snowblowTrigger;
-  private final Trigger autoUnjamTrigger;
-  private final Trigger manualUnjamTrigger;
-  private final Trigger incrementLauncherOffset;
-  private final Trigger decrementLauncherOffset;
-  private final Trigger faceRedAlliance;
+        // Command Triggers
+        t_autoScore_aligned = t_autoScore.and(drive.onAllianceSide).and(drive.launcherAlignedToHub)
+                .and(t_unjam.negate());
+        t_autoScore_notAligned = t_autoScore.and(drive.onAllianceSide).and(drive.launcherAlignedToHub.negate())
+                .and(t_unjam.negate());
+        t_autoSnowBlow_aligned = t_autoSnowBlow.and(drive.onAllianceSide.negate()).and(drive.launcherAlignedToSnowblow);
+        t_autoSnowBlow_notAligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
+                .and(drive.launcherAlignedToSnowblow.negate());
 
-  private final Trigger manualCloseScoreTrigger;
+        t_partialManualScore_aligned = t_partialManualScore.and(drive.launcherAlignedToHub);
+        t_partialManualScore_notAligned = t_partialManualScore.and(drive.launcherAlignedToHub.negate());
 
-  private final Trigger bayDoorHomeTrigger;
-  private final Trigger bayDoorOpenTrigger;
-  private final Trigger bayDoorCloseTrigger;
+        autoChooser = new SendableChooser<>();
+        initPathPlannerCommands();
+        initSmartdashBoard();
 
-  private RelativeReference relativeReference;
-
-  private final SendableChooser<Command> autonomousChooser;
-  private static final String DEFAULT_AUTO = "";
-
-  public RobotContainer() {
-    try {
-      drive = new Drive(
-          Drive.class.getSimpleName(),
-          "limelight",
-          TunerConstants.DrivetrainConstants,
-          TunerConstants.FrontLeft,
-          TunerConstants.FrontRight,
-          TunerConstants.BackLeft,
-          TunerConstants.BackRight);
-    } catch (IOException | ParseException e) {
-      throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
+        bindCommands();
     }
 
-    intake = new Intake(
-        Intake.class.getSimpleName(),
-        INTAKE_ROLLER_MOTOR_CAN_ID);
+    private void initSmartdashBoard() {
+        SmartDashboard.putData(drive);
+        SmartDashboard.putData(intake);
+        SmartDashboard.putData(bayDoor);
+        SmartDashboard.putData(spindexer);
+        SmartDashboard.putData(launcher);
+        SmartDashboard.putData(kicker);
+        SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
+        SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
+        SmartDashboard.putData("Robot Container/Autonomous", autoChooser);
+        SmartDashboard.putData("Robot Container", this);
+        SmartDashboard.putData(CommandScheduler.getInstance());
+    }
 
-    bayDoor = new BayDoor(
-        BayDoor.class.getSimpleName(),
-        BAYDOOR_MOTOR_LEFT_CAN_ID,
-        BAYDOOR_MOTOR_RIGHT_CAN_ID,
-        LEFT_BAYDOOR_DIO,
-        RIGHT_BAYDOOR_DIO);
+    @Override
+    public void initSendable(SendableBuilder builder) {
 
-    spindexer = new Spindexer(
-        Spindexer.class.getSimpleName(),
-        SPINDEXER_MOTOR_CAN_ID,
-        FUEL_SENSOR_CAN_ID);
+    }
 
-    launcher = new Launcher(
-        Launcher.class.getSimpleName(),
-        LAUNCHER_MOTOR_LEFT_CAN_ID,
-        LAUNCHER_MOTOR_RIGHT_CAN_ID);
+    public Command getAutonomousCommand() {
+        return autoChooser.getSelected();
+    }
 
-    kicker = new Kicker(
-        Kicker.class.getSimpleName(),
-        KICKER_MOTOR_CAN_ID);
-
-    launchCalculator = new LaunchCalculator();
-
-    driver = new CommandXboxController(0);
-    operator = new CommandXboxController(1);
-
-    registerPathplannerCommands();
-    autonomousChooser = AutoBuilder.buildAutoChooser(DEFAULT_AUTO);
-
-    // logger = new Telemetry(MAX_SPEED.in(MetersPerSecond));
-    // drive.registerTelemetry(logger::telemeterize);
-
-    driverLeftAxisX = () -> Value.of(driver.getLeftX());
-    driverLeftAxisY = () -> Value.of(driver.getLeftY());
-    driverRightAxisX = () -> Value.of(driver.getRightX());
-    driverRightTrigger = () -> Value.of(driver.getRightTriggerAxis());
-    driverLeftTrigger = () -> Value.of(driver.getLeftTriggerAxis());
-
-    snowblowTrigger = new Trigger(() -> driverRightTrigger.get().gt(Percent.of(20)));
-    autoScoreTrigger = driver.rightBumper();
-    autoScoreNoCalculationTrigger = operator.povLeft();
-    manualCloseScoreTrigger = operator.b();
-    autoUnjamTrigger = spindexer.autoUnjamTrigger;
-    manualUnjamTrigger = operator.a();
-    incrementLauncherOffset = operator.rightBumper();
-    decrementLauncherOffset = operator.leftBumper();
-    faceRedAlliance = new Trigger(driver.leftStick());
-    agitateHighFuelTrigger = new Trigger(() -> driverLeftTrigger.get().gt(Percent.of(20)));
-
-    bayDoorHomeTrigger = operator.leftStick().and(operator.rightStick());
-    bayDoorOpenTrigger = operator.povUp();
-    bayDoorCloseTrigger = operator.povDown();
-
-    relativeReference = RelativeReference.FIELD_CENTRIC;
-
-    initSmartDashboard();
-    configureControllerBindings();
-  }
-
-  private void initSmartDashboard() {
-    SmartDashboard.putData(drive);
-    SmartDashboard.putData(intake);
-    SmartDashboard.putData(bayDoor);
-    SmartDashboard.putData(spindexer);
-    SmartDashboard.putData(launcher);
-    SmartDashboard.putData(kicker);
-    SmartDashboard.putData("Robot Container/Launch Calculations", launchCalculator);
-    SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
-    SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
-    SmartDashboard.putData("Robot Container/Autonomous", autonomousChooser);
-    SmartDashboard.putData(CommandScheduler.getInstance());
-    SmartDashboard.putData("Robot Container", this);
-  }
-
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.addStringProperty("Relative Reference", () -> getRelativeReference().toString(), null);
-    builder.addBooleanProperty("autoScoreTrigger", autoScoreTrigger, null);
-    builder.addBooleanProperty("autoScoreNoCalculationTrigger", autoScoreNoCalculationTrigger, null);
-    builder.addBooleanProperty("incrementLauncherOffset", incrementLauncherOffset, null);
-    builder.addBooleanProperty("decrementLauncherOffset", decrementLauncherOffset, null);
-    builder.addBooleanProperty("faceRedAlliance", faceRedAlliance, null);
-    builder.addBooleanProperty("snowblowTrigger", snowblowTrigger, null);
-    builder.addBooleanProperty("autoUnjamTrigger", autoUnjamTrigger, null);
-  }
-
-  private RelativeReference getRelativeReference() {
-    return relativeReference;
-  }
-
-  private void configureControllerBindings() {
-    bindDriver();
-    bindOperator();
-    bindAutoScore();
-    bindSnowblow();
-
-    drive.setDefaultCommand(drive.moveWithPercentages(
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverRightAxisX.get(), DEADBAND, TURN_ROBOT_CURVE),
-        this::getRelativeReference).withName("Drive With Percentages"));
-
-    bayDoor.setDefaultCommand(bayDoor.ensuredHome().withName("Home Baydoor"));
-
-    intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
-    drive.onAllianceSide.and(() -> DriverStation.isTeleop()).and(autoScoreTrigger.negate())
-        .and(snowblowTrigger.negate())
-        .whileTrue(launcher.prepareLaunch().alongWith(kicker.prepareFuel()).withName("Prepare Fuel Launch"));
-  }
-
-  private void bindDriver() {
-    driver.leftBumper().onTrue(Commands.runOnce(() -> {
-      if (getRelativeReference() == RelativeReference.ROBOT_CENTRIC) {
-        relativeReference = RelativeReference.FIELD_CENTRIC;
-      } else {
-        relativeReference = RelativeReference.ROBOT_CENTRIC;
-      }
-    }).withName("Switching Relative Drive"));
-
-    // Opens Baydoor and Intakes Fuel
-    driver.x().toggleOnTrue(
-        bayDoor.open()
-            .alongWith(intake.intakeFuel())
-            .until(driver.b().or(driver.y()))
-            .withName("Open Bay Door & Intake Fuel"));
-
-    // Opens Baydoor and Shuttles Fuel
-    driver.b().toggleOnTrue(
-        bayDoor.open()
-            .alongWith(intake.shuttleFuel())
-            .until(driver.x().or(driver.y()))
-            .withName("Open Bay Door & Shuttle Fuel"));
-
-    driver.y().onTrue(bayDoor.close().withName("Close Baydoor"));
-
-    // This command should run automatically when baydoor is no longer targeting the
-    // open and close setpoints.
-    // driver.onTrue(bayDoor.middle());
-
-    driver.povDown().onTrue(drive.resetGyroCommand().withName("Reset Gyro"));
-    faceRedAlliance.whileTrue(drive.angleToRedAlliance(
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE))
-        .withName("Angle To Red Alliance"));
-  }
-
-  private void bindOperator() {
-    // Manual Launch Fuel With Smartdashboard values.
-    autoScoreNoCalculationTrigger.whileTrue(
-        launcher.smartDashboardLaunchFuel()
-            .alongWith(kicker.smartDashboardKickFuel())
-            .alongWith(spindexer.smartDashboardIndexFuel())
-            .alongWith(drive.angleToHub(
-                () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND, MOVE_ROBOT_CURVE),
-                () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND, MOVE_ROBOT_CURVE)))
-            .withName("Score With Fixed Values"));
-
-    // Manual Score Close
-    manualCloseScoreTrigger.whileTrue(
-        launcher.launchFuel(() -> launchCalculator.getLauncherVelocityToDistance(LAUNCHER_CLOSE_DISTANCE))
-            .alongWith(kicker.kickFuel(() -> launchCalculator.getKickerVelocityToDistance(LAUNCHER_CLOSE_DISTANCE)))
-            .alongWith(spindexer.indexFuel()).withName("Manual Score Close"));
-
-    // Homes baydoor
-    bayDoorHomeTrigger.onTrue(bayDoor.home().withName("Home Baydoor"));
-
-    bayDoorOpenTrigger.onTrue(bayDoor.open().withName("Manual Open Bay Door"));
-    bayDoorCloseTrigger.onTrue(bayDoor.close().withName("Manual Close Bay Door"));
-
-    incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset().withName("Increase Launcher Offset"));
-    decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset().withName("Decrease Launcher Offset"));
-
-    operator.start().whileTrue(bayDoor.agitateLowFuel().withName("Manual Baydoor Fuel Agitation"));
-
-    manualUnjamTrigger.and(drive.onAllianceSide.negate()).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
-        .withName("Manual Unjam"));
-
-    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger.negate()).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
-        .withName("Manual Unjam"));
-
-    manualUnjamTrigger.and(drive.onAllianceSide).and(autoScoreTrigger).whileTrue(new RepeatCommand(
-        spindexer.manualAgitateFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel()))
-        .alongWith(launchHubDistance()).withName("Manual Unjam & Launch Velocity"));
-  }
-
-  private void bindAutoScore() {
-    // If not aligned to hub then angle and prepare the fuel for launch.
-    autoScoreTrigger
-        .and(drive.onAllianceSide)
-        .and(drive.launcherAlignedToHub.negate())
-        .and(autoUnjamTrigger.negate())
-        .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance())).withName("Auto Score: Not Aligned"));
-
-    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
-    // LOW fuel.
-    autoScoreTrigger
-        .and(agitateHighFuelTrigger.negate())
-        .and(drive.onAllianceSide)
-        .and(drive.launcherAlignedToHub)
-        .and(autoUnjamTrigger.negate())
-        .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
-            .withName("Auto Score: Aligned & Index Fast"));
-
-    // If aligned to hub then attempt to stay angled and agitate fuel, anticipating
-    // HIGH fuel.
-    autoScoreTrigger
-        .and(agitateHighFuelTrigger)
-        .and(drive.onAllianceSide)
-        .and(drive.launcherAlignedToHub)
-        .and(autoUnjamTrigger.negate())
-        .and(manualUnjamTrigger.negate())
-        .whileTrue(new RepeatCommand(angleToHub().alongWith(launchHubDistance()).alongWith(indexLowFuel()))
-            .withName("Auto Score: Aligned & Intake Fuel Wait"));
-
-    autoScoreTrigger
-        .and(autoUnjamTrigger)
-        .and(manualUnjamTrigger.negate())
-        .whileTrue(
-            new RepeatCommand(
+    private void initPathPlannerCommands() {
+        NamedCommands.registerCommand("score",
                 angleToHub()
-                    .alongWith(launchHubDistance())
-                    .alongWith(spindexer.agitateFuel()))
-                .withName("Auto Score: Auto Unjam"));
-  }
+                        .alongWith(launcher.launchFuel(null))
+                        .alongWith(kicker.kickFuel(null)
+                                .alongWith(spindexer.indexFuel())
+                                .alongWith(bayDoor.agitateHighFuel())));
+                                
+        NamedCommands.registerCommand("baydooropen", bayDoor.open());
+        NamedCommands.registerCommand("baydoorclose", bayDoor.close());
+        NamedCommands.registerCommand("baydoorhome", bayDoor.ensuredHome());
+        NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
+    }
 
-  private void bindSnowblow() {
-    snowblowTrigger.whileTrue(
-        new RepeatCommand(angleToSnowblow().alongWith(launchSnowblowDistance())).withName("Snowblow: Not Aligned"));
+    private void switchRelativeReference() {
+        if (relativeReference == RelativeReference.FIELD_CENTRIC) {
+            relativeReference = RelativeReference.ROBOT_CENTRIC;
+        } else {
+            relativeReference = RelativeReference.FIELD_CENTRIC;
+        }
+    }
 
-    snowblowTrigger.and(drive.launcherAlignedToSnowblow)
-        .whileTrue(new RepeatCommand(
-            angleToSnowblow()
-                .alongWith(launchSnowblowDistance())
-                .alongWith(spindexer.indexFuel())
-                .alongWith(intake.intakeFuel())
-                .alongWith(bayDoor.open()))
-            .withName("Snowblow: Aligned"));
-  }
+    private RelativeReference getRelativeReference() {
+        return relativeReference;
+    }
 
-  private Command launchHubDistance() {
-    return launcher.launchFuel(() -> {
-      Optional<Distance> hubDistance = drive.getDistanceToHub();
-      if (hubDistance.isEmpty())
-        return RPM.zero();
-      return launchCalculator.getLauncherVelocityToDistance(hubDistance.get());
-    }).alongWith(kicker.kickFuel(() -> {
-      Optional<Distance> hubDistance = drive.getDistanceToHub();
-      if (hubDistance.isEmpty())
-        return RPM.zero();
-      return launchCalculator.getKickerVelocityToDistance(hubDistance.get());
-    }));
-  }
+    private Command prepareFuel() {
+        return launcher.prepareLaunch().alongWith(kicker.prepareFuel());
+    }
 
-  private Command launchSnowblowDistance() {
-    return launcher.launchFuel(() -> {
-      Optional<Distance> snowblowDistance = drive.getDistanceToSnowblow();
-      if (snowblowDistance.isEmpty())
-        return RPM.zero();
-      return launchCalculator.getLauncherVelocityToDistance(snowblowDistance.get());
-    }).alongWith(kicker.kickFuel(() -> {
-      Optional<Distance> snowblowDistance = drive.getDistanceToHub();
-      if (snowblowDistance.isEmpty())
-        return RPM.zero();
-      return launchCalculator.getKickerVelocityToDistance(snowblowDistance.get());
-    }));
-  }
+    private Command angleToHub() {
+        return drive.angleToHub(
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE),
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE));
+    }
 
-  private Command indexLowFuel() {
-    return spindexer.indexFuel().alongWith(bayDoor.agitateLowFuel()).alongWith(intake.agitateFuel());
-  }
+    private Command angleToSnowBlow() {
+        return drive.angleToSnowblow(
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE),
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE));
+    }
 
-  private Command indexHighFuel() {
-    return spindexer.indexFuel().alongWith(bayDoor.agitateHighFuel()).alongWith(intake.agitateFuel());
-  }
+    private Command angleToRedAlliance() {
+        return drive.angleToRedAlliance(
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE),
+                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(), DRIVER_CONTROLLER_DEADBAND,
+                        MOVE_CURVE));
+    }
 
-  private Command angleToHub() {
-    return drive.angleToHub(
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
-            MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,
-            MOVE_ROBOT_CURVE).times(REDUCE_SPEED));
-  }
+    private void bindCommands() {
+        drive.setDefaultCommand(
+                drive.moveWithPercentages(
+                        () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(), DRIVER_CONTROLLER_DEADBAND,
+                                MOVE_CURVE),
+                        () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(), DRIVER_CONTROLLER_DEADBAND,
+                                MOVE_CURVE),
+                        () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getRightX(), DRIVER_CONTROLLER_DEADBAND,
+                                TURN_CURVE),
+                        this::getRelativeReference)
+                        .withName("Drive With Percentages"));
 
-  private Command angleToSnowblow() {
-    return drive.angleToSnowblow(
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisX.get(), DEADBAND,
-            MOVE_ROBOT_CURVE).times(REDUCE_SPEED),
-        () -> getAxisWithDeadBandAndCurve(driverLeftAxisY.get(), DEADBAND,
-            MOVE_ROBOT_CURVE).times(REDUCE_SPEED));
-  }
+        bayDoor.setDefaultCommand(bayDoor.ensuredHome().withName("Home Baydoor"));
 
-  private void registerPathplannerCommands() {
-    NamedCommands.registerCommand("score", angleToHub().alongWith(launchHubDistance()).alongWith(indexHighFuel()));
-    NamedCommands.registerCommand("baydooropen", bayDoor.open());
-    NamedCommands.registerCommand("baydoorclose", bayDoor.close());
-    NamedCommands.registerCommand("baydoorhome", bayDoor.ensuredHome());
-    NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
-  }
+        intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
 
-  public Command getAutonomousCommand() {
-    return autonomousChooser.getSelected();
-  }
+        t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
-  // region SysId
-  @SuppressWarnings("unused")
-  private void bindDriveSystemDynamics() {
-    /*
-     * Note that each routine should be run exactly once in a single log.
-     */
-    driver.back().and(driver.y()).whileTrue(drive.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(drive.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(drive.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(drive.sysIdQuasistatic(Direction.kReverse));
-  }
+        drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(prepareFuel().until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
 
-  @SuppressWarnings("unused")
-  private void bindBayDoorSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(bayDoor.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(bayDoor.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(bayDoor.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(bayDoor.sysIdQuasistatic(Direction.kReverse));
-  }
+        t_autoScore_aligned.whileTrue(
+                angleToHub()
+                        .alongWith(launcher.launchFuel(null))
+                        .alongWith(kicker.kickFuel(null))
+                        .alongWith(spindexer.indexFuel())
+                        .alongWith(bayDoor.agitateLowFuel())
+                        .alongWith(intake.agitateFuel()));
 
-  @SuppressWarnings("unused")
-  private void bindIntakeSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(intake.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
-  }
+        t_autoScore_notAligned.whileTrue(
+                angleToHub()
+                        .alongWith(launcher.launchFuel(null))
+                        .alongWith(kicker.kickFuel(null)));
 
-  @SuppressWarnings("unused")
-  private void bindSpindexerSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(spindexer.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(spindexer.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(spindexer.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(spindexer.sysIdQuasistatic(Direction.kReverse));
-  }
+        t_autoSnowBlow_aligned.whileTrue(
+                angleToSnowBlow()
+                        .alongWith(launcher.launchFuel(null))
+                        .alongWith(kicker.kickFuel(null))
+                        .alongWith(spindexer.indexFuel())
+                        .alongWith(bayDoor.open())
+                        .alongWith(intake.intakeFuel()));
 
-  @SuppressWarnings("unused")
-  private void bindlauncherSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(launcher.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(launcher.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(launcher.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(launcher.sysIdQuasistatic(Direction.kReverse));
-  }
+        t_autoSnowBlow_notAligned.whileTrue(
+                angleToSnowBlow()
+                        .alongWith(launcher.launchFuel(null))
+                        .alongWith(kicker.kickFuel(null))
+                        .alongWith(bayDoor.open())
+                        .alongWith(intake.intakeFuel()));
 
-  @SuppressWarnings("unused")
-  private void bindKickerSystemDynamics() {
-    driver.back().and(driver.y()).whileTrue(kicker.sysIdDynamic(Direction.kForward));
-    driver.back().and(driver.x()).whileTrue(kicker.sysIdDynamic(Direction.kReverse));
-    driver.start().and(driver.y()).whileTrue(kicker.sysIdQuasistatic(Direction.kForward));
-    driver.start().and(driver.x()).whileTrue(kicker.sysIdQuasistatic(Direction.kReverse));
-  }
-  // endregion
+        t_partialManualScore_aligned.whileTrue(
+                angleToHub()
+                        .alongWith(launcher.smartDashboardLaunchFuel())
+                        .alongWith(kicker.smartDashboardKickFuel())
+                        .alongWith(spindexer.indexFuel()));
 
+        t_partialManualScore_notAligned.whileTrue(
+                angleToHub()
+                        .alongWith(launcher.smartDashboardLaunchFuel())
+                        .alongWith(kicker.smartDashboardKickFuel()));
+
+        t_manualScore.whileTrue(
+                launcher.smartDashboardLaunchFuel()
+                        .alongWith(kicker.smartDashboardKickFuel())
+                        .alongWith(spindexer.indexFuel()));
+
+        t_autoIntake.onTrue(bayDoor.open().alongWith(intake.intakeFuel()));
+        t_autoShuttle.onTrue(bayDoor.open().alongWith(intake.shuttleFuel()));
+        t_openBayDoor.onTrue(bayDoor.open());
+        t_closeBayDoor.onTrue(bayDoor.close());
+        t_homeBayDoor.onTrue(bayDoor.ensuredHome());
+
+        t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
+
+        t_faceRedAlliance.whileTrue(angleToRedAlliance());
+
+        t_incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset());
+        t_decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
+    }
 }

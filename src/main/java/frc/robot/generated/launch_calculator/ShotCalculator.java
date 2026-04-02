@@ -247,23 +247,15 @@ public class ShotCalculator {
    * you're out of range, behind the hub, going too fast, or the inputs are bad.
    */
   public LaunchParameters calculate(ShotInputs inputs) {
+    boolean isInvalid = false;
     if (inputs == null || inputs.robotPose() == null
         || inputs.fieldVelocity() == null || inputs.robotVelocity() == null) {
-          System.out.println("null");
-      return LaunchParameters.INVALID;
+      isInvalid = true;
     }
 
     Pose2d rawPose = inputs.robotPose();
     ChassisSpeeds fieldVel = inputs.fieldVelocity();
     ChassisSpeeds robotVel = inputs.robotVelocity();
-
-    double poseX = rawPose.getX();
-    double poseY = rawPose.getY();
-    if (Double.isNaN(poseX) || Double.isNaN(poseY)
-        || Double.isInfinite(poseX) || Double.isInfinite(poseY)) {
-          System.out.println("outside");
-      return LaunchParameters.INVALID;
-    }
 
     // Second-order pose prediction. Instead of just v*dt, we use v*dt + 0.5*a*dt^2
     // where acceleration is estimated from the velocity delta between this cycle and last.
@@ -296,8 +288,7 @@ public class ShotCalculator {
     double dot =
         (hubX - robotX) * hubForward.getX() + (hubY - robotY) * hubForward.getY();
     if (dot < 0) {
-      System.out.println("NOT HUB");
-      return LaunchParameters.INVALID;
+      isInvalid = true;
     }
 
     // Tilt gate. Bumps and ramps knock the launcher off-axis, so
@@ -305,7 +296,7 @@ public class ShotCalculator {
     if (Math.abs(inputs.pitchDeg()) > config.maxTiltDeg
         || Math.abs(inputs.rollDeg()) > config.maxTiltDeg) {
           System.out.println("max tilt");
-      return LaunchParameters.INVALID;
+      isInvalid = true;
     }
 
     // Transform robot center to launcher position
@@ -329,14 +320,14 @@ public class ShotCalculator {
     double distance = Math.hypot(rx, ry);
 
     if (distance < config.minScoringDistance || distance > config.maxScoringDistance) {
-      return LaunchParameters.INVALID;
+      isInvalid = true;
     }
 
     double robotSpeed = Math.hypot(vx, vy);
 
     // Speed cap: shots above this speed are out of calibration range
     if (robotSpeed > config.maxSOTMSpeed) {
-      return LaunchParameters.INVALID;
+      isInvalid = true;
     }
 
     boolean velocityFiltered = robotSpeed < config.minSOTMSpeed;
@@ -488,7 +479,7 @@ public class ShotCalculator {
         effectiveTOF,
         driveAngle,
         driveAngularVelocity,
-        true,
+        !isInvalid,
         confidence,
         distance,
         iterationsUsed,

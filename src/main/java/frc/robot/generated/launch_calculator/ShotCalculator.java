@@ -20,6 +20,11 @@
 
 package frc.robot.generated.launch_calculator;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,6 +32,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * Shoot-on-the-move fire control solver. Figures out what RPM and heading your robot needs
@@ -113,8 +119,8 @@ public class ShotCalculator {
   /** Tuning parameters. Set these to match your robot, or wire them to SmartDashboard/TunableNumber. */
   public static class Config {
     // Launcher geometry (measure from CAD)
-    public double launcherOffsetX = 0.20; // meters forward of robot center
-    public double launcherOffsetY = 0.0;  // meters left of robot center
+    public double launcherOffsetX = Inches.of(-7).in(Meters); // meters forward of robot center
+    public double launcherOffsetY = Inches.of(-9).in(Meters);  // meters left of robot center
 
     // How close/far you can score from (meters)
     public double minScoringDistance = 0.5;
@@ -165,7 +171,7 @@ public class ShotCalculator {
     // Rotation between the launcher face and robot front. 0 = forward-facing,
     // Math.PI = rear-facing. The solver rotates the drive heading so the
     // correct face points at the hub.
-    public double shooterAngleOffsetRad = 0.0;
+    public double shooterAngleOffsetRad = Math.PI / 2;
   }
 
   private final Config config;
@@ -243,6 +249,7 @@ public class ShotCalculator {
   public LaunchParameters calculate(ShotInputs inputs) {
     if (inputs == null || inputs.robotPose() == null
         || inputs.fieldVelocity() == null || inputs.robotVelocity() == null) {
+          System.out.println("null");
       return LaunchParameters.INVALID;
     }
 
@@ -254,6 +261,7 @@ public class ShotCalculator {
     double poseY = rawPose.getY();
     if (Double.isNaN(poseX) || Double.isNaN(poseY)
         || Double.isInfinite(poseX) || Double.isInfinite(poseY)) {
+          System.out.println("outside");
       return LaunchParameters.INVALID;
     }
 
@@ -276,7 +284,8 @@ public class ShotCalculator {
 
     double robotX = compensatedPose.getX();
     double robotY = compensatedPose.getY();
-    double heading = compensatedPose.getRotation().getRadians();
+    double heading = compensatedPose.getRotation().plus(new Rotation2d(Radians.of(Math.PI))).getRadians();
+    SmartDashboard.putNumber("Heading", Radians.of(heading).in(Degrees));
 
     Translation2d hubCenter = inputs.hubCenter();
     double hubX = hubCenter.getX();
@@ -287,6 +296,7 @@ public class ShotCalculator {
     double dot =
         (hubX - robotX) * hubForward.getX() + (hubY - robotY) * hubForward.getY();
     if (dot < 0) {
+      System.out.println("NOT HUB");
       return LaunchParameters.INVALID;
     }
 
@@ -294,6 +304,7 @@ public class ShotCalculator {
     // suppress firing when the chassis is tilted beyond the threshold.
     if (Math.abs(inputs.pitchDeg()) > config.maxTiltDeg
         || Math.abs(inputs.rollDeg()) > config.maxTiltDeg) {
+          System.out.println("max tilt");
       return LaunchParameters.INVALID;
     }
 
@@ -514,6 +525,13 @@ public class ShotCalculator {
     double headingErr = Math.abs(headingErrorRad);
     double headingAccuracy = MathUtil.clamp(1.0 - headingErr / scaledMaxError, 0, 1);
 
+    SmartDashboard.putNumber("distanceScale", distanceScale);
+    SmartDashboard.putNumber("speedScale", speedScale);
+    SmartDashboard.putNumber("scaledMaxError", scaledMaxError);
+    SmartDashboard.putNumber("headingErr", headingErr);
+    SmartDashboard.putNumber("headingAccuracy", headingAccuracy);
+
+
     // 5. Distance in range: penalty for being near min/max scoring boundaries
     double rangeSpan = config.maxScoringDistance - config.minScoringDistance;
     double rangeFraction = (distance - config.minScoringDistance) / rangeSpan;
@@ -530,6 +548,9 @@ public class ShotCalculator {
       config.wDistanceInRange
     };
 
+    SmartDashboard.putNumberArray("cooler", c);
+    SmartDashboard.putNumberArray("coolerer", w);
+
     double sumW = 0;
     double logSum = 0;
     for (int i = 0; i < 5; i++) {
@@ -538,6 +559,7 @@ public class ShotCalculator {
       sumW += w[i];
     }
 
+    SmartDashboard.putNumber("sumW", sumW);
     if (sumW <= 0) return 0;
     double composite = Math.exp(logSum / sumW) * 100.0;
     return MathUtil.clamp(composite, 0, 100);

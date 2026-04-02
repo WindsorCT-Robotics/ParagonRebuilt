@@ -1,6 +1,11 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Value;
 
 import java.io.IOException;
@@ -25,8 +30,10 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AutoScore;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
+import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
@@ -56,14 +63,15 @@ public class RobotContainer implements Sendable {
         private final Trigger t_openBayDoor;
         private final Trigger t_closeBayDoor;
         private final Trigger t_switchRelativeReference;
+        private final Trigger t_resetGyro;
 
         // Command Triggers
-        private final Trigger t_autoScore_aligned;
-        private final Trigger t_autoScore_notAligned;
-        private final Trigger t_autoSnowBlow_aligned;
-        private final Trigger t_autoSnowBlow_notAligned;
-        private final Trigger t_partialManualScore_aligned;
-        private final Trigger t_partialManualScore_notAligned;
+        // private final Trigger t_autoScore_aligned;
+        // private final Trigger t_autoScore_notAligned;
+        // private final Trigger t_autoSnowBlow_aligned;
+        // private final Trigger t_autoSnowBlow_notAligned;
+        // private final Trigger t_partialManualScore_aligned;
+        // private final Trigger t_partialManualScore_notAligned;
 
         private final Drive drive;
         private final Spindexer spindexer;
@@ -77,7 +85,9 @@ public class RobotContainer implements Sendable {
 
         private final ShotCalculator launchCalculator;
         private final ShotCalculator.Config launcherCalculatorConfig = new Config();
-        private final Supplier<Optional<ShotCalculator.LaunchParameters>> launcherParemetersSupplier;
+
+        private final Supplier<Optional<ShotCalculator.LaunchParameters>> hubLaunchSupplier;
+        private final Supplier<Optional<ShotCalculator.LaunchParameters>> snowBlowSupplier;
 
         private final SendableChooser<Command> autoChooser;
 
@@ -98,25 +108,27 @@ public class RobotContainer implements Sendable {
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
-                launcherCalculatorConfig.launcherOffsetX = 0.23;
-                launcherCalculatorConfig.launcherOffsetY = 0.0;
+                launcherCalculatorConfig.launcherOffsetX = Inches.of(-7).in(Meters);
+                launcherCalculatorConfig.launcherOffsetY = Inches.of(-9).in(Meters);
+                launcherCalculatorConfig.shooterAngleOffsetRad = Math.PI / 2;
                 launcherCalculatorConfig.phaseDelayMs = 30.0;
                 launcherCalculatorConfig.mechLatencyMs = 20.0;
                 launcherCalculatorConfig.maxTiltDeg = 5.0;
-                launcherCalculatorConfig.headingSpeedScalar = 1.0;
-                launcherCalculatorConfig.headingReferenceDistance = 2.5;
+                launcherCalculatorConfig.headingSpeedScalar = 0.0;
+                launcherCalculatorConfig.headingReferenceDistance = 0.0;
+                launcherCalculatorConfig.headingMaxErrorRad = Degrees.of(1).in(Radians);
 
                 launchCalculator = new ShotCalculator(launcherCalculatorConfig);
-                launchCalculator.loadLUTEntry(1.5, 2000, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(2.0, 2125, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(2.5, 2225, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(3, 2325, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(3.5, 2450, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(4, 2590, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(4.5, 2690, Double.POSITIVE_INFINITY);
-                launchCalculator.loadLUTEntry(5, 2850, Double.POSITIVE_INFINITY);
+                launchCalculator.loadLUTEntry(1.5, 2000, 0);
+                launchCalculator.loadLUTEntry(2.0, 2125, 0);
+                launchCalculator.loadLUTEntry(2.5, 2225, 0);
+                launchCalculator.loadLUTEntry(3, 2325, 0);
+                launchCalculator.loadLUTEntry(3.5, 2450, 0);
+                launchCalculator.loadLUTEntry(4, 2590, 0);
+                launchCalculator.loadLUTEntry(4.5, 2690, 0);
+                launchCalculator.loadLUTEntry(5, 2850, 0);
 
-                launcherParemetersSupplier = () -> {
+                hubLaunchSupplier = () -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
 
                         if (alliance.isEmpty()) {
@@ -130,9 +142,35 @@ public class RobotContainer implements Sendable {
                                         drive.getState().Speeds,
                                         drive.getHubTarget(alliance.get()),
                                         drive.getHubDirection(alliance.get()),
-                                        MOVE_CURVE);
+                                        0.9,
+                                        drive.getPigeon2().getPitch().getValue().in(Degrees),
+                                        drive.getPigeon2().getRoll().getValue().in(Degrees));
 
-                        return Optional.of(launchCalculator.calculate(inputs));
+                        LaunchParameters launchParameters = launchCalculator.calculate(inputs);
+                        return Optional.of(launchParameters);
+                };
+
+                // TODO: Do something with the getHubDirection
+                snowBlowSupplier = () -> {
+                        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+                        if (alliance.isEmpty()) {
+                                return Optional.empty();
+                        }
+
+                        ShotCalculator.ShotInputs inputs = new ShotCalculator.ShotInputs(
+                                        drive.getState().Pose,
+                                        ChassisSpeeds.fromFieldRelativeSpeeds(drive.getState().Speeds,
+                                                        new Rotation2d(drive.getAngle())),
+                                        drive.getState().Speeds,
+                                        drive.getHubTarget(alliance.get()),
+                                        drive.getHubDirection(alliance.get()),
+                                        0.9,
+                                        drive.getPigeon2().getPitch().getValue().in(Degrees),
+                                        drive.getPigeon2().getPitch().getValue().in(Degrees));
+
+                        LaunchParameters launchParameters = launchCalculator.calculate(inputs);
+                        return Optional.of(launchParameters);
                 };
 
                 // Controller Triggers
@@ -150,19 +188,18 @@ public class RobotContainer implements Sendable {
                 t_openBayDoor = operator.povDown();
                 t_closeBayDoor = operator.povUp();
                 t_switchRelativeReference = driver.leftBumper();
+                t_resetGyro = driver.povDown();
 
                 // Command Triggers
-                t_autoScore_aligned = t_autoScore.and(drive.onAllianceSide).and(drive.launcherAlignedToHub)
-                                .and(t_unjam.negate());
-                t_autoScore_notAligned = t_autoScore.and(drive.onAllianceSide).and(drive.launcherAlignedToHub.negate())
-                                .and(t_unjam.negate());
-                t_autoSnowBlow_aligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
-                                .and(drive.launcherAlignedToSnowblow);
-                t_autoSnowBlow_notAligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
-                                .and(drive.launcherAlignedToSnowblow.negate());
+                // t_autoSnowBlow_aligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
+                // .and(drive.launcherAlignedToSnowblow);
+                // t_autoSnowBlow_notAligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
+                // .and(drive.launcherAlignedToSnowblow.negate());
 
-                t_partialManualScore_aligned = t_partialManualScore.and(drive.launcherAlignedToHub);
-                t_partialManualScore_notAligned = t_partialManualScore.and(drive.launcherAlignedToHub.negate());
+                // t_partialManualScore_aligned =
+                // t_partialManualScore.and(drive.launcherAlignedToHub);
+                // t_partialManualScore_notAligned =
+                // t_partialManualScore.and(drive.launcherAlignedToHub.negate());
 
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
@@ -195,12 +232,12 @@ public class RobotContainer implements Sendable {
         }
 
         private void initPathPlannerCommands() {
-                NamedCommands.registerCommand("score",
-                                angleToHub()
-                                                .alongWith(launcher.launchFuel(null))
-                                                .alongWith(kicker.kickFuel(null)
-                                                                .alongWith(spindexer.indexFuel())
-                                                                .alongWith(bayDoor.agitateHighFuel())));
+                // NamedCommands.registerCommand("score",
+                // angleToHub()
+                // .alongWith(launcher.launchFuel(null))
+                // .alongWith(kicker.kickFuel(null)
+                // .alongWith(spindexer.indexFuel())
+                // .alongWith(bayDoor.agitateHighFuel())));
 
                 NamedCommands.registerCommand("baydooropen", bayDoor.open());
                 NamedCommands.registerCommand("baydoorclose", bayDoor.close());
@@ -224,25 +261,25 @@ public class RobotContainer implements Sendable {
                 return launcher.prepareLaunch().alongWith(kicker.prepareFuel());
         }
 
-        private Command angleToHub() {
-                return drive.angleToHub(
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE),
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE));
-        }
+        // private Command angleToHub() {
+        // return drive.angleToHub(
+        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
+        // DRIVER_CONTROLLER_DEADBAND,
+        // MOVE_CURVE),
+        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
+        // DRIVER_CONTROLLER_DEADBAND,
+        // MOVE_CURVE));
+        // }
 
-        private Command angleToSnowBlow() {
-                return drive.angleToSnowblow(
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE),
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE));
-        }
+        // private Command angleToSnowBlow() {
+        // return drive.angleToSnowblow(
+        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
+        // DRIVER_CONTROLLER_DEADBAND,
+        // MOVE_CURVE),
+        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
+        // DRIVER_CONTROLLER_DEADBAND,
+        // MOVE_CURVE));
+        // }
 
         private Command angleToRedAlliance() {
                 return drive.angleToRedAlliance(
@@ -278,44 +315,61 @@ public class RobotContainer implements Sendable {
                 drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(prepareFuel()
                                 .until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
 
-                t_autoScore_aligned.whileTrue(
-                                angleToHub()
-                                                .alongWith(launcher.launchFuel(null))
-                                                .alongWith(kicker.kickFuel(null))
-                                                .alongWith(spindexer.indexFuel())
-                                                .alongWith(bayDoor.agitateLowFuel())
-                                                .alongWith(intake.agitateFuel()));
+                t_autoScore.whileTrue(new AutoScore(
+                                drive,
+                                launcher,
+                                kicker,
+                                spindexer,
+                                bayDoor,
+                                intake,
+                                hubLaunchSupplier,
+                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(
+                                                driver.getLeftX(),
+                                                DRIVER_CONTROLLER_DEADBAND,
+                                                MOVE_CURVE),
+                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(
+                                                driver.getLeftY(),
+                                                DRIVER_CONTROLLER_DEADBAND,
+                                                MOVE_CURVE)));
 
-                t_autoScore_notAligned.whileTrue(
-                                angleToHub()
-                                                .alongWith(launcher.launchFuel(null))
-                                                .alongWith(kicker.kickFuel(null)));
+                // t_autoScore_aligned.whileTrue(
+                // angleToHub()
+                // .alongWith(launcher.launchFuel(null))
+                // .alongWith(kicker.kickFuel(null))
+                // .alongWith(spindexer.indexFuel())
+                // .alongWith(bayDoor.agitateLowFuel())
+                // .alongWith(intake.agitateFuel()));
 
-                t_autoSnowBlow_aligned.whileTrue(
-                                angleToSnowBlow()
-                                                .alongWith(launcher.launchFuel(null))
-                                                .alongWith(kicker.kickFuel(null))
-                                                .alongWith(spindexer.indexFuel())
-                                                .alongWith(bayDoor.open())
-                                                .alongWith(intake.intakeFuel()));
+                // t_autoScore_notAligned.whileTrue(
+                // angleToHub()
+                // .alongWith(launcher.launchFuel(null))
+                // .alongWith(kicker.kickFuel(null)));
 
-                t_autoSnowBlow_notAligned.whileTrue(
-                                angleToSnowBlow()
-                                                .alongWith(launcher.launchFuel(null))
-                                                .alongWith(kicker.kickFuel(null))
-                                                .alongWith(bayDoor.open())
-                                                .alongWith(intake.intakeFuel()));
+                // t_autoSnowBlow_aligned.whileTrue(
+                // angleToSnowBlow()
+                // .alongWith(launcher.launchFuel(null))
+                // .alongWith(kicker.kickFuel(null))
+                // .alongWith(spindexer.indexFuel())
+                // .alongWith(bayDoor.open())
+                // .alongWith(intake.intakeFuel()));
 
-                t_partialManualScore_aligned.whileTrue(
-                                angleToHub()
-                                                .alongWith(launcher.smartDashboardLaunchFuel())
-                                                .alongWith(kicker.smartDashboardKickFuel())
-                                                .alongWith(spindexer.indexFuel()));
+                // t_autoSnowBlow_notAligned.whileTrue(
+                // angleToSnowBlow()
+                // .alongWith(launcher.launchFuel(null))
+                // .alongWith(kicker.kickFuel(null))
+                // .alongWith(bayDoor.open())
+                // .alongWith(intake.intakeFuel()));
 
-                t_partialManualScore_notAligned.whileTrue(
-                                angleToHub()
-                                                .alongWith(launcher.smartDashboardLaunchFuel())
-                                                .alongWith(kicker.smartDashboardKickFuel()));
+                // t_partialManualScore_aligned.whileTrue(
+                // angleToHub()
+                // .alongWith(launcher.smartDashboardLaunchFuel())
+                // .alongWith(kicker.smartDashboardKickFuel())
+                // .alongWith(spindexer.indexFuel()));
+
+                // t_partialManualScore_notAligned.whileTrue(
+                // angleToHub()
+                // .alongWith(launcher.smartDashboardLaunchFuel())
+                // .alongWith(kicker.smartDashboardKickFuel()));
 
                 t_manualScore.whileTrue(
                                 launcher.smartDashboardLaunchFuel()
@@ -334,5 +388,7 @@ public class RobotContainer implements Sendable {
 
                 t_incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset());
                 t_decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
+
+                t_resetGyro.onTrue(drive.resetGyroCommand());
         }
 }

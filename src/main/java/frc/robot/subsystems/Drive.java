@@ -72,7 +72,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // region
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0.5);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
 
@@ -141,11 +141,11 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         public Drive(String name) throws IOException, ParseException {
                 super(
-                        TunerConstants.DrivetrainConstants,
-                        TunerConstants.FrontLeft,
-                        TunerConstants.FrontRight,
-                        TunerConstants.BackLeft,
-                        TunerConstants.BackRight);
+                                TunerConstants.DrivetrainConstants,
+                                TunerConstants.FrontLeft,
+                                TunerConstants.FrontRight,
+                                TunerConstants.BackLeft,
+                                TunerConstants.BackRight);
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
@@ -211,7 +211,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         return false;
                 });
 
-                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(5).in(Radians));
+                fieldCentricFacingAngleSwerveRequest.HeadingController.setTolerance(Degrees.of(0).in(Radians));
                 fieldCentricFacingAngleSwerveRequest.HeadingController.setPID(
                                 FACING_ANGLE_PID.kP,
                                 FACING_ANGLE_PID.kI,
@@ -309,9 +309,9 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         public Translation2d getHubDirection(Alliance alliance) {
                 if (alliance == Alliance.Blue) {
-                        return new Translation2d(-1, 0);
-                } else {
                         return new Translation2d(1, 0);
+                } else {
+                        return new Translation2d(-1, 0);
                 }
         }
 
@@ -412,7 +412,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         moveWithLockedAngle(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        targetAngle);
+                                        Optional.of(targetAngle));
                 });
         }
 
@@ -420,18 +420,32 @@ public class Drive extends GeneratedDrive implements Sendable {
          * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
          * CENTRIC.
          */
-        public void moveWithLockedAngle(
+        private void moveWithLockedAngle(
                         LinearVelocity x,
                         LinearVelocity y,
-                        Angle targetAngle) {
+                        Optional<Angle> targetAngle) {
+                if (targetAngle.isEmpty()) {
+                        return;
+                }
+
                 setControl(
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
                                                 .withTargetDirection(
-                                                                new Rotation2d(targetAngle)));
+                                                                new Rotation2d(targetAngle.get())));
 
-                SmartDashboard.putNumber("Target Angle", targetAngle.in(Degrees));
+                SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
+        }
+
+        public Command aimTo(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y,
+                        Supplier<Optional<Angle>> targetAngle) {
+                return run(() -> moveWithLockedAngle(
+                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                targetAngle.get()));
         }
 
         public Translation2d getHubTarget(Alliance alliance) {

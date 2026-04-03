@@ -32,7 +32,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AutoLaunchToHub;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
@@ -67,14 +66,6 @@ public class RobotContainer implements Sendable {
         private final Trigger t_switchRelativeReference;
         private final Trigger t_resetGyro;
 
-        // Command Triggers
-        // private final Trigger t_autoScore_aligned;
-        // private final Trigger t_autoScore_notAligned;
-        // private final Trigger t_autoSnowBlow_aligned;
-        // private final Trigger t_autoSnowBlow_notAligned;
-        // private final Trigger t_partialManualScore_aligned;
-        // private final Trigger t_partialManualScore_notAligned;
-
         private final Drive drive;
         private final Spindexer spindexer;
         private final BayDoor bayDoor;
@@ -90,6 +81,8 @@ public class RobotContainer implements Sendable {
 
         private final Supplier<Optional<ShotCalculator.LaunchParameters>> hubLaunchSupplier;
         private final Supplier<Optional<ShotCalculator.LaunchParameters>> snowBlowSupplier;
+
+        private Optional<LaunchParameters> launchParameters = Optional.empty();
 
         private final SendableChooser<Command> autoChooser;
 
@@ -192,17 +185,6 @@ public class RobotContainer implements Sendable {
                 t_switchRelativeReference = driver.leftBumper();
                 t_resetGyro = driver.povDown();
 
-                // Command Triggers
-                // t_autoSnowBlow_aligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
-                // .and(drive.launcherAlignedToSnowblow);
-                // t_autoSnowBlow_notAligned = t_autoSnowBlow.and(drive.onAllianceSide.negate())
-                // .and(drive.launcherAlignedToSnowblow.negate());
-
-                // t_partialManualScore_aligned =
-                // t_partialManualScore.and(drive.launcherAlignedToHub);
-                // t_partialManualScore_notAligned =
-                // t_partialManualScore.and(drive.launcherAlignedToHub.negate());
-
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
                 initSmartdashBoard();
@@ -227,6 +209,10 @@ public class RobotContainer implements Sendable {
         @Override
         public void initSendable(SendableBuilder builder) {
 
+        }
+
+        public void updateLaunchParameters() {
+                launchParameters = hubLaunchSupplier.get();
         }
 
         public Command getAutonomousCommand() {
@@ -263,26 +249,6 @@ public class RobotContainer implements Sendable {
                 return launcher.prepareLaunch().alongWith(kicker.prepareFuel());
         }
 
-        // private Command angleToHub() {
-        // return drive.angleToHub(
-        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-        // DRIVER_CONTROLLER_DEADBAND,
-        // MOVE_CURVE),
-        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-        // DRIVER_CONTROLLER_DEADBAND,
-        // MOVE_CURVE));
-        // }
-
-        // private Command angleToSnowBlow() {
-        // return drive.angleToSnowblow(
-        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-        // DRIVER_CONTROLLER_DEADBAND,
-        // MOVE_CURVE),
-        // () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-        // DRIVER_CONTROLLER_DEADBAND,
-        // MOVE_CURVE));
-        // }
-
         private Command angleToRedAlliance() {
                 return drive.angleToRedAlliance(
                                 () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
@@ -294,23 +260,11 @@ public class RobotContainer implements Sendable {
         }
 
         private AngularVelocity launchVelocityToHub() {
-                if (hubLaunchSupplier.get().isEmpty()) {
-                        return RPM.zero();
-                }
-
-                LaunchParameters parameters = hubLaunchSupplier.get().get();
-
-                return RPM.of(parameters.rpm());
+                return launchParameters.map(parameters -> RPM.of(parameters.rpm())).orElse(RPM.zero());
         }
 
         private Optional<Angle> angleToHub() {
-                if (hubLaunchSupplier.get().isEmpty()) {
-                        return Optional.empty();
-                }
-
-                LaunchParameters parameters = hubLaunchSupplier.get().get();
-
-                return Optional.of(parameters.driveAngle().getMeasure());
+                return launchParameters.map(parameters -> parameters.driveAngle().getMeasure());
         }
 
         private void bindCommands() {
@@ -350,45 +304,6 @@ public class RobotContainer implements Sendable {
                                                 DRIVER_CONTROLLER_DEADBAND,
                                                 MOVE_CURVE),
                                 () -> angleToHub()));
-
-                // t_autoScore_aligned.whileTrue(
-                // angleToHub()
-                // .alongWith(launcher.launchFuel(null))
-                // .alongWith(kicker.kickFuel(null))
-                // .alongWith(spindexer.indexFuel())
-                // .alongWith(bayDoor.agitateLowFuel())
-                // .alongWith(intake.agitateFuel()));
-
-                // t_autoScore_notAligned.whileTrue(
-                // angleToHub()
-                // .alongWith(launcher.launchFuel(null))
-                // .alongWith(kicker.kickFuel(null)));
-
-                // t_autoSnowBlow_aligned.whileTrue(
-                // angleToSnowBlow()
-                // .alongWith(launcher.launchFuel(null))
-                // .alongWith(kicker.kickFuel(null))
-                // .alongWith(spindexer.indexFuel())
-                // .alongWith(bayDoor.open())
-                // .alongWith(intake.intakeFuel()));
-
-                // t_autoSnowBlow_notAligned.whileTrue(
-                // angleToSnowBlow()
-                // .alongWith(launcher.launchFuel(null))
-                // .alongWith(kicker.kickFuel(null))
-                // .alongWith(bayDoor.open())
-                // .alongWith(intake.intakeFuel()));
-
-                // t_partialManualScore_aligned.whileTrue(
-                // angleToHub()
-                // .alongWith(launcher.smartDashboardLaunchFuel())
-                // .alongWith(kicker.smartDashboardKickFuel())
-                // .alongWith(spindexer.indexFuel()));
-
-                // t_partialManualScore_notAligned.whileTrue(
-                // angleToHub()
-                // .alongWith(launcher.smartDashboardLaunchFuel())
-                // .alongWith(kicker.smartDashboardKickFuel()));
 
                 t_manualScore.whileTrue(
                                 launcher.smartDashboardLaunchFuel()

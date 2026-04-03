@@ -19,8 +19,8 @@ import frc.robot.subsystems.Kicker;
 import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Spindexer;
 
-public class AutoScore extends ParallelCommandGroup {
-    public AutoScore(
+public class AutoLaunchToHub extends ParallelCommandGroup {
+    public AutoLaunchToHub(
             Drive drive,
             Launcher launcher,
             Kicker kicker,
@@ -60,8 +60,7 @@ public class AutoScore extends ParallelCommandGroup {
         addCommands(
             drive.aimTo(x, y, targetAngle)
             .alongWith(launcher.launchFuel(launchVelocity)
-            .alongWith(kicker.kickFuel(launchVelocity))
-            .alongWith(spindexer.indexFuel()))
+            .alongWith(kicker.kickFuel(launchVelocity)))
         );
     }
 }

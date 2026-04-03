@@ -18,6 +18,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -30,7 +32,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AutoScore;
+import frc.robot.commands.AutoLaunchToHub;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
@@ -291,6 +293,26 @@ public class RobotContainer implements Sendable {
                                                 MOVE_CURVE));
         }
 
+        private AngularVelocity launchVelocityToHub() {
+                if (hubLaunchSupplier.get().isEmpty()) {
+                        return RPM.zero();
+                }
+
+                LaunchParameters parameters = hubLaunchSupplier.get().get();
+
+                return RPM.of(parameters.rpm());
+        }
+
+        private Optional<Angle> angleToHub() {
+                if (hubLaunchSupplier.get().isEmpty()) {
+                        return Optional.empty();
+                }
+
+                LaunchParameters parameters = hubLaunchSupplier.get().get();
+
+                return Optional.of(parameters.driveAngle().getMeasure());
+        }
+
         private void bindCommands() {
                 drive.setDefaultCommand(
                                 drive.moveWithPercentages(
@@ -315,14 +337,10 @@ public class RobotContainer implements Sendable {
                 drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(prepareFuel()
                                 .until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
 
-                t_autoScore.whileTrue(new AutoScore(
-                                drive,
-                                launcher,
-                                kicker,
-                                spindexer,
-                                bayDoor,
-                                intake,
-                                hubLaunchSupplier,
+                t_autoScore.whileTrue(launcher.launchFuel(() -> launchVelocityToHub()));
+                t_autoScore.whileTrue(kicker.kickFuel(() -> launchVelocityToHub()));
+                t_autoScore.whileTrue(spindexer.indexFuel());
+                t_autoScore.whileTrue(drive.aimTo(
                                 () -> ControllerUtil.getAxisWithDeadBandAndCurve(
                                                 driver.getLeftX(),
                                                 DRIVER_CONTROLLER_DEADBAND,
@@ -330,7 +348,8 @@ public class RobotContainer implements Sendable {
                                 () -> ControllerUtil.getAxisWithDeadBandAndCurve(
                                                 driver.getLeftY(),
                                                 DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE)));
+                                                MOVE_CURVE),
+                                () -> angleToHub()));
 
                 // t_autoScore_aligned.whileTrue(
                 // angleToHub()

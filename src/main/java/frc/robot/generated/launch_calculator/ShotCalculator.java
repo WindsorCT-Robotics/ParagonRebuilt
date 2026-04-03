@@ -20,7 +20,6 @@
 
 package frc.robot.generated.launch_calculator;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
@@ -300,7 +299,6 @@ public class ShotCalculator {
     double robotX = compensatedPose.getX();
     double robotY = compensatedPose.getY();
     double heading = compensatedPose.getRotation().plus(new Rotation2d(Radians.of(Math.PI))).getRadians();
-    SmartDashboard.putNumber("Heading", Radians.of(heading).in(Degrees));
 
     Translation2d target = inputs.target();
     double hubX = target.getX();
@@ -310,7 +308,6 @@ public class ShotCalculator {
     // suppress firing when the chassis is tilted beyond the threshold.
     if (Math.abs(inputs.pitchDeg()) > config.maxTiltDeg
         || Math.abs(inputs.rollDeg()) > config.maxTiltDeg) {
-      System.out.println("max tilt");
       isInvalid = true;
     }
 
@@ -555,9 +552,6 @@ public class ShotCalculator {
         config.wDistanceInRange
     };
 
-    SmartDashboard.putNumberArray("cooler", c);
-    SmartDashboard.putNumberArray("coolerer", w);
-
     double sumW = 0;
     double logSum = 0;
     for (int i = 0; i < 5; i++) {
@@ -567,7 +561,6 @@ public class ShotCalculator {
       sumW += w[i];
     }
 
-    SmartDashboard.putNumber("sumW", sumW);
     if (sumW <= 0)
       return 0;
     double composite = Math.exp(logSum / sumW) * 100.0;

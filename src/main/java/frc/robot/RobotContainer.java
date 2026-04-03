@@ -80,6 +80,13 @@ public class RobotContainer implements Sendable {
         private final CommandXboxController driver = new CommandXboxController(0);
         private final CommandXboxController operator = new CommandXboxController(1);
 
+        private final Supplier<Dimensionless> moveX = () -> ControllerUtil
+                        .getAxisWithDeadBandAndCurve(driver.getLeftX(), DRIVER_CONTROLLER_DEADBAND, MOVE_CURVE);
+        private final Supplier<Dimensionless> moveY = () -> ControllerUtil
+                        .getAxisWithDeadBandAndCurve(driver.getLeftY(), DRIVER_CONTROLLER_DEADBAND, MOVE_CURVE);
+        private final Supplier<Dimensionless> turnX = () -> ControllerUtil
+                        .getAxisWithDeadBandAndCurve(driver.getRightX(), DRIVER_CONTROLLER_DEADBAND, TURN_CURVE);
+
         private final ShotCalculator launchCalculator;
         private final ShotCalculator.Config launcherCalculatorConfig = new Config();
 
@@ -242,13 +249,7 @@ public class RobotContainer implements Sendable {
         }
 
         private Command angleToRedAlliance() {
-                return drive.angleToRedAlliance(
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE),
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE));
+                return drive.angleToRedAlliance(moveX, moveY);
         }
 
         private AngularVelocity launchVelocityToHub() {
@@ -269,17 +270,7 @@ public class RobotContainer implements Sendable {
 
         private void bindCommands() {
                 drive.setDefaultCommand(
-                                drive.moveWithPercentages(
-                                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftX(),
-                                                                DRIVER_CONTROLLER_DEADBAND,
-                                                                MOVE_CURVE),
-                                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getLeftY(),
-                                                                DRIVER_CONTROLLER_DEADBAND,
-                                                                MOVE_CURVE),
-                                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(driver.getRightX(),
-                                                                DRIVER_CONTROLLER_DEADBAND,
-                                                                TURN_CURVE),
-                                                this::getRelativeReference)
+                                drive.moveWithPercentages(moveX, moveY, turnX, this::getRelativeReference)
                                                 .withName("Drive With Percentages"));
 
                 bayDoor.setDefaultCommand(bayDoor.ensuredHome().withName("Home Baydoor"));
@@ -294,16 +285,7 @@ public class RobotContainer implements Sendable {
                 t_autoScore.whileTrue(launcher.launchFuel(() -> launchVelocityToHub()));
                 t_autoScore.whileTrue(kicker.kickFuel(() -> launchVelocityToHub()));
                 t_autoScore.whileTrue(spindexer.indexFuel());
-                t_autoScore.whileTrue(drive.aimTo(
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(
-                                                driver.getLeftX(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE),
-                                () -> ControllerUtil.getAxisWithDeadBandAndCurve(
-                                                driver.getLeftY(),
-                                                DRIVER_CONTROLLER_DEADBAND,
-                                                MOVE_CURVE),
-                                () -> angleToHub()));
+                t_autoScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
 
                 t_manualScore.whileTrue(
                                 launcher.smartDashboardLaunchFuel()

@@ -15,17 +15,12 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.generated.Elastic;
-import frc.robot.generated.Elastic.Notification;
-import frc.robot.generated.Elastic.NotificationLevel;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.LauncherMotor;
 
@@ -39,7 +34,7 @@ public class Launcher extends SubsystemBase {
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
 
     private static final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
-    
+
     private static final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
             .withStatorCurrentLimit(Amps.of(80));
 
@@ -74,11 +69,6 @@ public class Launcher extends SubsystemBase {
 
     public final Trigger nearTargetRPM;
 
-    private final static String incrementLauncherOffsetTitle = "Launcher Offset increments to: ";
-    private final static String decrementLauncherOffsetTitle = "Launcher Offset decrements to: ";
-    private final Elastic.Notification launcherOffsetNotification = new Notification(NotificationLevel.INFO, "", "")
-            .withDisplaySeconds(0.8);
-
     public Launcher(String name) {
         super("Subsystems/" + name);
 
@@ -90,8 +80,6 @@ public class Launcher extends SubsystemBase {
         nearTargetRPM = new Trigger(
                 () -> leadMotor.getVelocity().isNear(leadMotor.getTargetVelocity(), NEAR_TARGET_VELOCITY_THRESHHOLD));
 
-        launcherOffsetNotification.setWidth(250);
-        launcherOffsetNotification.setHeight(75);
         initSmartDashboard();
     }
 
@@ -103,11 +91,6 @@ public class Launcher extends SubsystemBase {
                 () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
 
-        builder.addDoubleProperty(
-                "Launcher Offset (RPM)",
-                () -> getRPMLauncherOffset().in(RPM),
-                this::setRPMLauncherOffset);
-
         builder.addBooleanProperty("Near Target Velocity (RPM)", nearTargetRPM, null);
     }
 
@@ -115,34 +98,6 @@ public class Launcher extends SubsystemBase {
         SmartDashboard.putData(getName(), this);
         SmartDashboard.putData(getName() + "/" + leadMotor.getSmartDashboardName(), leadMotor);
         SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
-    }
-
-    private void setRPMLauncherOffset(double rpm) {
-        launcherOffset = RPM.of(
-                MathUtil.clamp(
-                        rpm,
-                        MIN_USER_VELOCITY_OFFSET.in(RPM),
-                        MAX_USER_VELOCITY_OFFSET.in(RPM)));
-    }
-
-    public Command incrementLauncherOffset() {
-        return new InstantCommand(() -> {
-            setRPMLauncherOffset(getRPMLauncherOffset().plus(RPM.of(10)).in(RPM));
-            Elastic.sendNotification(launcherOffsetNotification
-                    .withTitle(incrementLauncherOffsetTitle + getRPMLauncherOffset().in(RPM)));
-        });
-    }
-
-    public Command decrementLauncherOffset() {
-        return new InstantCommand(() -> {
-            setRPMLauncherOffset(getRPMLauncherOffset().minus(RPM.of(10)).in(RPM));
-            Elastic.sendNotification(launcherOffsetNotification
-                    .withTitle(decrementLauncherOffsetTitle + getRPMLauncherOffset().in(RPM)));
-        });
-    }
-
-    private AngularVelocity getRPMLauncherOffset() {
-        return launcherOffset;
     }
 
     public Command launchFuel(Supplier<AngularVelocity> velocity) {

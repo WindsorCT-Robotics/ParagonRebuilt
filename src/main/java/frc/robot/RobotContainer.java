@@ -289,6 +289,7 @@ public class RobotContainer implements Sendable {
 
                 t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
+                // TODO: change this somehow.
                 drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(prepareFuel()
                                 .until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
 

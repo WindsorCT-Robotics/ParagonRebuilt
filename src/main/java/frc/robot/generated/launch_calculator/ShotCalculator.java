@@ -32,6 +32,9 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.generated.Elastic;
+import frc.robot.generated.Elastic.Notification;
+import frc.robot.generated.Elastic.NotificationLevel;
 
 /**
  * Shoot-on-the-move fire control solver. Figures out what RPM and heading your
@@ -78,6 +81,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * </pre>
  */
 public class ShotCalculator {
+  private final static String incrementLauncherOffsetTitle = "Launcher Offset increments to: ";
+  private final static String decrementLauncherOffsetTitle = "Launcher Offset decrements to: ";
+  private final Elastic.Notification launcherOffsetNotification = new Notification(NotificationLevel.INFO, "", "")
+      .withDisplaySeconds(0.8);
 
   /**
    * The result of calculate(). RPM to spin up, time of flight, heading to aim at,
@@ -212,6 +219,9 @@ public class ShotCalculator {
 
   public ShotCalculator(Config config) {
     this.config = config;
+    launcherOffsetNotification.setWidth(250);
+    launcherOffsetNotification.setHeight(75);
+    launcherOffsetNotification.setDisplayTimeSeconds(0.8);
   }
 
   /**
@@ -591,6 +601,16 @@ public class ShotCalculator {
    */
   public void adjustOffset(double delta) {
     rpmOffset = MathUtil.clamp(rpmOffset + delta, -200, 200);
+
+    if (delta > 0) {
+      Elastic.sendNotification(launcherOffsetNotification
+          .withTitle(incrementLauncherOffsetTitle + rpmOffset));
+    }
+
+    if (delta < 0) {
+      Elastic.sendNotification(launcherOffsetNotification
+          .withTitle(decrementLauncherOffsetTitle + rpmOffset));
+    }
   }
 
   /**

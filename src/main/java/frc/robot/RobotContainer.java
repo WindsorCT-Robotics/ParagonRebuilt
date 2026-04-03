@@ -70,6 +70,10 @@ public class RobotContainer implements Sendable {
         private final Trigger t_switchRelativeReference;
         private final Trigger t_resetGyro;
 
+        // Conditional Triggers
+        private final Trigger t_scoreValid;
+        private final Trigger t_snowBlowValid;
+
         private final Drive drive;
         private final Spindexer spindexer;
         private final BayDoor bayDoor;
@@ -157,6 +161,12 @@ public class RobotContainer implements Sendable {
                 t_closeBayDoor = operator.povUp();
                 t_switchRelativeReference = driver.leftBumper();
                 t_resetGyro = driver.povDown();
+
+                t_scoreValid = new Trigger(
+                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid()).orElse(false));
+
+                t_snowBlowValid = new Trigger(() -> snowBlowLaunchSupplier.get().map(parameters -> parameters.isValid())
+                                .orElse(false));
 
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
@@ -284,13 +294,26 @@ public class RobotContainer implements Sendable {
 
                 t_autoScore.whileTrue(launcher.launchFuel(() -> launchVelocityToHub()));
                 t_autoScore.whileTrue(kicker.kickFuel(() -> launchVelocityToHub()));
-                t_autoScore.whileTrue(spindexer.indexFuel());
+                t_autoScore.whileTrue(spindexer.indexFuel().until(t_scoreValid.negate()));
                 t_autoScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
 
-                t_manualScore.whileTrue(
-                                launcher.smartDashboardLaunchFuel()
-                                                .alongWith(kicker.smartDashboardKickFuel())
-                                                .alongWith(spindexer.indexFuel()));
+                t_autoSnowBlow.whileTrue(launcher.launchFuel(() -> launchVelocityToSnowBlow()));
+                t_autoSnowBlow.whileTrue(kicker.kickFuel(() -> launchVelocityToSnowBlow()));
+                t_autoSnowBlow.whileTrue(spindexer.indexFuel().until(t_snowBlowValid.negate()));
+                t_autoSnowBlow.whileTrue(drive.aimTo(moveX, moveY, () -> angleToSnowBlow()));
+                t_autoSnowBlow.whileTrue(bayDoor.open());
+                t_autoSnowBlow.whileTrue(intake.intakeFuel());
+
+                t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
+                t_partialManualScore.whileTrue(spindexer.indexFuel());
+                t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
+
+                t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
+                t_manualScore.whileTrue(spindexer.indexFuel());
+
+                t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
 
                 t_autoIntake.onTrue(bayDoor.open().alongWith(intake.intakeFuel()));
                 t_autoShuttle.onTrue(bayDoor.open().alongWith(intake.shuttleFuel()));
@@ -298,12 +321,12 @@ public class RobotContainer implements Sendable {
                 t_closeBayDoor.onTrue(bayDoor.close());
                 t_homeBayDoor.onTrue(bayDoor.ensuredHome());
 
-                t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
-
                 t_faceRedAlliance.whileTrue(angleToRedAlliance());
 
-                t_incrementLauncherOffset.onTrue(launcher.incrementLauncherOffset());
-                t_decrementLauncherOffset.onTrue(launcher.decrementLauncherOffset());
+                t_incrementLauncherOffset
+                                .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(25).in(RPM))));
+                t_decrementLauncherOffset
+                                .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(-25).in(RPM))));
 
                 t_resetGyro.onTrue(drive.resetGyroCommand());
         }

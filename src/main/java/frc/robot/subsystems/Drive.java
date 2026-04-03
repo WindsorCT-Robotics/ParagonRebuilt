@@ -34,13 +34,15 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -61,11 +63,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.GeneratedDrive;
-import frc.robot.generated.LimelightHelpers;
-import frc.robot.generated.RectanglePoseArea;
 import frc.robot.generated.TunerConstants;
-import frc.robot.generated.LimelightHelpers.LimelightTarget_Fiducial;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
+import frc.robot.hardware.base_sensors.LimelightVisionBase;
+import frc.robot.hardware.base_sensors.LimelightVisionBase.StandardVisionDeviations;
+import frc.robot.hardware.sensors.LauncherVision;
 import frc.robot.utils.AngleUtil;
 
 public class Drive extends GeneratedDrive implements Sendable {
@@ -124,19 +126,21 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final StructArrayPublisher<SwerveModuleState> targetModuleStates = driveTable
                         .getStructArrayTopic("Target Modules States", SwerveModuleState.struct).publish();
 
-        private final String limelightName;
-        private final RectanglePoseArea field;
+        private static final Distance STANDARD_DEVIATION_THRESHOLD = Meters.one();
+        private static final double STANDARD_DEVIATION_SCALAR = 6.0;
+
+        private final String launcherVisionName;
+        private final LauncherVision launcherVision;
+
+        private final LimelightVisionBase[] visions;
+
         private final RobotConfig robotConfiguration;
         private final SwerveRequest.ApplyRobotSpeeds pathPlannerSwerveRequest = new SwerveRequest.ApplyRobotSpeeds();
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
 
-        private final Supplier<PoseEstimate> poseEstimate;
         public final Trigger onAllianceSide;
-        public final Trigger isVisionEstimateInField;
-        public final Trigger isVisionEstimateHasTags;
-        public final Trigger isVisionMeasurementValid;
         // endregion
 
         public Drive(String name) throws IOException, ParseException {
@@ -163,35 +167,25 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
 
-                limelightName = "limelight";
-                AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+                launcherVisionName = "limelight";
+                launcherVision = new LauncherVision(
+                                name,
+                                new Pose3d(
+                                                Inches.of(-8),
+                                                Inches.of(-12),
+                                                Inches.of(20.5),
+                                                new Rotation3d(
+                                                                Degrees.zero(),
+                                                                Degrees.of(25),
+                                                                Degrees.of(90))),
+                                getPigeon2().getYaw().asSupplier(),
+                                getPigeon2().getAngularVelocityZDevice().asSupplier(),
+                                getPigeon2().getPitch().asSupplier(),
+                                getPigeon2().getAngularVelocityYDevice().asSupplier(),
+                                getPigeon2().getRoll().asSupplier(),
+                                getPigeon2().getAngularVelocityXDevice().asSupplier());
 
-                this.field = new RectanglePoseArea(
-                                Translation2d.kZero,
-                                new Translation2d(layout.getFieldLength(), layout.getFieldWidth()));
-
-                setVisionMeasurementStdDevs(VecBuilder.fill(.5, .5, 9999999));
-                LimelightHelpers.setCameraPose_RobotSpace(
-                                limelightName,
-                                Inches.of(-8).in(Meters),
-                                Inches.of(-12).in(Meters),
-                                Inches.of(20.5).in(Meters),
-                                Degrees.zero().in(Degrees),
-                                Degrees.of(25).in(Degrees),
-                                Degrees.of(90).in(Degrees));
-                LimelightHelpers.SetRobotOrientation(limelightName,
-                                getPigeon2().getYaw().getValue().in(Degrees),
-                                0.0,
-                                0.0,
-                                0.0,
-                                0.0,
-                                0.0);
-
-                poseEstimate = () -> LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
-
-                isVisionEstimateInField = new Trigger(() -> field.isPoseWithinArea(poseEstimate.get().pose));
-                isVisionEstimateHasTags = new Trigger(() -> poseEstimate.get().tagCount > 0);
-                isVisionMeasurementValid = isVisionEstimateHasTags.and(isVisionEstimateInField);
+                visions = new LimelightVisionBase[] { launcherVision };
 
                 onAllianceSide = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -230,7 +224,9 @@ public class Drive extends GeneratedDrive implements Sendable {
         @Override
         public void periodic() {
                 super.periodic();
-                updateLimelightOrientationToRobot();
+                for (LimelightVisionBase vision : visions) {
+                        vision.updateRobotOrientation();
+                }
                 addVisionMeasurements();
 
                 SwerveDriveState robotState = getState();
@@ -255,8 +251,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "none",
                                 null);
                 builder.addBooleanProperty("On Alliance Side", onAllianceSide, null);
-                builder.addBooleanProperty("Vison Estimate in Field", isVisionEstimateInField, null);
-                builder.addBooleanProperty("Vision Tags Found", isVisionEstimateHasTags, null);
                 builder.addDoubleProperty("Distance To Hub (Meters)",
                                 () -> getDistanceToHub().orElse(Meters.zero()).in(Meters), null);
         }
@@ -561,43 +555,30 @@ public class Drive extends GeneratedDrive implements Sendable {
         // endregion
 
         // region Vision
-        private void addVisionMeasurements() {
-                double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(limelightName).getTranslation()
-                                .getDistance(new Translation3d());
-                double confidence = (targetDistance - 1) / 6;
-                LimelightHelpers.PoseEstimate positionEstimate = poseEstimate.get();
-
-                perceptedTags.set(getPercivedTags());
-
-                if (!isVisionMeasurementValid.getAsBoolean()) {
-                        invalidVisionPosition.set(positionEstimate.pose);
-                        return;
+        private void addVisionMeasurements() { // TODO: Account for invalid states such as pose not in bounds or if the
+                                               // vision doesn't actually have a tag. Also ensure that sendables are
+                                               // added for each camera.
+                LimelightVisionBase bestConfidence = launcherVision;
+                for (LimelightVisionBase vision : visions) {
+                        Distance bestTag = bestConfidence
+                                        .getStandardDeviations(STANDARD_DEVIATION_THRESHOLD, STANDARD_DEVIATION_SCALAR)
+                                        .tagDistance();
+                        Distance visionTag = vision
+                                        .getStandardDeviations(STANDARD_DEVIATION_THRESHOLD, STANDARD_DEVIATION_SCALAR)
+                                        .tagDistance();
+                        if (bestTag.gt(visionTag)) {
+                                bestConfidence = vision;
+                        }
                 }
 
-                addVisionMeasurement(
-                                positionEstimate.pose,
-                                positionEstimate.timestampSeconds,
-                                VecBuilder.fill(confidence, confidence, 0.1));
-                validvisionPosition.set(positionEstimate.pose);
+                PoseEstimate poseEstimate = bestConfidence.getPoseEstimate();
+                StandardVisionDeviations deviation = bestConfidence.getStandardDeviations(STANDARD_DEVIATION_THRESHOLD,
+                                STANDARD_DEVIATION_SCALAR);
+                Vector<N3> standardDeviationVector = VecBuilder.fill(deviation.deviationX().in(Meters),
+                                deviation.deviationY().in(Meters), deviation.deviationRotation().in(Radians));
+                addVisionMeasurement(poseEstimate.pose, poseEstimate.timestampSeconds, standardDeviationVector);
         }
 
-        private void updateLimelightOrientationToRobot() {
-                LimelightHelpers.SetRobotOrientation(limelightName, getAngle().in(Degrees),
-                                0.0, 0.0, 0.0, 0.0, 0.0);
-        }
-
-        private Pose2d[] getPercivedTags() {
-                LimelightTarget_Fiducial[] fiducials = LimelightHelpers
-                                .getLatestResults(limelightName).targets_Fiducials;
-
-                Pose2d[] tags = new Pose2d[fiducials.length];
-
-                for (int i = 0; i < tags.length; i++) {
-                        tags[i] = fiducials[i].getTargetPose_RobotSpace2D();
-                }
-
-                return tags;
-        }
         // endregion
 
         public void resetGyro() {

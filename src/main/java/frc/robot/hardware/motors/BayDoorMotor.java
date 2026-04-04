@@ -6,10 +6,10 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.BayMotorState;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.base_motors.KrakenMotorBase;
+import frc.robot.hardware.base_motors.KrakenMotorX60Base;
 import frc.robot.interfaces.IHomingMotor;
 
-public class BayDoorMotor extends KrakenMotorBase implements IHomingMotor {
+public class BayDoorMotor extends KrakenMotorX60Base implements IHomingMotor {
     private BayMotorState motorBayDoorState = BayMotorState.UNKNOWN;
     private boolean hasHomed = false;
 

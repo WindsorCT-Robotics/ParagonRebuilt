@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Watts;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -19,6 +20,7 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Power;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -116,14 +118,20 @@ public class BayDoor extends SubsystemBase {
                                 name + " HOMING INCOMPLETE.",
                                 "");
 
-                atLeftCloseLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
-                atLeftOpenLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
-                
-                atLeftMiddleLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
-                atRightMiddleLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
-                
-                atRightCloseLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
-                atRightOpenLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
+                atLeftCloseLimit = new Trigger(
+                                () -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                atLeftOpenLimit = new Trigger(
+                                () -> leftAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
+
+                atLeftMiddleLimit = new Trigger(
+                                () -> leftAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
+                atRightMiddleLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE,
+                                MIDDLE_TOLERANCE));
+
+                atRightCloseLimit = new Trigger(
+                                () -> rightAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                atRightOpenLimit = new Trigger(
+                                () -> rightAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
 
                 isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
                 isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
@@ -136,6 +144,10 @@ public class BayDoor extends SubsystemBase {
                 SmartDashboard.putData(getName(), this);
                 SmartDashboard.putData(getName() + "/" + leftMotor.getSmartDashboardName(), leftMotor);
                 SmartDashboard.putData(getName() + "/" + rightMotor.getSmartDashboardName(), rightMotor);
+                SmartDashboard.putData(getName() + "/" + leftAbsoluteEncoder.getSmartDashboardName(),
+                                leftAbsoluteEncoder);
+                SmartDashboard.putData(getName() + "/" + rightAbsoluteEncoder.getSmartDashboardName(),
+                                rightAbsoluteEncoder);
         }
 
         @Override
@@ -153,6 +165,15 @@ public class BayDoor extends SubsystemBase {
                 builder.addBooleanProperty("isBayDoorOpen", isBayDoorOpen, null);
 
                 builder.addBooleanProperty("hasBayDoorHomed", hasBayDoorHomed, null);
+
+                builder.addDoubleProperty("Power (Watts)", () -> getTotalPower().in(Watts), null);
+        }
+
+        private Power getTotalPower() {
+                Power totalPower = Watts.zero();
+                totalPower.plus(leftMotor.getPower());
+                totalPower.plus(rightMotor.getPower());
+                return totalPower;
         }
 
         private boolean hasHomed() {

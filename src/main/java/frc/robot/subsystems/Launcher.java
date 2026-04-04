@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Watts;
+
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -16,6 +18,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Power;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -81,6 +84,12 @@ public class Launcher extends SubsystemBase {
         initSmartDashboard();
     }
 
+    private void initSmartDashboard() {
+        SmartDashboard.putData(getName(), this);
+        SmartDashboard.putData(getName() + "/" + leadMotor.getSmartDashboardName(), leadMotor);
+        SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
@@ -90,12 +99,15 @@ public class Launcher extends SubsystemBase {
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
 
         builder.addBooleanProperty("Near Target Velocity (RPM)", nearTargetRPM, null);
+
+        builder.addDoubleProperty("Power (Watts)", () -> getTotalPower().in(Watts), null);
     }
 
-    private void initSmartDashboard() {
-        SmartDashboard.putData(getName(), this);
-        SmartDashboard.putData(getName() + "/" + leadMotor.getSmartDashboardName(), leadMotor);
-        SmartDashboard.putData(getName() + "/" + followerMotor.getSmartDashboardName(), followerMotor);
+    private Power getTotalPower() {
+        Power totalPower = Watts.zero();
+        totalPower.plus(leadMotor.getPower());
+        totalPower.plus(followerMotor.getPower());
+        return totalPower;
     }
 
     public Command launchFuel(Supplier<AngularVelocity> velocity) {

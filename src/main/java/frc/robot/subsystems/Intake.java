@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Watts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -58,6 +59,8 @@ public class Intake extends SubsystemBase {
         builder.addDoubleProperty("Shuttle Target Velocity",
                 () -> getShuttleTargetVelocity().in(RotationsPerSecond),
                 this::setShuttleTargetVelocity);
+
+        builder.addDoubleProperty("Power (Watts)", () -> motor.getPower().in(Watts), null);
     }
 
     private void initSmartDashboard() {

@@ -33,12 +33,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Kicker;
@@ -69,6 +71,8 @@ public class RobotContainer implements Sendable {
         private final Trigger t_closeBayDoor;
         private final Trigger t_switchRelativeReference;
         private final Trigger t_resetGyro;
+        private final Trigger t_climb;
+        private final Trigger t_climb_home;
 
         // Conditional Triggers
         private final Trigger t_scoreValid;
@@ -80,6 +84,7 @@ public class RobotContainer implements Sendable {
         private final Intake intake;
         private final Kicker kicker;
         private final Launcher launcher;
+        private final Climber climber;
 
         private final CommandXboxController driver = new CommandXboxController(0);
         private final CommandXboxController operator = new CommandXboxController(1);
@@ -116,6 +121,7 @@ public class RobotContainer implements Sendable {
                 spindexer = new Spindexer(Spindexer.class.getSimpleName());
                 launcher = new Launcher(Launcher.class.getSimpleName());
                 kicker = new Kicker(Kicker.class.getSimpleName());
+                climber = new Climber(Climber.class.getSimpleName());
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -161,6 +167,8 @@ public class RobotContainer implements Sendable {
                 t_closeBayDoor = operator.povUp();
                 t_switchRelativeReference = driver.leftBumper();
                 t_resetGyro = driver.povDown();
+                t_climb = operator.rightTrigger();
+                t_climb_home = operator.start().and(operator.back());
 
                 t_scoreValid = new Trigger(
                                 () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid()).orElse(false));
@@ -283,10 +291,13 @@ public class RobotContainer implements Sendable {
 
                 intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
 
+                climber.setDefaultCommand(climber.home());
+
                 t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
                 // TODO: change this somehow.
-                drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(launcher.prepareLaunch().alongWith(kicker.prepareFuel())
+                drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(launcher.prepareLaunch()
+                                .alongWith(kicker.prepareFuel())
                                 .until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
 
                 drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(spindexer.prepareFuel());
@@ -321,6 +332,11 @@ public class RobotContainer implements Sendable {
                 t_homeBayDoor.onTrue(bayDoor.ensuredHome());
 
                 t_faceRedAlliance.whileTrue(angleToRedAlliance());
+
+                t_climb.whileTrue(bayDoor.close().andThen(climber.open())
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+                t_climb.whileFalse(climber.close().unless(() -> DriverStation.isAutonomous()));
+                t_climb_home.onTrue(climber.home());
 
                 t_incrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(25).in(RPM))));

@@ -44,12 +44,12 @@ public class Spindexer extends SubsystemBase {
                             .withKS(0.03)
                             .withKV(0.009)));
     private final FuelSensor fuelSensor = new FuelSensor(
-                        "Fuel Sensor",
-                        new CanId((byte) 13),
-                        FUEL_SENSOR_THRESHOLD,
-                        RangingMode.Short,
-                        Milliseconds.of(20),
-                        this::getIndexingToScore);
+            "Fuel Sensor",
+            new CanId((byte) 13),
+            FUEL_SENSOR_THRESHOLD,
+            RangingMode.Short,
+            Milliseconds.of(20),
+            this::getIndexingToScore);
 
     private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(4800);
     private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
@@ -77,6 +77,16 @@ public class Spindexer extends SubsystemBase {
         SmartDashboard.putData(getName() + "/" + fuelSensor.getSmartDashboardName(), fuelSensor);
     }
 
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addDoubleProperty(
+                "Indexing Target Velocity (RPM)",
+                () -> getSmartdashBoardVelocity().in(RPM),
+                this::setSmartdashBoardVelocity);
+        builder.addBooleanProperty("Unjam Fuel", autoUnjamTrigger, null);
+    }
+
     private AngularVelocity getSmartdashBoardVelocity() {
         return smartDashboardVelocity;
     }
@@ -88,16 +98,6 @@ public class Spindexer extends SubsystemBase {
     @Override
     public void periodic() {
         fuelSensor.update();
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addDoubleProperty(
-                "Indexing Target Velocity (RPM)",
-                () -> getSmartdashBoardVelocity().in(RPM),
-                this::setSmartdashBoardVelocity);
-        builder.addBooleanProperty("Unjam Fuel", autoUnjamTrigger, null);
     }
 
     private boolean getIndexingToScore() {
@@ -127,7 +127,7 @@ public class Spindexer extends SubsystemBase {
     }
 
     public Command prepareFuel() {
-        return ;
+        return;
     }
 
     public Command smartDashboardIndexFuel() {

@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Watts;
 
 import java.util.function.Supplier;
 
@@ -38,7 +39,7 @@ public class Kicker extends SubsystemBase {
                     .withSlot0(new Slot0Configs()
                             .withKS(0.03)
                             .withKV(0.01)));
-                            
+
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
 
@@ -55,6 +56,7 @@ public class Kicker extends SubsystemBase {
                 "Motor Velocity (RPM)",
                 () -> getTargetVelocity().in(RPM),
                 this::setTargetVelocity);
+        builder.addDoubleProperty("Power (Watts)", () -> motor.getPower().in(Watts), null);
     }
 
     private void initSmartDashboard() {

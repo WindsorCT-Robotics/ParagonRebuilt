@@ -9,9 +9,9 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.IntakeMotorState;
-import frc.robot.hardware.base_motors.KrakenMotorBase;
+import frc.robot.hardware.base_motors.KrakenMotorX60Base;
 
-public class IntakeRollerMotor extends KrakenMotorBase {
+public class IntakeRollerMotor extends KrakenMotorX60Base {
         private AngularVelocity targetVelocity = RPM.of(0);
         private IntakeMotorState intakeMotorState = IntakeMotorState.IDLE;
         private Color intakeMotorStateIdle = new Color(255, 255, 255);

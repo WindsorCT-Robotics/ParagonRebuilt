@@ -26,6 +26,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -114,6 +115,7 @@ public class RobotContainer implements Sendable {
   private static final String DEFAULT_AUTO = "";
 
   public RobotContainer() {
+    RobotController.setBrownoutVoltage(6);
     try {
       drive = new Drive(
           Drive.class.getSimpleName(),

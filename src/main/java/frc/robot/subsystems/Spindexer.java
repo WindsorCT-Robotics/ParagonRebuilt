@@ -126,6 +126,10 @@ public class Spindexer extends SubsystemBase {
         return runEnd(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY), this::stop);
     }
 
+    public Command prepareFuel() {
+        return ;
+    }
+
     public Command smartDashboardIndexFuel() {
         return runEnd(() -> {
             motor.setPointVelocity(getSmartdashBoardVelocity());

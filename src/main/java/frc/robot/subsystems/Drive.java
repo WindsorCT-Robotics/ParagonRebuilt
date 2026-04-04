@@ -537,8 +537,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 constraints,
                                                 goalEndState,
                                                 robotNextControlDistance,
-                                                endAnchorPreviousControlDistance))
-                                .withName("Subsystems/" + getName() + "/pathToPosition");
+                                                endAnchorPreviousControlDistance));
         }
 
         // endregion
@@ -564,7 +563,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         public Command resetGyroCommand() {
-                return Commands.runOnce(() -> resetGyro())
-                                .withName("Subsystems/" + getName() + "/resetGyro");
+                return Commands.runOnce(this::resetGyro);
         }
 }

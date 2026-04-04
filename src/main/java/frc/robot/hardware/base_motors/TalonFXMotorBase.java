@@ -28,8 +28,9 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IClosedLoopMotor;
+import frc.robot.interfaces.IConfiguration;
 
-public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
+public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonFXConfiguration>, Sendable {
     protected final TalonFX motor;
     protected final TalonFXConfigurator configurator;
     private final CanId canId;
@@ -80,15 +81,18 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
         motor.setControl(motionMagicVelocityDutyCycle.withVelocity(angularVelocity));
     }
 
+    @Override
     public void configure(TalonFXConfiguration configuration) {
         currentConfiguration = configuration;
         configurator.apply(configuration);
     }
 
+    @Override
     public TalonFXConfiguration getCurrentConfiguration() {
         return currentConfiguration.clone();
     }
 
+    @Override
     public TalonFXConfiguration getDefaultConfiguration() {
         return defaultConfiguration.clone();
     }

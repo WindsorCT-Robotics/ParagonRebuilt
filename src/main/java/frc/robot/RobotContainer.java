@@ -254,10 +254,6 @@ public class RobotContainer implements Sendable {
                 return relativeReference;
         }
 
-        private Command prepareFuel() {
-                return launcher.prepareLaunch().alongWith(kicker.prepareFuel());
-        }
-
         private Command angleToRedAlliance() {
                 return drive.angleToRedAlliance(moveX, moveY);
         }
@@ -290,8 +286,10 @@ public class RobotContainer implements Sendable {
                 t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
                 // TODO: change this somehow.
-                drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(prepareFuel()
+                drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(launcher.prepareLaunch().alongWith(kicker.prepareFuel())
                                 .until(t_autoScore.or(t_autoSnowBlow).or(t_manualScore).or(t_partialManualScore)));
+
+                drive.onAllianceSide.and(() -> DriverStation.isTeleop()).whileTrue(spindexer.prepareFuel());
 
                 t_autoScore.whileTrue(launcher.launchFuel(() -> launchVelocityToHub()));
                 t_autoScore.whileTrue(kicker.kickFuel(() -> launchVelocityToHub()));

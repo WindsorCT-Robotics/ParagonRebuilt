@@ -30,12 +30,12 @@ public class Climber extends SubsystemBase {
             new CanId((byte) 0),
             new TalonFXConfiguration()
                     .withMotorOutput(new MotorOutputConfigs().withInverted(null))
-                    .withSlot0(new Slot0Configs()
-                            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-                            .withGravityType(GravityTypeValue.Arm_Cosine)
-                            .withKG(null)
-                            .withKS(null)
-                            .withKP(null))
+                    // .withSlot0(new Slot0Configs()
+                    // .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+                    // .withGravityType(GravityTypeValue.Arm_Cosine)
+                    // .withKG(null)
+                    // .withKS(null)
+                    // .withKP(null))
                     .withCurrentLimits(new CurrentLimitsConfigs()
                             .withStatorCurrentLimit(null)
                             .withSupplyCurrentLimit(null))
@@ -64,6 +64,7 @@ public class Climber extends SubsystemBase {
 
         atSoftOpen = new Trigger(() -> motor.getAngle().gte(OPEN_ANGLE_SETPOINT));
         atSoftClose = new Trigger(() -> motor.getAngle().lte(CLOSE_ANGLE_SETPOINT));
+        atHardClose = new Trigger(() -> false); // TODO: What is going to use verify that this will home.
         initSmartDashboard();
     }
 

@@ -61,8 +61,6 @@ public class Launcher extends SubsystemBase {
 
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
-    private static final AngularVelocity MAX_USER_VELOCITY_OFFSET = RPM.of(200);
-    private static final AngularVelocity MIN_USER_VELOCITY_OFFSET = RPM.of(-200);
 
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
     private AngularVelocity launcherOffset = RPM.of(0);

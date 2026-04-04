@@ -107,15 +107,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final StructPublisher<Pose2d> robotPosition = driveTable
                         .getStructTopic("Robot Position 2D", Pose2d.struct).publish();
 
-        private final StructPublisher<Pose2d> validvisionPosition = driveTable
-                        .getStructTopic("Valid Vision Position 2D", Pose2d.struct).publish();
-
-        private final StructPublisher<Pose2d> invalidVisionPosition = driveTable
-                        .getStructTopic("Invalid Vision Position 2D", Pose2d.struct).publish();
-
-        private final StructArrayPublisher<Pose2d> perceptedTags = driveTable
-                        .getStructArrayTopic("Percepted Tags Position 2D", Pose2d.struct).publish();
-
         private final StructArrayPublisher<SwerveModuleState> currentModulesStates = driveTable
                         .getStructArrayTopic("Current Modules States", SwerveModuleState.struct).publish();
 
@@ -180,7 +171,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 getPigeon2().getRoll().asSupplier(),
                                 getPigeon2().getAngularVelocityXDevice().asSupplier(),
                                 STANDARD_DEVIATION_THRESHOLD,
-                                STANDARD_DEVIATION_SCALAR);
+                                STANDARD_DEVIATION_SCALAR,
+                                "SmartDashboard/Subsystems/Drive/Visions");
 
                 visions = new LimelightVisionBase[] { launcherVision };
 

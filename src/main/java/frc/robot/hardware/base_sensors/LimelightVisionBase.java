@@ -11,10 +11,14 @@ import java.util.function.Supplier;
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -34,10 +38,11 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
     private final Supplier<AngularVelocity> rollRate;
     private final Distance standardDeviationThreshold;
     private final double standardDeviationScalar;
+    private final NetworkTable table;
+    private final StructArrayPublisher<Pose2d> perceivedTags;
 
     private static final Angle GYRO_DEVIATION = Radians.of(Integer.MAX_VALUE); // Uses gyro and not vision estimate to
                                                                                // determine theta.
-
     public LimelightVisionBase(
             String name,
             Pose3d cameraPose,
@@ -48,7 +53,8 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
             Supplier<Angle> roll,
             Supplier<AngularVelocity> rollRate,
             Distance standardDeviationThreshold,
-            double standardDeviationScalar) {
+            double standardDeviationScalar,
+            String networkTableDirectory) {
         this.name = name;
         this.yaw = yaw;
         this.yawRate = yawRate;
@@ -67,6 +73,9 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
                 cameraPose.getRotation().getMeasureX().in(Degrees),
                 cameraPose.getRotation().getMeasureY().in(Degrees),
                 cameraPose.getRotation().getMeasureZ().in(Degrees));
+
+        table = NetworkTableInstance.getDefault().getTable(networkTableDirectory);
+        perceivedTags = table.getStructArrayTopic(name + "/Perceived April Tags", Pose2d.struct).publish();
     }
 
     @Override
@@ -96,7 +105,9 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
 
     @Override
     public PoseEstimate getPoseEstimate() {
-        return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
+        PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
+        updateNetworkTables(poseEstimate);
+        return poseEstimate;
     }
 
     public record VisionMeasurements(PoseEstimate poseEstimate, Matrix<N3, N1> deviations) {
@@ -170,5 +181,16 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
 
         return Optional.of(
                 new StandardVisionDeviations(visionDeviationX, visionDeviationY, GYRO_DEVIATION, tagDistance.get()));
+    }
+
+    public void updateNetworkTables(PoseEstimate poseEstimate) {
+        AprilTag[] aprilTags = getDetectedTags(poseEstimate);
+        Pose2d[] tags = new Pose2d[aprilTags.length];
+
+        for (int i = 0; i < tags.length; i++) {
+            tags[i] = aprilTags[i].pose.toPose2d();
+        }
+
+        perceivedTags.set(tags);
     }
 }

@@ -5,7 +5,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
+
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -17,10 +20,8 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -29,9 +30,9 @@ import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
-import frc.robot.hardware.BayMotorState;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.BayDoorMotor;
+import frc.robot.hardware.sensors.BayDoorAbsoluteEncoder;
 
 public class BayDoor extends SubsystemBase {
         private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
@@ -43,7 +44,7 @@ public class BayDoor extends SubsystemBase {
 
         private static final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
                         .withStatorCurrentLimit(Amps.of(25));
-        
+
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",
                         new CanId((byte) 14),
@@ -63,8 +64,20 @@ public class BayDoor extends SubsystemBase {
                                         .withSlot0(SLOT0_CONFIGS)
                                         .withCurrentLimits(currentLimitsConfigs));
 
-        private final DigitalInput leftHardLimit = new DigitalInput(0);
-        private final DigitalInput rightHardLimit = new DigitalInput(1);
+        private final BayDoorAbsoluteEncoder leftAbsoluteEncoder = new BayDoorAbsoluteEncoder(
+                        "Left Bay Door Encoder",
+                        new CanId((byte) 0),
+                        new CANcoderConfiguration()
+                                        .withMagnetSensor(
+                                                        new MagnetSensorConfigs()
+                                                                        .withMagnetOffset(Rotations.of(0))));
+        private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
+                        "Right Bay Door Encoder",
+                        new CanId((byte) 0),
+                        new CANcoderConfiguration()
+                                        .withMagnetSensor(
+                                                        new MagnetSensorConfigs()
+                                                                        .withMagnetOffset(Rotations.of(0))));
 
         private final Elastic.Notification homeCompletionNotification;
         private final Elastic.Notification homeIncompletionNotification;
@@ -78,35 +91,16 @@ public class BayDoor extends SubsystemBase {
         private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(5);
         private static final Dimensionless CLOSE_PRESSURE_DUTY_CYCLE = Percent.of(-5);
 
-        public final Trigger atLeftCloseLimit = new Trigger(() -> leftHardLimit.get())
-                        .onTrue(new InstantCommand(() -> leftMotor.setBayMotorState(BayMotorState.CLOSE)));
+        public final Trigger atLeftCloseLimit;
+        public final Trigger atRightCloseLimit;
+        public final Trigger atLeftMiddleLimit;
+        public final Trigger atRightMiddleLimit;
+        public final Trigger atLeftOpenLimit;
+        public final Trigger atRightOpenLimit;
 
-        public final Trigger atRightCloseLimit = new Trigger(() -> rightHardLimit.get())
-                        .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
-
-        public final Trigger atLeftSoftCloseLimit = new Trigger(() -> leftMotor.getAngle().lt(CLOSE_ANGLE_SETPOINT))
-                        .onTrue(new InstantCommand(() -> leftMotor.setBayMotorState(BayMotorState.CLOSE)));
-
-        public final Trigger atRightSoftCloseLimit = new Trigger(() -> rightMotor.getAngle().lt(CLOSE_ANGLE_SETPOINT))
-                        .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
-
-        public final Trigger atLeftSoftOpenLimit = new Trigger(() -> leftMotor.getAngle().gte(OPEN_ANGLE_THRESHOLD))
-                        .onTrue(new InstantCommand(() -> leftMotor.setBayMotorState(BayMotorState.CLOSE)));
-
-        public final Trigger atRightSoftOpenLimit = new Trigger(() -> rightMotor.getAngle().gte(OPEN_ANGLE_THRESHOLD))
-                        .onTrue(new InstantCommand(() -> rightMotor.setBayMotorState(BayMotorState.CLOSE)));
-
-        public final Trigger isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
-
-        public final Trigger isBayDoorSoftClosed = new Trigger(atLeftSoftCloseLimit.and(atRightSoftCloseLimit));
-        
-        public final Trigger isBayDoorSoftOpen = new Trigger(atLeftSoftOpenLimit.and(atRightSoftOpenLimit));
-
-        public final Trigger atLeftMiddleLimit = new Trigger(
-                        () -> leftMotor.getAngle().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
-        public final Trigger atRightMiddleLimit = new Trigger(
-                        () -> rightMotor.getAngle().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
-        public final Trigger isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
+        private final Trigger isBayDoorClosed;
+        private final Trigger isBayDoorMiddle;
+        private final Trigger isBayDoorOpen;
 
         public final Trigger hasBayDoorHomed = new Trigger(this::hasHomed);
         private boolean hasHomed = false;
@@ -122,13 +116,24 @@ public class BayDoor extends SubsystemBase {
                                 name + " HOMING INCOMPLETE.",
                                 "");
 
+                atLeftCloseLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                atLeftOpenLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
+                
+                atLeftMiddleLimit = new Trigger(() -> leftAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
+                atRightMiddleLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().isNear(MIDDLE_ANGLE, MIDDLE_TOLERANCE));
+                
+                atRightCloseLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                atRightOpenLimit = new Trigger(() -> rightAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
+
+                isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
+                isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
+                isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightCloseLimit));
+
                 initSmartDashboard();
         }
 
         private void initSmartDashboard() {
                 SmartDashboard.putData(getName(), this);
-                SmartDashboard.putData(getName() + "/Left Limit Switch", leftHardLimit);
-                SmartDashboard.putData(getName() + "/Right Limit Switch", rightHardLimit);
                 SmartDashboard.putData(getName() + "/" + leftMotor.getSmartDashboardName(), leftMotor);
                 SmartDashboard.putData(getName() + "/" + rightMotor.getSmartDashboardName(), rightMotor);
         }
@@ -140,15 +145,12 @@ public class BayDoor extends SubsystemBase {
                 builder.addBooleanProperty("atLeftCloseLimit", atLeftCloseLimit, null);
                 builder.addBooleanProperty("atRightCloseLimit", atRightCloseLimit, null);
 
-                builder.addBooleanProperty("atLeftSoftCloseLimit", atLeftSoftCloseLimit, null);
-                builder.addBooleanProperty("atRightSoftCloseLimit", atRightSoftCloseLimit, null);
-
-                builder.addBooleanProperty("atLeftSoftOpenLimit", atLeftSoftOpenLimit, null);
-                builder.addBooleanProperty("atRightSoftOpenLimit", atRightSoftOpenLimit, null);
+                builder.addBooleanProperty("atLeftSoftOpenLimit", atLeftOpenLimit, null);
+                builder.addBooleanProperty("atRightSoftOpenLimit", atRightOpenLimit, null);
 
                 builder.addBooleanProperty("isBayDoorClosed", isBayDoorClosed, null);
-                builder.addBooleanProperty("isBayDoorSoftClosed", isBayDoorSoftClosed, null);
-                builder.addBooleanProperty("isBayDoorSoftOpen", isBayDoorSoftOpen, null);
+                builder.addBooleanProperty("isBayDoorMiddle", isBayDoorMiddle, null);
+                builder.addBooleanProperty("isBayDoorOpen", isBayDoorOpen, null);
 
                 builder.addBooleanProperty("hasBayDoorHomed", hasBayDoorHomed, null);
         }
@@ -223,7 +225,7 @@ public class BayDoor extends SubsystemBase {
 
         public Command open() {
                 return runEnd(() -> setPointPosition(OPEN_ANGLE_SETPOINT), () -> setDutyCycle(OPEN_PRESSURE_DUTY_CYCLE))
-                                .until(isBayDoorSoftOpen)
+                                .until(isBayDoorOpen)
                                 .withName("Open");
         }
 
@@ -236,7 +238,7 @@ public class BayDoor extends SubsystemBase {
         public Command close() {
                 return runEnd(() -> setPointPosition(CLOSE_ANGLE_SETPOINT),
                                 () -> setDutyCycle(CLOSE_PRESSURE_DUTY_CYCLE))
-                                .until(isBayDoorClosed.or(isBayDoorSoftClosed))
+                                .until(isBayDoorClosed)
                                 .withName("Close");
         }
 

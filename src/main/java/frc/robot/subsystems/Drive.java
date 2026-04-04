@@ -183,7 +183,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 getPigeon2().getPitch().asSupplier(),
                                 getPigeon2().getAngularVelocityYDevice().asSupplier(),
                                 getPigeon2().getRoll().asSupplier(),
-                                getPigeon2().getAngularVelocityXDevice().asSupplier());
+                                getPigeon2().getAngularVelocityXDevice().asSupplier(),
+                                STANDARD_DEVIATION_THRESHOLD,
+                                STANDARD_DEVIATION_SCALAR);
 
                 visions = new LimelightVisionBase[] { launcherVision };
 
@@ -555,29 +557,71 @@ public class Drive extends GeneratedDrive implements Sendable {
         // endregion
 
         // region Vision
-        private void addVisionMeasurements() { // TODO: Account for invalid states such as pose not in bounds or if the
-                                               // vision doesn't actually have a tag. Also ensure that sendables are
-                                               // added for each camera.
-                LimelightVisionBase bestConfidence = launcherVision;
+
+        private Optional<LimelightVisionBase> visionWithMostConfidence(LimelightVisionBase[] visions) {
+                Optional<LimelightVisionBase> bestVision = Optional.empty();
+
                 for (LimelightVisionBase vision : visions) {
-                        Distance bestTag = bestConfidence
-                                        .getStandardDeviations(STANDARD_DEVIATION_THRESHOLD, STANDARD_DEVIATION_SCALAR)
-                                        .tagDistance();
-                        Distance visionTag = vision
-                                        .getStandardDeviations(STANDARD_DEVIATION_THRESHOLD, STANDARD_DEVIATION_SCALAR)
-                                        .tagDistance();
-                        if (bestTag.gt(visionTag)) {
-                                bestConfidence = vision;
+                        PoseEstimate currentPoseEstimate = vision.getPoseEstimate();
+                        if (!vision.measurementValid(currentPoseEstimate)) {
+                                continue;
+                        }
+
+                        if (bestVision.isEmpty()) {
+                                bestVision = Optional.of(vision);
+                                continue;
+                        }
+
+                        PoseEstimate bestPoseEstimate = bestVision.get().getPoseEstimate();
+                        Optional<StandardVisionDeviations> bestDeviations = bestVision.get()
+                                        .getStandardDeviations(bestPoseEstimate);
+                        Optional<StandardVisionDeviations> currentDeviations = vision
+                                        .getStandardDeviations(currentPoseEstimate);
+
+                        if (bestDeviations.isEmpty() || currentDeviations.isEmpty()) {
+                                continue;
+                        }
+
+                        Distance bestTagDistance = bestDeviations.get().tagDistance();
+                        Distance currentTagDistance = currentDeviations.get().tagDistance();
+
+                        if (bestTagDistance.gt(currentTagDistance)) {
+                                bestVision = Optional.of(vision);
                         }
                 }
 
-                PoseEstimate poseEstimate = bestConfidence.getPoseEstimate();
-                StandardVisionDeviations deviation = bestConfidence.getStandardDeviations(STANDARD_DEVIATION_THRESHOLD,
-                                STANDARD_DEVIATION_SCALAR);
-                Vector<N3> standardDeviationVector = VecBuilder.fill(deviation.deviationX().in(Meters),
-                                deviation.deviationY().in(Meters), deviation.deviationRotation().in(Radians));
-                addVisionMeasurement(poseEstimate.pose, poseEstimate.timestampSeconds, standardDeviationVector);
+                return bestVision;
         }
+
+        private void addVisionMeasurements() { // TODO: Account for invalid states such as pose not in bounds or if the
+                                               // vision doesn't actually have a tag. Also ensure that sendables are
+                                               // added for each camera.
+                Optional<LimelightVisionBase> confidentVision = visionWithMostConfidence(visions);
+
+                if (confidentVision.isEmpty()) {
+                        return;
+                }
+
+                PoseEstimate poseEstimate = confidentVision.get().getPoseEstimate();
+                addVisionMeasurement(
+                                poseEstimate.pose,
+                                poseEstimate.timestampSeconds,
+                                StandardVisionDeviations.toMatrix(
+                                                confidentVision.get().getStandardDeviations(poseEstimate).get()));
+        }
+
+        // private void addVisionMeasurements2() {
+        // for (LimelightVisionBase vision : visions) {
+        // PoseEstimate poseEstimate = vision.getPoseEstimate();
+        // if (vision.measurementValid(poseEstimate)) {
+        // StandardVisionDeviations deviation = vision.getStandardDeviations();
+        // addVisionMeasurement(
+        // poseEstimate.pose,
+        // poseEstimate.timestampSeconds,
+        // StandardVisionDeviations.toMatrix(deviation));
+        // }
+        // }
+        // }
 
         // endregion
 

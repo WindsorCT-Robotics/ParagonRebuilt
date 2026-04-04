@@ -9,8 +9,12 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -28,6 +32,8 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
     private final Supplier<AngularVelocity> pitchRate;
     private final Supplier<Angle> roll;
     private final Supplier<AngularVelocity> rollRate;
+    private final Distance standardDeviationThreshold;
+    private final double standardDeviationScalar;
 
     private static final Angle GYRO_DEVIATION = Radians.of(Integer.MAX_VALUE); // Uses gyro and not vision estimate to
                                                                                // determine thea.
@@ -40,7 +46,9 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
             Supplier<Angle> pitch,
             Supplier<AngularVelocity> pitchRate,
             Supplier<Angle> roll,
-            Supplier<AngularVelocity> rollRate) {
+            Supplier<AngularVelocity> rollRate,
+            Distance standardDeviationThreshold,
+            double standardDeviationScalar) {
         this.name = name;
         this.yaw = yaw;
         this.yawRate = yawRate;
@@ -48,6 +56,8 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
         this.pitchRate = pitchRate;
         this.roll = roll;
         this.rollRate = rollRate;
+        this.standardDeviationThreshold = standardDeviationThreshold;
+        this.standardDeviationScalar = standardDeviationScalar;
 
         LimelightHelpers.setCameraPose_RobotSpace(
                 name,
@@ -101,9 +111,17 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
                 rollRate.get().in(DegreesPerSecond));
     }
 
-    private Distance distanceToClosestTag() {
-        return Meters.of(
-                LimelightHelpers.getTargetPose3d_CameraSpace(name).getTranslation().getDistance(Translation3d.kZero));
+    private Optional<Distance> distanceToClosestTag(PoseEstimate poseEstimate) {
+        if (poseEstimate.tagCount <= 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                Meters.of(
+                        LimelightHelpers
+                                .getTargetPose3d_CameraSpace(name)
+                                .getTranslation()
+                                .getDistance(Translation3d.kZero)));
     }
 
     private Distance getVisionUncertainty(Distance tag, Distance threshold, double standardDeviationScalar) {
@@ -116,13 +134,43 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
 
     public record StandardVisionDeviations(Distance deviationX, Distance deviationY, Angle deviationRotation,
             Distance tagDistance) {
+        public static Matrix<N3, N1> toMatrix(StandardVisionDeviations dvs) {
+            return VecBuilder.fill(dvs.deviationX.in(Meters), dvs.deviationY.in(Meters),
+                    dvs.deviationRotation.in(Radians));
+        }
     }
 
     @Override
-    public StandardVisionDeviations getStandardDeviations(Distance threshold, double standardDeviationScalar) {
-        Distance tagDistance = distanceToClosestTag();
-        Distance visionDeviationX = getVisionUncertainty(tagDistance, threshold, standardDeviationScalar);
-        Distance visionDeviationY = getVisionUncertainty(tagDistance, threshold, standardDeviationScalar);
-        return new StandardVisionDeviations(visionDeviationX, visionDeviationY, GYRO_DEVIATION, tagDistance);
+    public Optional<StandardVisionDeviations> getStandardDeviations(
+            Distance threshold,
+            double standardDeviationScalar,
+            PoseEstimate poseEstimate) {
+        Optional<Distance> tagDistance = distanceToClosestTag(poseEstimate);
+
+        if (tagDistance.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Distance visionDeviationX = getVisionUncertainty(tagDistance.get(), threshold, standardDeviationScalar);
+        Distance visionDeviationY = getVisionUncertainty(tagDistance.get(), threshold, standardDeviationScalar);
+        return Optional.of(
+                new StandardVisionDeviations(visionDeviationX, visionDeviationY, GYRO_DEVIATION, tagDistance.get()));
+    }
+
+    @Override
+    public Optional<StandardVisionDeviations> getStandardDeviations(PoseEstimate poseEstimate) {
+        Optional<Distance> tagDistance = distanceToClosestTag(poseEstimate);
+
+        if (tagDistance.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Distance visionDeviationX = getVisionUncertainty(tagDistance.get(), standardDeviationThreshold,
+                standardDeviationScalar);
+        Distance visionDeviationY = getVisionUncertainty(tagDistance.get(), standardDeviationThreshold,
+                standardDeviationScalar);
+
+        return Optional.of(
+                new StandardVisionDeviations(visionDeviationX, visionDeviationY, GYRO_DEVIATION, tagDistance.get()));
     }
 }

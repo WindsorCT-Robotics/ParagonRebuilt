@@ -10,6 +10,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
 import frc.robot.hardware.base_sensors.LimelightVisionBase;
 
@@ -26,8 +27,20 @@ public class LauncherVision extends LimelightVisionBase {
             Supplier<Angle> pitch,
             Supplier<AngularVelocity> pitchRate,
             Supplier<Angle> roll,
-            Supplier<AngularVelocity> rollRate) {
-        super(name, cameraPose, yaw, yawRate, pitch, pitchRate, roll, rollRate);
+            Supplier<AngularVelocity> rollRate,
+            Distance standardDeviationThreshold,
+            double standardDeviationScalar) {
+        super(
+                name,
+                cameraPose,
+                yaw,
+                yawRate,
+                pitch,
+                pitchRate,
+                roll,
+                rollRate,
+                standardDeviationThreshold,
+                standardDeviationScalar);
     }
 
     public void updateNetworkTables(PoseEstimate poseEstimate) {

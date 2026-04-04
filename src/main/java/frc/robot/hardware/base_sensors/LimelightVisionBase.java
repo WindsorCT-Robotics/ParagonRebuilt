@@ -36,7 +36,7 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
     private final double standardDeviationScalar;
 
     private static final Angle GYRO_DEVIATION = Radians.of(Integer.MAX_VALUE); // Uses gyro and not vision estimate to
-                                                                               // determine thea.
+                                                                               // determine theta.
 
     public LimelightVisionBase(
             String name,
@@ -99,6 +99,21 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
     }
 
+    public record VisionMeasurements(PoseEstimate poseEstimate, Matrix<N3, N1> deviations) {
+    }
+
+    public Optional<VisionMeasurements> getValidVisionData() {
+        PoseEstimate poseEstimate = getPoseEstimate();
+        Optional<StandardVisionDeviations> standardDeviations = getStandardDeviations(poseEstimate);
+
+        if (measurementValid(poseEstimate) && standardDeviations.isPresent()) {
+            return Optional.of(
+                    new VisionMeasurements(poseEstimate, StandardVisionDeviations.toMatrix(standardDeviations.get())));
+        }
+
+        return Optional.empty();
+    }
+
     @Override
     public void updateRobotOrientation() {
         LimelightHelpers.SetRobotOrientation(
@@ -125,7 +140,7 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
     }
 
     private Distance getVisionUncertainty(Distance tag, Distance threshold, double standardDeviationScalar) {
-        if (tag.lte(threshold)) { // A measurement less than or equal to 1 meter will be added.
+        if (tag.lte(threshold)) { // A measurement less than or equal to 1 meters will be added.
             return Meters.of(0.05);
         } else {
             return tag.div(standardDeviationScalar);
@@ -138,23 +153,6 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
             return VecBuilder.fill(dvs.deviationX.in(Meters), dvs.deviationY.in(Meters),
                     dvs.deviationRotation.in(Radians));
         }
-    }
-
-    @Override
-    public Optional<StandardVisionDeviations> getStandardDeviations(
-            Distance threshold,
-            double standardDeviationScalar,
-            PoseEstimate poseEstimate) {
-        Optional<Distance> tagDistance = distanceToClosestTag(poseEstimate);
-
-        if (tagDistance.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Distance visionDeviationX = getVisionUncertainty(tagDistance.get(), threshold, standardDeviationScalar);
-        Distance visionDeviationY = getVisionUncertainty(tagDistance.get(), threshold, standardDeviationScalar);
-        return Optional.of(
-                new StandardVisionDeviations(visionDeviationX, visionDeviationY, GYRO_DEVIATION, tagDistance.get()));
     }
 
     @Override

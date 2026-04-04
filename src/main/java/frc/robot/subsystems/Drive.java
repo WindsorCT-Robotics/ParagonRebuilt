@@ -33,8 +33,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -42,7 +40,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -64,9 +61,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.TunerConstants;
-import frc.robot.generated.LimelightHelpers.PoseEstimate;
 import frc.robot.hardware.base_sensors.LimelightVisionBase;
-import frc.robot.hardware.base_sensors.LimelightVisionBase.StandardVisionDeviations;
+import frc.robot.hardware.base_sensors.LimelightVisionBase.VisionMeasurements;
 import frc.robot.hardware.sensors.LauncherVision;
 import frc.robot.utils.AngleUtil;
 
@@ -129,8 +125,8 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final Distance STANDARD_DEVIATION_THRESHOLD = Meters.one();
         private static final double STANDARD_DEVIATION_SCALAR = 6.0;
 
-        private final String launcherVisionName;
         private final LauncherVision launcherVision;
+        // private final OtherVision backLauncherVision;
 
         private final LimelightVisionBase[] visions;
 
@@ -167,9 +163,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                                 this);
 
-                launcherVisionName = "limelight";
                 launcherVision = new LauncherVision(
-                                name,
+                                "limelight",
                                 new Pose3d(
                                                 Inches.of(-8),
                                                 Inches.of(-12),
@@ -558,70 +553,17 @@ public class Drive extends GeneratedDrive implements Sendable {
 
         // region Vision
 
-        private Optional<LimelightVisionBase> visionWithMostConfidence(LimelightVisionBase[] visions) {
-                Optional<LimelightVisionBase> bestVision = Optional.empty();
-
+        private void addVisionMeasurements() {
                 for (LimelightVisionBase vision : visions) {
-                        PoseEstimate currentPoseEstimate = vision.getPoseEstimate();
-                        if (!vision.measurementValid(currentPoseEstimate)) {
+                        Optional<VisionMeasurements> visionMeasurements = vision.getValidVisionData();
+                        if (visionMeasurements.isEmpty()) {
                                 continue;
                         }
 
-                        if (bestVision.isEmpty()) {
-                                bestVision = Optional.of(vision);
-                                continue;
-                        }
-
-                        PoseEstimate bestPoseEstimate = bestVision.get().getPoseEstimate();
-                        Optional<StandardVisionDeviations> bestDeviations = bestVision.get()
-                                        .getStandardDeviations(bestPoseEstimate);
-                        Optional<StandardVisionDeviations> currentDeviations = vision
-                                        .getStandardDeviations(currentPoseEstimate);
-
-                        if (bestDeviations.isEmpty() || currentDeviations.isEmpty()) {
-                                continue;
-                        }
-
-                        Distance bestTagDistance = bestDeviations.get().tagDistance();
-                        Distance currentTagDistance = currentDeviations.get().tagDistance();
-
-                        if (bestTagDistance.gt(currentTagDistance)) {
-                                bestVision = Optional.of(vision);
-                        }
+                        VisionMeasurements v = visionMeasurements.get();
+                        addVisionMeasurement(v.poseEstimate().pose, v.poseEstimate().timestampSeconds, v.deviations());
                 }
-
-                return bestVision;
         }
-
-        private void addVisionMeasurements() { // TODO: Account for invalid states such as pose not in bounds or if the
-                                               // vision doesn't actually have a tag. Also ensure that sendables are
-                                               // added for each camera.
-                Optional<LimelightVisionBase> confidentVision = visionWithMostConfidence(visions);
-
-                if (confidentVision.isEmpty()) {
-                        return;
-                }
-
-                PoseEstimate poseEstimate = confidentVision.get().getPoseEstimate();
-                addVisionMeasurement(
-                                poseEstimate.pose,
-                                poseEstimate.timestampSeconds,
-                                StandardVisionDeviations.toMatrix(
-                                                confidentVision.get().getStandardDeviations(poseEstimate).get()));
-        }
-
-        // private void addVisionMeasurements2() {
-        // for (LimelightVisionBase vision : visions) {
-        // PoseEstimate poseEstimate = vision.getPoseEstimate();
-        // if (vision.measurementValid(poseEstimate)) {
-        // StandardVisionDeviations deviation = vision.getStandardDeviations();
-        // addVisionMeasurement(
-        // poseEstimate.pose,
-        // poseEstimate.timestampSeconds,
-        // StandardVisionDeviations.toMatrix(deviation));
-        // }
-        // }
-        // }
 
         // endregion
 

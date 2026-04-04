@@ -3,7 +3,6 @@ package frc.robot.interfaces;
 import java.util.Optional;
 
 import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.units.measure.Distance;
 import frc.robot.generated.LimelightHelpers.PoseEstimate;
 import frc.robot.hardware.base_sensors.LimelightVisionBase.StandardVisionDeviations;
 
@@ -23,8 +22,5 @@ public interface IPoseEstimateCamera {
      * 
      * @return
      */
-    public Optional<StandardVisionDeviations> getStandardDeviations(Distance threshold, double standardDeviationScalar,
-            PoseEstimate poseEstimate);
-
     public Optional<StandardVisionDeviations> getStandardDeviations(PoseEstimate poseEstimate);
 }

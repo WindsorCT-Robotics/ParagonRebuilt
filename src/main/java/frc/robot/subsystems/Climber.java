@@ -29,21 +29,22 @@ public class Climber extends SubsystemBase {
             "Climber Motor",
             new CanId((byte) 0),
             new TalonFXConfiguration()
-                    .withMotorOutput(new MotorOutputConfigs().withInverted(null))
-                    // .withSlot0(new Slot0Configs()
-                    // .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-                    // .withGravityType(GravityTypeValue.Arm_Cosine)
-                    // .withKG(null)
-                    // .withKS(null)
-                    // .withKP(null))
-                    .withCurrentLimits(new CurrentLimitsConfigs()
-                            .withStatorCurrentLimit(null)
-                            .withSupplyCurrentLimit(null))
-                    .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
-                            .withForwardSoftLimitThreshold(null)
-                            .withReverseSoftLimitThreshold(null)
-                            .withForwardSoftLimitEnable(true)
-                            .withReverseSoftLimitEnable(true)));
+    // .withMotorOutput(new MotorOutputConfigs().withInverted(null))
+    // .withSlot0(new Slot0Configs()
+    // .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+    // .withGravityType(GravityTypeValue.Arm_Cosine)
+    // .withKG(null)
+    // .withKS(null)
+    // .withKP(null))
+    // .withCurrentLimits(new CurrentLimitsConfigs()
+    // .withStatorCurrentLimit(null)
+    // .withSupplyCurrentLimit(null))
+    // .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+    // .withForwardSoftLimitThreshold(null)
+    // .withReverseSoftLimitThreshold(null)
+    // .withForwardSoftLimitEnable(true)
+    // .withReverseSoftLimitEnable(true))
+    );
 
     private final Elastic.Notification homeNotification;
 

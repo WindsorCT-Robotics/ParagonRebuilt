@@ -26,7 +26,7 @@ public interface IMotor {
 
     public Angle getAngle();
 
-    public Temperature getTemperarure();
+    public Temperature getTemperature();
 
     public Current getCurrent();
 

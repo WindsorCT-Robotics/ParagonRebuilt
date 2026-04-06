@@ -19,6 +19,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -69,8 +70,8 @@ import frc.robot.utils.AngleUtil;
 public class Drive extends GeneratedDrive implements Sendable {
         // region
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
-        private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.75);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(10, 0, 0);
+        private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(5, 0, 0);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
 
@@ -305,6 +306,12 @@ public class Drive extends GeneratedDrive implements Sendable {
         public SwerveModuleState[] getSwerveModuleTargetStates() {
                 return getState().ModuleTargets;
         }
+
+        public Pose2d getRawPosition() {
+                Pose2d perspectivePose2d = getState().Pose;
+                return new Pose2d(perspectivePose2d.getMeasureX(), perspectivePose2d.getMeasureY(),
+                                new Rotation2d(getAngle()));
+        }
         // endregion
 
         // region General Moving
@@ -392,7 +399,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Angle targetAngle = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue)
                                         ? Radians.zero()
                                         : Radians.of(Math.PI);
-                        moveWithLockedAngle(
+                        aimTo(
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                         percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                         Optional.of(targetAngle));
@@ -403,7 +410,7 @@ public class Drive extends GeneratedDrive implements Sendable {
          * Moves with the ability to control rotation by a target angle WITH ONLY FIELD
          * CENTRIC.
          */
-        private void moveWithLockedAngle(
+        private void aimTo(
                         LinearVelocity x,
                         LinearVelocity y,
                         Optional<Angle> targetAngle) {
@@ -421,14 +428,47 @@ public class Drive extends GeneratedDrive implements Sendable {
                 SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
         }
 
+        private void aimToWithFF(
+                        LinearVelocity x,
+                        LinearVelocity y,
+                        Optional<Angle> targetAngle,
+                        Optional<AngularVelocity> feedforward) {
+                if (targetAngle.isEmpty() || feedforward.isEmpty()) {
+                        return;
+                }
+
+                setControl(
+                                fieldCentricFacingAngleSwerveRequest
+                                                .withVelocityX(y)
+                                                .withVelocityY(x)
+                                                .withTargetRateFeedforward(feedforward.get())
+                                                .withTargetDirection(
+                                                                new Rotation2d(targetAngle.get()))
+                                                .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective));
+
+                SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
+        }
+
         public Command aimTo(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y,
                         Supplier<Optional<Angle>> targetAngle) {
-                return run(() -> moveWithLockedAngle(
+                return run(() -> aimTo(
                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
                                 percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
                                 targetAngle.get()));
+        }
+
+        public Command aimToWithFF(
+                        Supplier<Dimensionless> x,
+                        Supplier<Dimensionless> y,
+                        Supplier<Optional<Angle>> targetAngle,
+                        Supplier<Optional<AngularVelocity>> feedforward) {
+                return run(() -> aimToWithFF(
+                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
+                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
+                                targetAngle.get(),
+                                feedforward.get()));
         }
 
         public Translation2d getHubTarget(Alliance alliance) {

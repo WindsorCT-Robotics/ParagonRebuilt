@@ -20,6 +20,7 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.MutPower;
 import edu.wpi.first.units.measure.Power;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,10 +29,7 @@ import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.generated.Elastic;
-import frc.robot.generated.Elastic.Notification;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.BayDoorMotor;
 import frc.robot.hardware.sensors.BayDoorAbsoluteEncoder;
@@ -81,10 +79,6 @@ public class BayDoor extends SubsystemBase {
                                                         new MagnetSensorConfigs()
                                                                         .withMagnetOffset(Rotations.of(0))));
 
-        private final Elastic.Notification homeCompletionNotification;
-        private final Elastic.Notification homeIncompletionNotification;
-
-        private static final Dimensionless HOME_DUTY_CYCLE = Percent.of(-15);
         private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(6.3);
         private static final Angle OPEN_ANGLE_SETPOINT = Rotations.of(7.3);
         private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0);
@@ -104,20 +98,7 @@ public class BayDoor extends SubsystemBase {
         private final Trigger isBayDoorMiddle;
         private final Trigger isBayDoorOpen;
 
-        public final Trigger hasBayDoorHomed = new Trigger(this::hasHomed);
-        private boolean hasHomed = false;
-
         public BayDoor(String name) {
-                super("Subsystems/" + name);
-                homeCompletionNotification = new Notification(
-                                Elastic.NotificationLevel.INFO,
-                                name + " has been HOMED.",
-                                "");
-                homeIncompletionNotification = new Notification(
-                                Elastic.NotificationLevel.WARNING,
-                                name + " HOMING INCOMPLETE.",
-                                "");
-
                 atLeftCloseLimit = new Trigger(
                                 () -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
                 atLeftOpenLimit = new Trigger(
@@ -135,7 +116,7 @@ public class BayDoor extends SubsystemBase {
 
                 isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
                 isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
-                isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightCloseLimit));
+                isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightOpenLimit));
 
                 initSmartDashboard();
         }
@@ -164,20 +145,14 @@ public class BayDoor extends SubsystemBase {
                 builder.addBooleanProperty("isBayDoorMiddle", isBayDoorMiddle, null);
                 builder.addBooleanProperty("isBayDoorOpen", isBayDoorOpen, null);
 
-                builder.addBooleanProperty("hasBayDoorHomed", hasBayDoorHomed, null);
-
                 builder.addDoubleProperty("Power (Watts)", () -> getTotalPower().in(Watts), null);
         }
 
         private Power getTotalPower() {
-                Power totalPower = Watts.zero();
-                totalPower.plus(leftMotor.getPower());
-                totalPower.plus(rightMotor.getPower());
+                MutPower totalPower = Watts.zero().mutableCopy();
+                totalPower.mut_plus(leftMotor.getPower());
+                totalPower.mut_plus(rightMotor.getPower());
                 return totalPower;
-        }
-
-        private boolean hasHomed() {
-                return hasHomed;
         }
 
         private void setPointPosition(Angle angle) {
@@ -188,60 +163,6 @@ public class BayDoor extends SubsystemBase {
         private void setDutyCycle(Dimensionless percent) {
                 leftMotor.setDutyCycle(percent);
                 rightMotor.setDutyCycle(percent);
-        }
-
-        public Command home() {
-                return run(
-                                () -> {
-                                        leftMotor.home(atLeftCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
-                                        rightMotor.home(atRightCloseLimit.getAsBoolean(), HOME_DUTY_CYCLE);
-                                })
-                                .withName("Home")
-                                .until(isBayDoorClosed)
-                                .handleInterrupt(() -> hasHomed = false)
-                                .finallyDo(interrupted -> {
-                                        if (interrupted) {
-                                                onHomingIncomplete();
-                                        } else {
-                                                onHomingComplete();
-                                        }
-                                })
-                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-        }
-
-        private Command hardHome() {
-                return run(() -> {
-                        leftMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                        rightMotor.setDutyCycle(HOME_DUTY_CYCLE);
-                }).withDeadline(new WaitCommand(Seconds.of(0.5)))
-                                .finallyDo(() -> {
-                                        leftMotor.resetRelativeEncoder();
-                                        rightMotor.resetRelativeEncoder();
-                                        stop();
-                                });
-        }
-
-        public Command ensuredHome() {
-                return home().andThen(hardHome()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                                .finallyDo(interrupted -> {
-                                        if (interrupted) {
-                                                onHomingIncomplete();
-                                        } else {
-                                                onHomingComplete();
-                                        }
-                                });
-        }
-
-        private void onHomingComplete() {
-                removeDefaultCommand();
-                hasHomed = true;
-                Elastic.sendNotification(homeCompletionNotification);
-        }
-
-        private void onHomingIncomplete() {
-                setDefaultCommand(ensuredHome());
-                hasHomed = false;
-                Elastic.sendNotification(homeIncompletionNotification);
         }
 
         public Command open() {
@@ -274,10 +195,5 @@ public class BayDoor extends SubsystemBase {
 
         public Command agitateLowFuel() {
                 return agitateFuel();
-        }
-
-        private void stop() {
-                leftMotor.stop();
-                rightMotor.stop();
         }
 }

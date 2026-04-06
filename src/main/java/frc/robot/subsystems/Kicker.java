@@ -21,7 +21,6 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.KickerMotor;
 
@@ -79,16 +78,6 @@ public class Kicker extends SubsystemBase {
     public Command kickFuel(Supplier<AngularVelocity> velocity) {
         return runEnd(() -> motor.setPointVelocity(velocity.get()), this::hardStop);
 
-    }
-
-    public Command kickFuelToHub(Supplier<AngularVelocity> velocity, Trigger onAllianceSide) {
-        return runEnd(() -> {
-            if (onAllianceSide.getAsBoolean()) {
-                motor.setPointVelocity(velocity.get());
-            } else {
-                motor.setPointVelocity(RPM.zero());
-            }
-        }, this::hardStop);
     }
 
     public Command prepareFuel() {

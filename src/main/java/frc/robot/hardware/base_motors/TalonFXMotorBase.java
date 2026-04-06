@@ -149,7 +149,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
     }
 
     @Override
-    public Temperature getTemperarure() {
+    public Temperature getTemperature() {
         return motor.getDeviceTemp().getValue();
     }
 
@@ -167,6 +167,6 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
         builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addDoubleProperty("Power (Watts)", () -> getPower().in(Watts), null);
-        builder.addDoubleProperty("Temperature (C)", () -> getTemperarure().in(Celsius), null);
+        builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 }

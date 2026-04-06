@@ -69,21 +69,25 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeFuel() {
-        return runEnd(() -> motor.setPointVelocity(getIntakeTargetVelocity()), this::stopIntake)
+        return runEnd(() -> motor.setPointVelocity(getIntakeTargetVelocity()), this::softStop)
                 .withName(getSubsystem() + "/intakeFuel");
     }
 
     public Command shuttleFuel() {
-        return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), this::stopIntake)
+        return runEnd(() -> motor.setPointVelocity(getShuttleTargetVelocity()), this::softStop)
                 .withName(getSubsystem() + "/shuttleFuel");
     }
 
     public Command stopIntake() {
         return runOnce(() -> {
-            motor.setPointVelocity(RotationsPerSecond.zero());
+            softStop();
             motor.setState(IntakeMotorState.IDLE);
         })
                 .withName(getSubsystem() + "/stopIntake");
+    }
+
+    private void softStop() {
+        motor.setPointVelocity(RotationsPerSecond.zero());
     }
 
     public Command agitateFuel() {

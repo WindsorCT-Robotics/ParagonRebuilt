@@ -18,6 +18,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutPower;
 import edu.wpi.first.units.measure.Power;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -104,9 +105,9 @@ public class Launcher extends SubsystemBase {
     }
 
     private Power getTotalPower() {
-        Power totalPower = Watts.zero();
-        totalPower.plus(leadMotor.getPower());
-        totalPower.plus(followerMotor.getPower());
+        MutPower totalPower = Watts.zero().mutableCopy();
+        totalPower.mut_plus(leadMotor.getPower());
+        totalPower.mut_plus(followerMotor.getPower());
         return totalPower;
     }
 
@@ -114,7 +115,7 @@ public class Launcher extends SubsystemBase {
         return runEnd(() -> leadMotor.setPointVelocity(velocity.get().plus(launcherOffset)), this::stop);
     }
 
-    public Command prepareLaunch() {
+    public Command prepareFuel() {
         return runEnd(() -> {
             leadMotor.setPointVelocity(PREP_ANGULAR_VELOCITY);
         }, this::stop);

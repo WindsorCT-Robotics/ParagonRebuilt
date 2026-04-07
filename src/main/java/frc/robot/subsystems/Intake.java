@@ -39,7 +39,7 @@ public class Intake extends SubsystemBase {
                             .withKV(0.0105)));
 
     private final static AngularVelocity AGITATION_VELOCITY = RPM.of(400);
-    private AngularVelocity intakeVelocity = RPM.of(4800);
+    private AngularVelocity intakeVelocity = RPM.of(3200);
     private AngularVelocity shuttleVelocity = RPM.of(-4800);
 
     public Intake(String name) {

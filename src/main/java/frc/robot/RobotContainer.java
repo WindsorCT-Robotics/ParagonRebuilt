@@ -34,14 +34,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Kicker;
@@ -86,7 +84,7 @@ public class RobotContainer implements Sendable {
         private final Intake intake;
         private final Kicker kicker;
         private final Launcher launcher;
-        private final Climber climber;
+        // private final Climber climber;
 
         private final CommandXboxController driver = new CommandXboxController(0);
         private final CommandXboxController operator = new CommandXboxController(1);
@@ -123,7 +121,7 @@ public class RobotContainer implements Sendable {
                 spindexer = new Spindexer(Spindexer.class.getSimpleName());
                 launcher = new Launcher(Launcher.class.getSimpleName());
                 kicker = new Kicker(Kicker.class.getSimpleName());
-                climber = new Climber(Climber.class.getSimpleName());
+                // climber = new Climber(Climber.class.getSimpleName());
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -303,7 +301,7 @@ public class RobotContainer implements Sendable {
 
                 intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
 
-                climber.setDefaultCommand(climber.home().withName("Home Climber"));
+                // climber.setDefaultCommand(climber.home().withName("Home Climber"));
 
                 t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
@@ -326,27 +324,9 @@ public class RobotContainer implements Sendable {
                                                 .withName("Spindexer Prepare Fuel"));
 
                 bindAutoScore();
-
-                t_autoSnowBlow.whileTrue(launcher.launchFuel(() -> launchVelocityToSnowBlow())
-                                .withName("Launch Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(
-                                kicker.kickFuel(() -> launchVelocityToSnowBlow()).withName("Kick Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(spindexer.indexFuel().until(t_snowBlowValid.negate())
-                                .withName("Index Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(
-                                drive.aimToWithFF(moveX, moveY, () -> angleToSnowBlow(), () -> angleToSnowBlowWithFF())
-                                                .withName("Auto Aim To SnowBlow"));
-                t_autoSnowBlow.whileTrue(bayDoor.open().withName("Open Bay Door To SnowBlow"));
-                t_autoSnowBlow.whileTrue(intake.intakeFuel().withName("Intake Fuel To SnowBlow"));
-
-                t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
-                t_partialManualScore.whileTrue(spindexer.indexFuel());
-                t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
-
-                t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
-                t_manualScore.whileTrue(spindexer.indexFuel());
+                bindSnowBlow();
+                bindPartialManualScore();
+                bindManualScore();
 
                 t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
 
@@ -357,10 +337,10 @@ public class RobotContainer implements Sendable {
 
                 t_faceRedAlliance.whileTrue(angleToRedAlliance());
 
-                t_climb.whileTrue(bayDoor.close().andThen(climber.open())
-                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-                t_climb.whileFalse(climber.close().unless(() -> DriverStation.isAutonomous()));
-                t_climb_home.onTrue(climber.home());
+                // t_climb.whileTrue(bayDoor.close().andThen(climber.open())
+                //                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+                // t_climb.whileFalse(climber.close().unless(() -> DriverStation.isAutonomous()));
+                // t_climb_home.onTrue(climber.home());
 
                 t_incrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(25).in(RPM))));
@@ -389,5 +369,32 @@ public class RobotContainer implements Sendable {
                                 drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF())
                                                 .withName("Auto Aim To Hub")
                                                 .repeatedly());
+        }
+
+        private void bindSnowBlow() {
+                t_autoSnowBlow.whileTrue(launcher.launchFuel(() -> launchVelocityToSnowBlow())
+                                .withName("Launch Fuel To SnowBlow"));
+                t_autoSnowBlow.whileTrue(
+                                kicker.kickFuel(() -> launchVelocityToSnowBlow()).withName("Kick Fuel To SnowBlow"));
+                t_autoSnowBlow.whileTrue(spindexer.indexFuel().until(t_snowBlowValid.negate())
+                                .withName("Index Fuel To SnowBlow"));
+                t_autoSnowBlow.whileTrue(
+                                drive.aimToWithFF(moveX, moveY, () -> angleToSnowBlow(), () -> angleToSnowBlowWithFF())
+                                                .withName("Auto Aim To SnowBlow"));
+                t_autoSnowBlow.whileTrue(bayDoor.open().withName("Open Bay Door To SnowBlow"));
+                t_autoSnowBlow.whileTrue(intake.intakeFuel().withName("Intake Fuel To SnowBlow"));
+        }
+
+        private void bindPartialManualScore() {
+                t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
+                t_partialManualScore.whileTrue(spindexer.indexFuel());
+                t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
+        }
+
+        private void bindManualScore() {
+                t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
+                t_manualScore.whileTrue(spindexer.indexFuel());
         }
 }

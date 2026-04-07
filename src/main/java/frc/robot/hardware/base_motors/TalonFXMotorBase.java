@@ -44,6 +44,12 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
     private final MotionMagicVelocityDutyCycle motionMagicVelocityDutyCycle = new MotionMagicVelocityDutyCycle(0);
     private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
+    /**
+     * 
+     * @param name
+     * @param canId
+     * @param configuration
+     */
     public TalonFXMotorBase(
             String name,
             CanId canId,
@@ -76,6 +82,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
 
     @Override
     public void setPointPosition(Angle angle) {
+        System.out.println(angle);
         motor.setControl(positionDutyCycle.withPosition(angle));
     }
 

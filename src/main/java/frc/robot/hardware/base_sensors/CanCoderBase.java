@@ -96,4 +96,8 @@ public class CanCoderBase implements IAbsoluteEncoder, IConfiguration<CANcoderCo
     public String getSmartDashboardName() {
         return name;
     }
+
+    public CANcoder getEncoder() {
+        return canCoder;
+    }
 }

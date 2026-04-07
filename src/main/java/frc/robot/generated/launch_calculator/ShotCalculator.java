@@ -286,6 +286,7 @@ public class ShotCalculator {
     if (inputs == null || inputs.robotPose() == null
         || inputs.fieldVelocity() == null || inputs.robotVelocity() == null) {
       isInvalid = true;
+      System.out.println("null");
     }
 
     Pose2d rawPose = inputs.robotPose();
@@ -323,6 +324,7 @@ public class ShotCalculator {
     if (Math.abs(inputs.pitchDeg()) > config.maxTiltDeg
         || Math.abs(inputs.rollDeg()) > config.maxTiltDeg) {
       isInvalid = true;
+      System.out.println("pitch");
     }
 
     // Transform robot center to launcher position
@@ -344,15 +346,12 @@ public class ShotCalculator {
     double ry = hubY - launcherY;
     double distance = Math.hypot(rx, ry);
 
-    if (distance < config.minScoringDistance || distance > config.maxScoringDistance) {
-      isInvalid = true;
-    }
-
     double robotSpeed = Math.hypot(vx, vy);
 
     // Speed cap: shots above this speed are out of calibration range
     if (robotSpeed > config.maxSOTMSpeed) {
       isInvalid = true;
+      System.out.println("max solve speed");
     }
 
     boolean velocityFiltered = robotSpeed < config.minSOTMSpeed;
@@ -468,6 +467,7 @@ public class ShotCalculator {
 
       if (launcherOffset.isEmpty()) {
         isInvalid = true;
+        System.out.println("empty");
       } else {
         driveAngle = driveAngle.minus(new Rotation2d(launcherOffset.get()));
       }

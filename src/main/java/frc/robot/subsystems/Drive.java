@@ -118,7 +118,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final double STANDARD_DEVIATION_SCALAR = 6.0;
 
         private final LauncherVision launcherVision;
-        // private final OtherVision backLauncherVision;
+        private final LauncherVision backLauncherVision;
 
         private final LimelightVisionBase[] visions;
 
@@ -156,11 +156,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 this);
 
                 launcherVision = new LauncherVision(
-                                "limelight",
+                                "limelight-launch",
                                 new Pose3d(
-                                                Inches.of(-8),
-                                                Inches.of(-12),
-                                                Inches.of(20.5),
+                                                Inches.of(-7.3),
+                                                Inches.of(-12.3),
+                                                Inches.of(20.3),
                                                 new Rotation3d(
                                                                 Degrees.zero(),
                                                                 Degrees.of(25),
@@ -175,7 +175,27 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 STANDARD_DEVIATION_SCALAR,
                                 "SmartDashboard/Subsystems/Drive/Visions");
 
-                visions = new LimelightVisionBase[] { launcherVision };
+                backLauncherVision = new LauncherVision(
+                        "limelight-reverse",
+                                new Pose3d(
+                                                Inches.of(-7.3),
+                                                Inches.of(-7.5),
+                                                Inches.of(20.3),
+                                                new Rotation3d(
+                                                                Degrees.zero(),
+                                                                Degrees.of(25),
+                                                                Degrees.of(-90))),
+                                getPigeon2().getYaw().asSupplier(),
+                                getPigeon2().getAngularVelocityZDevice().asSupplier(),
+                                getPigeon2().getPitch().asSupplier(),
+                                getPigeon2().getAngularVelocityYDevice().asSupplier(),
+                                getPigeon2().getRoll().asSupplier(),
+                                getPigeon2().getAngularVelocityXDevice().asSupplier(),
+                                STANDARD_DEVIATION_THRESHOLD,
+                                STANDARD_DEVIATION_SCALAR,
+                                "SmartDashboard/Subsystems/Drive/Visions");
+
+                visions = new LimelightVisionBase[] {launcherVision, backLauncherVision};
 
                 onAllianceSide = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();

@@ -12,7 +12,10 @@ public class ClimberMotor extends KrakenMotorX44Base implements IHomingMotor {
             String name,
             CanId canId,
             TalonFXConfiguration configuration) {
-        super(name, canId, configuration);
+        super(
+            name, 
+            canId, 
+            configuration);
     }
 
     @Override

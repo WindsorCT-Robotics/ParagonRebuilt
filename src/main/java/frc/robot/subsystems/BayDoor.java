@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.Watts;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -16,6 +17,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.units.measure.Angle;
@@ -38,12 +40,36 @@ public class BayDoor extends SubsystemBase {
         private static final Slot0Configs SLOT0_CONFIGS = new Slot0Configs()
                         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
                         .withGravityType(GravityTypeValue.Arm_Cosine)
-                        .withKG(0.1)
+                        .withKG(0.04)
                         .withKS(0.05)
-                        .withKP(0.07);
+                        .withKP(2);
 
         private static final CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs()
                         .withStatorCurrentLimit(Amps.of(25));
+
+        private static final double MOTOR_SCALE_FACTOR = 25.0;
+
+        private final BayDoorAbsoluteEncoder leftAbsoluteEncoder = new BayDoorAbsoluteEncoder(
+                        "Left Bay Door Encoder",
+                        new CanId((byte) 21),
+                        new CANcoderConfiguration()
+                                        .withMagnetSensor(
+                                                        new MagnetSensorConfigs()
+                                                                        .withSensorDirection(
+                                                                                        SensorDirectionValue.CounterClockwise_Positive)
+                                                                        .withMagnetOffset(
+                                                                                        Rotations.of(0.18017578125))));
+
+        private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
+                        "Right Bay Door Encoder",
+                        new CanId((byte) 22),
+                        new CANcoderConfiguration()
+                                        .withMagnetSensor(
+                                                        new MagnetSensorConfigs()
+                                                                        .withSensorDirection(
+                                                                                        SensorDirectionValue.Clockwise_Positive)
+                                                                        .withMagnetOffset(
+                                                                                        Rotations.of(-0.394287109375))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",
@@ -53,7 +79,11 @@ public class BayDoor extends SubsystemBase {
                                                         .withInverted(InvertedValue.CounterClockwise_Positive)
                                                         .withNeutralMode(NeutralModeValue.Brake))
                                         .withSlot0(SLOT0_CONFIGS)
-                                        .withCurrentLimits(currentLimitsConfigs));
+                                        .withCurrentLimits(currentLimitsConfigs)
+                                        .withFeedback(new FeedbackConfigs()
+                                                        .withSyncCANcoder(leftAbsoluteEncoder.getEncoder())
+                                        .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
+
         private final BayDoorMotor rightMotor = new BayDoorMotor(
                         "Right Bay Door Motor",
                         new CanId((byte) 15),
@@ -62,26 +92,14 @@ public class BayDoor extends SubsystemBase {
                                                         .withInverted(InvertedValue.Clockwise_Positive)
                                                         .withNeutralMode(NeutralModeValue.Brake))
                                         .withSlot0(SLOT0_CONFIGS)
-                                        .withCurrentLimits(currentLimitsConfigs));
+                                        .withCurrentLimits(currentLimitsConfigs)
+                                        .withFeedback(new FeedbackConfigs()
+                                                        .withSyncCANcoder(rightAbsoluteEncoder.getEncoder())
+                                                        .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
-        private final BayDoorAbsoluteEncoder leftAbsoluteEncoder = new BayDoorAbsoluteEncoder(
-                        "Left Bay Door Encoder",
-                        new CanId((byte) 0),
-                        new CANcoderConfiguration()
-                                        .withMagnetSensor(
-                                                        new MagnetSensorConfigs()
-                                                                        .withMagnetOffset(Rotations.of(0))));
-        private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
-                        "Right Bay Door Encoder",
-                        new CanId((byte) 0),
-                        new CANcoderConfiguration()
-                                        .withMagnetSensor(
-                                                        new MagnetSensorConfigs()
-                                                                        .withMagnetOffset(Rotations.of(0))));
-
-        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(6.3);
-        private static final Angle OPEN_ANGLE_SETPOINT = Rotations.of(7.3);
-        private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0);
+        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.232);
+        private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD.plus(Degrees.of(10));
+        private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0.04);
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
         private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(5);

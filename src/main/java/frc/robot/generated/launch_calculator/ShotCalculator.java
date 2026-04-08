@@ -34,6 +34,8 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
@@ -84,11 +86,12 @@ import frc.robot.utils.AllianceUtil;
  * }
  * </pre>
  */
-public class ShotCalculator {
+public class ShotCalculator implements Sendable {
   private final static String incrementLauncherOffsetTitle = "Launcher Offset increments to: ";
   private final static String decrementLauncherOffsetTitle = "Launcher Offset decrements to: ";
   private final Elastic.Notification launcherOffsetNotification = new Notification(NotificationLevel.INFO, "", "")
       .withDisplaySeconds(0.8);
+  private LaunchParameters launchParameters = LaunchParameters.INVALID;
 
   /**
    * The result of calculate(). RPM to spin up, time of flight, heading to aim at,
@@ -351,7 +354,6 @@ public class ShotCalculator {
     // Speed cap: shots above this speed are out of calibration range
     if (robotSpeed > config.maxSOTMSpeed) {
       isInvalid = true;
-      System.out.println("max solve speed");
     }
 
     boolean velocityFiltered = robotSpeed < config.minSOTMSpeed;
@@ -504,7 +506,7 @@ public class ShotCalculator {
 
     previousSpeed = robotSpeed;
 
-    return new LaunchParameters(
+    launchParameters = new LaunchParameters(
         effectiveRPMValue,
         effectiveTOF,
         driveAngle,
@@ -514,6 +516,8 @@ public class ShotCalculator {
         distance,
         iterationsUsed,
         warmStartUsed);
+
+    return launchParameters;
   }
 
   /**
@@ -691,5 +695,17 @@ public class ShotCalculator {
 
   InterpolatingDoubleTreeMap getTofMap() {
     return tofMap;
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+      builder.addDoubleProperty("Confidence", () -> launchParameters.confidence, null);
+      builder.addBooleanProperty("Valid Launch", () -> launchParameters.isValid, null);
+      builder.addDoubleProperty("Launch Angle (Degrees)", () -> launchParameters.driveAngle.getDegrees(), null);
+      builder.addDoubleProperty("Launch Feedforward (Rads/Sec)", () -> launchParameters.driveAngularVelocityRadPerSec, null);
+      builder.addDoubleProperty("Launch Velocity (RPM)", () -> launchParameters.rpm, null);
+      builder.addDoubleProperty("Distance From Hub (M)", () -> launchParameters.solvedDistanceM, null);
+      builder.addDoubleProperty("Time Of Flight (s)", () -> launchParameters.timeOfFlightSec, null);
+      builder.addDoubleProperty("Launch Solver Iterations", () -> launchParameters.iterationsUsed, null);
   }
 }

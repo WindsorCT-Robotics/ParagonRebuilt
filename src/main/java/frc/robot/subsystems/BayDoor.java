@@ -82,7 +82,7 @@ public class BayDoor extends SubsystemBase {
                                         .withCurrentLimits(currentLimitsConfigs)
                                         .withFeedback(new FeedbackConfigs()
                                                         .withSyncCANcoder(leftAbsoluteEncoder.getEncoder())
-                                        .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
+                                                        .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
         private final BayDoorMotor rightMotor = new BayDoorMotor(
                         "Right Bay Door Motor",
@@ -117,6 +117,8 @@ public class BayDoor extends SubsystemBase {
         private final Trigger isBayDoorOpen;
 
         public BayDoor(String name) {
+                super("Subsystems/" + name);
+
                 atLeftCloseLimit = new Trigger(
                                 () -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
                 atLeftOpenLimit = new Trigger(

@@ -35,7 +35,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
@@ -55,28 +54,28 @@ public class RobotContainer implements Sendable {
         private static final double TURN_CURVE = 2.0;
 
         // Controller Triggers
-        private final Trigger t_autoScore;
-        private final Trigger t_manualScore;
-        private final Trigger t_partialManualScore;
-        private final Trigger t_autoSnowBlow;
-        private final Trigger t_unjam;
-        private final Trigger t_incrementLauncherOffset;
-        private final Trigger t_decrementLauncherOffset;
-        private final Trigger t_faceRedAlliance;
-        private final Trigger t_autoIntake;
-        private final Trigger t_autoShuttle;
-        private final Trigger t_openBayDoor;
-        private final Trigger t_closeBayDoor;
-        private final Trigger t_switchRelativeReference;
-        private final Trigger t_resetGyro;
-        private final Trigger t_climb;
-        private final Trigger t_climb_home;
+        private final SendableTrigger t_autoScore;
+        private final SendableTrigger t_manualScore;
+        private final SendableTrigger t_partialManualScore;
+        private final SendableTrigger t_autoSnowBlow;
+        private final SendableTrigger t_unjam;
+        private final SendableTrigger t_incrementLauncherOffset;
+        private final SendableTrigger t_decrementLauncherOffset;
+        private final SendableTrigger t_faceRedAlliance;
+        private final ToggleableTrigger t_autoIntake;
+        private final SendableTrigger t_autoShuttle;
+        private final SendableTrigger t_openBayDoor;
+        private final SendableTrigger t_closeBayDoor;
+        private final SendableTrigger t_switchRelativeReference;
+        private final SendableTrigger t_resetGyro;
+        private final SendableTrigger t_climb;
+        private final SendableTrigger t_climb_home;
 
         // Conditional Triggers
-        private final Trigger t_scoreValid;
-        private final Trigger t_snowBlowValid;
-        private final Trigger t_attemptToScore;
-        private final Trigger t_onAllianceSide;
+        private final SendableTrigger t_scoreValid;
+        private final SendableTrigger t_snowBlowValid;
+        private final SendableTrigger t_attemptToScore;
+        private final SendableTrigger t_onAllianceSide;
 
         private final Drive drive;
         private final Spindexer spindexer;
@@ -152,32 +151,37 @@ public class RobotContainer implements Sendable {
                                 .map(alliance -> getLaunchParametersFor(drive.getSnowblowTarget(alliance)));
 
                 // Controller Triggers
-                t_autoScore = driver.rightBumper();
-                t_manualScore = operator.b();
-                t_partialManualScore = operator.povLeft();
-                t_autoSnowBlow = driver.rightTrigger(Percent.of(0.2).in(Value));
-                t_unjam = operator.a();
-                t_incrementLauncherOffset = operator.rightBumper();
-                t_decrementLauncherOffset = operator.leftBumper();
-                t_faceRedAlliance = driver.leftStick();
-                t_autoIntake = driver.x();
-                t_autoShuttle = driver.b();
-                t_openBayDoor = operator.povDown();
-                t_closeBayDoor = operator.povUp();
-                t_switchRelativeReference = driver.leftBumper();
-                t_resetGyro = driver.povDown();
-                t_climb = operator.rightTrigger();
-                t_climb_home = operator.start().and(operator.back());
+                t_autoScore               = new SendableTrigger(driver.rightBumper(), "c_autoScore");
+                t_manualScore             = new SendableTrigger(operator.b(), "c_manualScore");
+                t_partialManualScore      = new SendableTrigger(operator.povLeft(), "c_partialManualScore");
+                t_autoSnowBlow            = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)), "c_autoSnowBlow");
+                t_unjam                   = new SendableTrigger(operator.a(), "c_unjam");
+                t_incrementLauncherOffset = new SendableTrigger(operator.rightBumper(), "c_incrementLauncherOffset");
+                t_decrementLauncherOffset = new SendableTrigger(operator.leftBumper(), "c_decrementLauncherOffset");
+                t_faceRedAlliance         = new SendableTrigger(driver.leftStick(), "c_faceRedAlliance");
+                t_autoIntake              = new ToggleableTrigger(driver.x());
+                t_autoShuttle             = new SendableTrigger(driver.b(), "c_autoShuttle");
+                t_openBayDoor             = new SendableTrigger(operator.povDown(), "c_openBayDoor");
+                t_closeBayDoor            = new SendableTrigger(operator.povUp(), "c_closeBayDoor");
+                t_switchRelativeReference = new SendableTrigger(driver.leftBumper(), "c_switchRelativeReference");
+                t_resetGyro               = new SendableTrigger(driver.povDown(), "c_resetGyro");
+                t_climb                   = new SendableTrigger(operator.rightTrigger(), "c_climb");
+                t_climb_home              = new SendableTrigger(operator.start().and(operator.back()), "c_climb_home");
 
                 // Conditional Trigger
-                t_scoreValid = new Trigger(
-                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid()).orElse(false));
+                t_scoreValid = new SendableTrigger(
+                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid()).orElse(false),
+                                "nc_scoreValid");
 
-                t_snowBlowValid = new Trigger(() -> snowBlowLaunchSupplier.get().map(parameters -> parameters.isValid())
-                                .orElse(false));
+                t_snowBlowValid = new SendableTrigger(
+                                () -> snowBlowLaunchSupplier.get().map(parameters -> parameters.isValid())
+                                                .orElse(false),
+                                "nc_snowBlowValid");
 
-                t_attemptToScore = t_autoScore.or(t_partialManualScore).or(t_manualScore);
-                t_onAllianceSide = drive.onAllianceSide.and(() -> DriverStation.isTeleop());
+                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
+                                "nc_attemptToScore");
+                t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> DriverStation.isTeleop()),
+                                "nc_onAllianceSide");
 
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
@@ -193,16 +197,36 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData(spindexer);
                 SmartDashboard.putData(launcher);
                 SmartDashboard.putData(kicker);
+                SmartDashboard.putData(CommandScheduler.getInstance());
+
                 SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
                 SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
                 SmartDashboard.putData("Robot Container/Autonomous", autoChooser);
                 SmartDashboard.putData("Robot Container", this);
-                SmartDashboard.putData(CommandScheduler.getInstance());
+                SmartDashboard.putData("Robot Container/Triggers", t_autoScore);
+                SmartDashboard.putData("Robot Container/Triggers", t_manualScore);
+                SmartDashboard.putData("Robot Container/Triggers", t_partialManualScore);
+                SmartDashboard.putData("Robot Container/Triggers", t_autoSnowBlow);
+                SmartDashboard.putData("Robot Container/Triggers", t_unjam);
+                SmartDashboard.putData("Robot Container/Triggers", t_incrementLauncherOffset);
+                SmartDashboard.putData("Robot Container/Triggers", t_decrementLauncherOffset);
+                SmartDashboard.putData("Robot Container/Triggers", t_faceRedAlliance);
+                SmartDashboard.putData("Robot Container/Triggers", t_autoShuttle);
+                SmartDashboard.putData("Robot Container/Triggers", t_openBayDoor);
+                SmartDashboard.putData("Robot Container/Triggers", t_closeBayDoor);
+                SmartDashboard.putData("Robot Container/Triggers", t_switchRelativeReference);
+                SmartDashboard.putData("Robot Container/Triggers", t_resetGyro);
+                SmartDashboard.putData("Robot Container/Triggers", t_climb);
+                SmartDashboard.putData("Robot Container/Triggers", t_climb_home);
+                SmartDashboard.putData("Robot Container/Triggers", t_scoreValid);
+                SmartDashboard.putData("Robot Container/Triggers", t_snowBlowValid);
+                SmartDashboard.putData("Robot Container/Triggers", t_attemptToScore);
+                SmartDashboard.putData("Robot Container/Triggers", t_onAllianceSide);
         }
 
         @Override
         public void initSendable(SendableBuilder builder) {
-                builder.addBooleanProperty("b", t_scoreValid, null);
+
         }
 
         private LaunchParameters getLaunchParametersFor(Translation2d target) {
@@ -210,9 +234,9 @@ public class RobotContainer implements Sendable {
                 Pigeon2 gyro = drive.getPigeon2();
 
                 Pose2d drivePosition = drive.getRawPosition();
-                Angle pitch = AngleUtil.wrap(gyro.getPitch().getValue());
-                Angle yaw = AngleUtil.wrap(gyro.getYaw().getValue());
-                Angle roll = AngleUtil.wrap(gyro.getRoll().getValue());
+                Angle  pitch         = AngleUtil.wrap(gyro.getPitch().getValue());
+                Angle  yaw           = AngleUtil.wrap(gyro.getYaw().getValue());
+                Angle  roll          = AngleUtil.wrap(gyro.getRoll().getValue());
 
                 ChassisSpeeds robotSpeeds = driveState.Speeds;
                 ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds,
@@ -330,16 +354,26 @@ public class RobotContainer implements Sendable {
 
                 t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
 
-                t_autoIntake.onTrue(bayDoor.open().alongWith(intake.intakeFuel()));
-                t_autoShuttle.onTrue(bayDoor.open().alongWith(intake.shuttleFuel()));
+                t_autoIntake.getTrigger().onTrue(
+                                bayDoor.open().alongWith(intake.intakeFuel())
+                                                .until(t_attemptToScore)
+                                                .unless(t_attemptToScore)
+                                                .repeatedly());
+
+                t_autoShuttle.onTrue(
+                                bayDoor.open().alongWith(intake.shuttleFuel())
+                                                .until(t_attemptToScore)
+                                                .unless(t_attemptToScore)
+                                                .repeatedly());
                 t_openBayDoor.onTrue(bayDoor.open());
                 t_closeBayDoor.onTrue(bayDoor.close());
 
                 t_faceRedAlliance.whileTrue(angleToRedAlliance());
 
                 // t_climb.whileTrue(bayDoor.close().andThen(climber.open())
-                //                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-                // t_climb.whileFalse(climber.close().unless(() -> DriverStation.isAutonomous()));
+                // .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+                // t_climb.whileFalse(climber.close().unless(() ->
+                // DriverStation.isAutonomous()));
                 // t_climb_home.onTrue(climber.home());
 
                 t_incrementLauncherOffset

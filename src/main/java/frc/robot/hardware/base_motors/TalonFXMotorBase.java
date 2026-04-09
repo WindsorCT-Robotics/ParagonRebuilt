@@ -82,7 +82,6 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
 
     @Override
     public void setPointPosition(Angle angle) {
-        System.out.println(angle);
         motor.setControl(positionDutyCycle.withPosition(angle));
     }
 

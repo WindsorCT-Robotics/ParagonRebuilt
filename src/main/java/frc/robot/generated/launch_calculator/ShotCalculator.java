@@ -20,6 +20,7 @@
 
 package frc.robot.generated.launch_calculator;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
@@ -41,6 +42,7 @@ import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
 import frc.robot.generated.Elastic.NotificationLevel;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.AngleUtil;
 
 /**
  * Shoot-on-the-move fire control solver. Figures out what RPM and heading your
@@ -289,7 +291,6 @@ public class ShotCalculator implements Sendable {
     if (inputs == null || inputs.robotPose() == null
         || inputs.fieldVelocity() == null || inputs.robotVelocity() == null) {
       isInvalid = true;
-      System.out.println("null");
     }
 
     Pose2d rawPose = inputs.robotPose();
@@ -327,7 +328,6 @@ public class ShotCalculator implements Sendable {
     if (Math.abs(inputs.pitchDeg()) > config.maxTiltDeg
         || Math.abs(inputs.rollDeg()) > config.maxTiltDeg) {
       isInvalid = true;
-      System.out.println("pitch");
     }
 
     // Transform robot center to launcher position
@@ -465,18 +465,20 @@ public class ShotCalculator implements Sendable {
     double aimY = compTargetY - robotY;
     Rotation2d driveAngle = new Rotation2d(aimX, aimY);
     if (config.shooterAngleOffsetRad != 0.0) {
-      Optional<Angle> launcherOffset = AllianceUtil.angleOffset(Radians.of(config.shooterAngleOffsetRad));
+      Optional<Angle> angle = AllianceUtil.angleOffset(driveAngle.getMeasure());
 
-      if (launcherOffset.isEmpty()) {
+      if (angle.isEmpty()) {
         isInvalid = true;
-        System.out.println("empty");
       } else {
-        driveAngle = driveAngle.minus(new Rotation2d(launcherOffset.get()));
+        driveAngle = new Rotation2d(angle.get().minus(Radians.of(config.shooterAngleOffsetRad)));
       }
     }
 
     // Heading error for confidence calculation
-    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
+    Rotation2d wrappedDriveHeading = new Rotation2d(heading);
+    SmartDashboard.putNumber("Drive Angle", driveAngle.getDegrees());
+    SmartDashboard.putNumber("Drive Heading", wrappedDriveHeading.getDegrees());
+    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - wrappedDriveHeading.getRadians());
 
     // Angular velocity feedforward: rate of change of aim angle
     double driveAngularVelocity = 0;
@@ -536,14 +538,19 @@ public class ShotCalculator implements Sendable {
 
     // 1. Solver quality (passed in, already 0-1)
     double convergenceQuality = solverQuality;
+    SmartDashboard.putNumber("calc/1/convergenceQuality", convergenceQuality);
+    
 
     // 2. Velocity stability: penalize rapid speed changes
     double speedDelta = Math.abs(currentSpeed - previousSpeed);
     double velocityStability = MathUtil.clamp(1.0 - speedDelta / 0.5, 0, 1);
+    SmartDashboard.putNumber("calc/2/speedDelta", speedDelta);
+    SmartDashboard.putNumber("calc/2/velocityStability", velocityStability);
 
     // 3. Vision confidence (0-1, from caller)
     double visionConf = MathUtil.clamp(visionConfidence, 0, 1);
-
+    SmartDashboard.putNumber("calc/3/visionConf", visionConf);
+    
     // 4. Heading accuracy with speed scaling and distance scaling.
     // Faster robot = tighter tolerance (because velocity errors compound).
     // Closer to hub = tighter tolerance (because small angles mean big misses).
@@ -554,31 +561,27 @@ public class ShotCalculator implements Sendable {
     double headingErr = Math.abs(headingErrorRad);
     double headingAccuracy = MathUtil.clamp(1.0 - headingErr / scaledMaxError, 0, 1);
 
-    SmartDashboard.putNumber("distanceScale", distanceScale);
-    SmartDashboard.putNumber("speedScale", speedScale);
-    SmartDashboard.putNumber("scaledMaxError", scaledMaxError);
-    SmartDashboard.putNumber("headingErr", headingErr);
-    SmartDashboard.putNumber("headingAccuracy", headingAccuracy);
-
-    // 5. Distance in range: penalty for being near min/max scoring boundaries
-    double rangeSpan = config.maxScoringDistance - config.minScoringDistance;
-    double rangeFraction = (distance - config.minScoringDistance) / rangeSpan;
-    double distInRange = 1.0 - 2.0 * Math.abs(rangeFraction - 0.5);
-    distInRange = MathUtil.clamp(distInRange, 0, 1);
+    SmartDashboard.putNumber("calc/4/distanceScale", distanceScale);
+    SmartDashboard.putNumber("calc/4/speedScale", speedScale);
+    SmartDashboard.putNumber("calc/4/scaledMaxError", scaledMaxError);
+    SmartDashboard.putNumber("calc/4/headingErr", headingErr);
+    SmartDashboard.putNumber("calc/4/headingAccuracy", headingAccuracy);
 
     // Weighted geometric mean (one zero kills it)
-    double[] c = { convergenceQuality, velocityStability, visionConf, headingAccuracy, distInRange };
+    double[] c = { convergenceQuality, velocityStability, visionConf, headingAccuracy};
     double[] w = {
         config.wConvergence,
         config.wVelocityStability,
         config.wVisionConfidence,
-        config.wHeadingAccuracy,
-        config.wDistanceInRange
+        config.wHeadingAccuracy
     };
+
+    SmartDashboard.putNumberArray("calc/weighted", c);
+    SmartDashboard.putNumberArray("calc/weighted2", w);
 
     double sumW = 0;
     double logSum = 0;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       if (c[i] <= 0)
         return 0;
       logSum += w[i] * Math.log(c[i]);

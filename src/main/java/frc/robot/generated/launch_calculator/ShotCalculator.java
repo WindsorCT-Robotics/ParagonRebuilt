@@ -25,8 +25,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
-import java.util.Optional;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -34,15 +32,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
 import frc.robot.generated.Elastic.NotificationLevel;
-import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.AngleUtil;
 
 /**
  * Shoot-on-the-move fire control solver. Figures out what RPM and heading your
@@ -461,17 +456,11 @@ public class ShotCalculator implements Sendable {
       compTargetX = hubX - vx * headingDriftTOF;
       compTargetY = hubY - vy * headingDriftTOF;
     }
-    double aimX = compTargetX - robotX;
-    double aimY = compTargetY - robotY;
+    double aimX = compTargetX - launcherX;
+    double aimY = compTargetY - launcherY;
     Rotation2d driveAngle = new Rotation2d(aimX, aimY);
     if (config.shooterAngleOffsetRad != 0.0) {
-      Optional<Angle> angle = AllianceUtil.angleOffset(driveAngle.getMeasure());
-
-      if (angle.isEmpty()) {
-        isInvalid = true;
-      } else {
-        driveAngle = new Rotation2d(angle.get().minus(Radians.of(config.shooterAngleOffsetRad)));
-      }
+      driveAngle = driveAngle.minus(new Rotation2d(Radians.of(config.shooterAngleOffsetRad)));
     }
 
     // Heading error for confidence calculation

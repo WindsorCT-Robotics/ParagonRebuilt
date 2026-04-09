@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -19,7 +20,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
-import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -65,6 +65,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.base_sensors.LimelightVisionBase;
 import frc.robot.hardware.base_sensors.LimelightVisionBase.VisionMeasurements;
 import frc.robot.hardware.sensors.LauncherVision;
+import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.AngleUtil;
 
 public class Drive extends GeneratedDrive implements Sendable {
@@ -176,7 +177,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 "SmartDashboard/Subsystems/Drive/Visions");
 
                 backLauncherVision = new LauncherVision(
-                        "limelight-reverse",
+                                "limelight-reverse",
                                 new Pose3d(
                                                 Inches.of(-7.3),
                                                 Inches.of(-7.5),
@@ -195,7 +196,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 STANDARD_DEVIATION_SCALAR,
                                 "SmartDashboard/Subsystems/Drive/Visions");
 
-                visions = new LimelightVisionBase[] {launcherVision, backLauncherVision};
+                visions = new LimelightVisionBase[] { launcherVision, backLauncherVision };
 
                 onAllianceSide = new Trigger(() -> {
                         Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -416,13 +417,18 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y) {
                 return run(() -> {
-                        Angle targetAngle = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue)
-                                        ? Radians.zero()
-                                        : Radians.of(Math.PI);
-                        aimTo(
-                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                                        percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                        Optional.of(targetAngle));
+                        LinearVelocity velocityX = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x);
+                        LinearVelocity velocityY = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y);
+
+                        Optional<Angle> targetAngle = AllianceUtil.angleOffset(Degrees.zero());
+                        if (targetAngle.isEmpty()) {
+                                aimToFail(velocityX, velocityY);
+                        } else {
+                                aimTo(
+                                                velocityX,
+                                                velocityY,
+                                                targetAngle.get());
+                        }
                 });
         }
 
@@ -433,50 +439,64 @@ public class Drive extends GeneratedDrive implements Sendable {
         private void aimTo(
                         LinearVelocity x,
                         LinearVelocity y,
-                        Optional<Angle> targetAngle) {
-                if (targetAngle.isEmpty()) {
-                        return;
-                }
+                        Angle targetAngle) {
+                Optional<Angle> normalizedAngle = AllianceUtil.angleOffset(targetAngle);
 
-                setControl(
+                if (normalizedAngle.isEmpty()) {
+                        aimToFail(x, y);
+                } else {
+                        setControl(
                                 fieldCentricFacingAngleSwerveRequest
                                                 .withVelocityX(y)
                                                 .withVelocityY(x)
                                                 .withTargetDirection(
-                                                                new Rotation2d(targetAngle.get())));
-
-                // SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
+                                                                new Rotation2d(normalizedAngle.get())));
+                }
         }
 
         private void aimToWithFF(
                         LinearVelocity x,
                         LinearVelocity y,
-                        Optional<Angle> targetAngle,
-                        Optional<AngularVelocity> feedforward) {
-                if (targetAngle.isEmpty() || feedforward.isEmpty()) {
-                        return;
+                        Angle targetAngle,
+                        AngularVelocity feedforward) {
+                Optional<Angle> normalizedAngle = AllianceUtil.angleOffset(targetAngle);
+                if (normalizedAngle.isEmpty()) {
+                        aimToFail(x, y);
+                } else {
+                        setControl(
+                                        fieldCentricFacingAngleSwerveRequest
+                                                        .withVelocityX(y)
+                                                        .withVelocityY(x)
+                                                        .withTargetRateFeedforward(feedforward)
+                                                        .withTargetDirection(
+                                                                        new Rotation2d(normalizedAngle.get())));
                 }
+        }
 
-                setControl(
-                                fieldCentricFacingAngleSwerveRequest
-                                                .withVelocityX(y)
-                                                .withVelocityY(x)
-                                                .withTargetRateFeedforward(feedforward.get())
-                                                .withTargetDirection(
-                                                                new Rotation2d(targetAngle.get()))
-                                                .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective));
-
-                SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
+        private void aimToFail(LinearVelocity x, LinearVelocity y) {
+                setControl(fieldCentricSwerveRequest
+                                .withVelocityX(y)
+                                .withVelocityY(x)
+                                .withRotationalRate(RPM.zero()));
         }
 
         public Command aimTo(
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y,
                         Supplier<Optional<Angle>> targetAngle) {
-                return run(() -> aimTo(
-                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                targetAngle.get()));
+                return run(() -> {
+                        LinearVelocity velocityX = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x);
+                        LinearVelocity velocityY = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y);
+
+                        if (targetAngle.get().isEmpty()) {
+                                aimToFail(velocityX, velocityY);
+                        } else {
+                                aimTo(
+                                                velocityX,
+                                                velocityY,
+                                                targetAngle.get().get());
+                        }
+                });
         }
 
         public Command aimToWithFF(
@@ -484,11 +504,20 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> y,
                         Supplier<Optional<Angle>> targetAngle,
                         Supplier<Optional<AngularVelocity>> feedforward) {
-                return run(() -> aimToWithFF(
-                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x),
-                                percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y),
-                                targetAngle.get(),
-                                feedforward.get()));
+                return run(() -> {
+                        LinearVelocity velocityX = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x);
+                        LinearVelocity velocityY = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y);
+
+                        if (targetAngle.get().isEmpty() || feedforward.get().isEmpty()) {
+                                aimToFail(velocityX, velocityY);
+                        } else {
+                                aimToWithFF(
+                                                velocityX,
+                                                velocityY,
+                                                targetAngle.get().get(),
+                                                feedforward.get().get());
+                        }
+                });
         }
 
         public Translation2d getHubTarget(Alliance alliance) {

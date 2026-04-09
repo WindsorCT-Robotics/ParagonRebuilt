@@ -196,6 +196,8 @@ public class ShotCalculator implements Sendable {
     // Math.PI = rear-facing. The solver rotates the drive heading so the
     // correct face points at the hub.
     public double shooterAngleOffsetRad = Math.PI / 2;
+
+    public double launchConfidence = 45;
   }
 
   private final Config config;
@@ -464,9 +466,6 @@ public class ShotCalculator implements Sendable {
     }
 
     // Heading error for confidence calculation
-    // Rotation2d wrappedDriveHeading = new Rotation2d(heading);
-    // Offset heading of launcher to hub by difference of the current robot heading.
-    // TODO: Drive angle must be correct because it gives the correct angle to aim, this must mean that heading is wrong.
     double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
 
     // Angular velocity feedforward: rate of change of aim angle
@@ -494,6 +493,10 @@ public class ShotCalculator implements Sendable {
 
     double confidence = computeConfidence(
         solverQuality, robotSpeed, headingErrorRad, distance, inputs.visionConfidence());
+
+    if (confidence < config.launchConfidence) {
+      isInvalid = true;
+    }
 
     previousSpeed = robotSpeed;
 
@@ -526,7 +529,6 @@ public class ShotCalculator implements Sendable {
 
     // 1. Solver quality (passed in, already 0-1)
     double convergenceQuality = solverQuality;
-    
 
     // 2. Velocity stability: penalize rapid speed changes
     double speedDelta = Math.abs(currentSpeed - previousSpeed);
@@ -534,7 +536,7 @@ public class ShotCalculator implements Sendable {
 
     // 3. Vision confidence (0-1, from caller)
     double visionConf = MathUtil.clamp(visionConfidence, 0, 1);
-    
+
     // 4. Heading accuracy with speed scaling and distance scaling.
     // Faster robot = tighter tolerance (because velocity errors compound).
     // Closer to hub = tighter tolerance (because small angles mean big misses).
@@ -546,7 +548,7 @@ public class ShotCalculator implements Sendable {
     double headingAccuracy = MathUtil.clamp(1.0 - headingErr / scaledMaxError, 0, 1);
 
     // Weighted geometric mean (one zero kills it)
-    double[] c = { convergenceQuality, velocityStability, visionConf, headingAccuracy};
+    double[] c = { convergenceQuality, velocityStability, visionConf, headingAccuracy };
     double[] w = {
         config.wConvergence,
         config.wVelocityStability,
@@ -677,13 +679,14 @@ public class ShotCalculator implements Sendable {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-      builder.addDoubleProperty("Confidence", () -> launchParameters.confidence, null);
-      builder.addBooleanProperty("Valid Launch", () -> launchParameters.isValid, null);
-      builder.addDoubleProperty("Launch Angle (Degrees)", () -> launchParameters.driveAngle.getDegrees(), null);
-      builder.addDoubleProperty("Launch Feedforward (Rads/Sec)", () -> launchParameters.driveAngularVelocityRadPerSec, null);
-      builder.addDoubleProperty("Launch Velocity (RPM)", () -> launchParameters.rpm, null);
-      builder.addDoubleProperty("Distance From Hub (M)", () -> launchParameters.solvedDistanceM, null);
-      builder.addDoubleProperty("Time Of Flight (s)", () -> launchParameters.timeOfFlightSec, null);
-      builder.addDoubleProperty("Launch Solver Iterations", () -> launchParameters.iterationsUsed, null);
+    builder.addDoubleProperty("Confidence", () -> launchParameters.confidence, null);
+    builder.addBooleanProperty("Valid Launch", () -> launchParameters.isValid, null);
+    builder.addDoubleProperty("Launch Angle (Degrees)", () -> launchParameters.driveAngle.getDegrees(), null);
+    builder.addDoubleProperty("Launch Feedforward (Rads/Sec)", () -> launchParameters.driveAngularVelocityRadPerSec,
+        null);
+    builder.addDoubleProperty("Launch Velocity (RPM)", () -> launchParameters.rpm, null);
+    builder.addDoubleProperty("Distance From Hub (M)", () -> launchParameters.solvedDistanceM, null);
+    builder.addDoubleProperty("Time Of Flight (s)", () -> launchParameters.timeOfFlightSec, null);
+    builder.addDoubleProperty("Launch Solver Iterations", () -> launchParameters.iterationsUsed, null);
   }
 }

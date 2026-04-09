@@ -1,11 +1,8 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Value;
 
@@ -36,7 +33,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.launch_calculator.ShotCalculator;
-import frc.robot.generated.launch_calculator.ShotCalculator.Config;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
 import frc.robot.subsystems.Drive;
@@ -100,14 +96,11 @@ public class RobotContainer implements Sendable {
         private final Supplier<Dimensionless> turnX = () -> ControllerUtil
                         .getAxisWithDeadBandAndCurve(driver.getRightX(), DRIVER_CONTROLLER_DEADBAND, TURN_CURVE);
 
-        private final ShotCalculator launchCalculator;
-        private final ShotCalculator.Config launcherCalculatorConfig = new Config();
+        private final ShotCalculator hubCalculator;
+        private final ShotCalculator snowBlowCalculator;
 
-        private final Supplier<Optional<ShotCalculator.LaunchParameters>> hubLaunchSupplier;
-        private final Supplier<Optional<ShotCalculator.LaunchParameters>> snowBlowLaunchSupplier;
-
-        private Optional<LaunchParameters> hubLaunchParameters = Optional.empty();
-        private Optional<LaunchParameters> snowBlowLaunchParameters = Optional.empty();
+        private Optional<ShotCalculator.LaunchParameters> hubLaunchParameters = Optional.empty();
+        private Optional<ShotCalculator.LaunchParameters> snowBlowLaunchParameters = Optional.empty();
 
         private final SendableChooser<Command> autoChooser;
 
@@ -129,30 +122,25 @@ public class RobotContainer implements Sendable {
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
-                launcherCalculatorConfig.launcherOffsetX = Inches.of(-7).in(Meters);
-                launcherCalculatorConfig.launcherOffsetY = Inches.of(-9).in(Meters);
-                launcherCalculatorConfig.shooterAngleOffsetRad = Math.PI / 2;
-                launcherCalculatorConfig.phaseDelayMs = 30.0;
-                launcherCalculatorConfig.mechLatencyMs = 20.0;
-                launcherCalculatorConfig.maxTiltDeg = 5.0;
-                launcherCalculatorConfig.headingSpeedScalar = 1;
-                launcherCalculatorConfig.headingReferenceDistance = 2.5;
+                hubCalculator = new ShotCalculator();
+                hubCalculator.loadLUTEntry(1.5, 2000, 1);
+                hubCalculator.loadLUTEntry(2.0, 2125, 1);
+                hubCalculator.loadLUTEntry(2.5, 2225, 1);
+                hubCalculator.loadLUTEntry(3, 2325, 1);
+                hubCalculator.loadLUTEntry(3.5, 2450, 1);
+                hubCalculator.loadLUTEntry(4, 2590, 1);
+                hubCalculator.loadLUTEntry(4.5, 2690, 1);
+                hubCalculator.loadLUTEntry(5, 2850, 1);
 
-                launchCalculator = new ShotCalculator(launcherCalculatorConfig);
-                launchCalculator.loadLUTEntry(1.5, 2000, 1);
-                launchCalculator.loadLUTEntry(2.0, 2125, 1);
-                launchCalculator.loadLUTEntry(2.5, 2225, 1);
-                launchCalculator.loadLUTEntry(3, 2325, 1);
-                launchCalculator.loadLUTEntry(3.5, 2450, 1);
-                launchCalculator.loadLUTEntry(4, 2590, 1);
-                launchCalculator.loadLUTEntry(4.5, 2690, 1);
-                launchCalculator.loadLUTEntry(5, 2850, 1);
-
-                hubLaunchSupplier = () -> DriverStation.getAlliance()
-                                .map(alliance -> getLaunchParametersFor(drive.getHubTarget(alliance)));
-
-                snowBlowLaunchSupplier = () -> DriverStation.getAlliance()
-                                .map(alliance -> getLaunchParametersFor(drive.getSnowblowTarget(alliance)));
+                snowBlowCalculator = new ShotCalculator();
+                snowBlowCalculator.loadLUTEntry(1.5, 2000, 1);
+                snowBlowCalculator.loadLUTEntry(2.0, 2125, 1);
+                snowBlowCalculator.loadLUTEntry(2.5, 2225, 1);
+                snowBlowCalculator.loadLUTEntry(3, 2325, 1);
+                snowBlowCalculator.loadLUTEntry(3.5, 2450, 1);
+                snowBlowCalculator.loadLUTEntry(4, 2590, 1);
+                snowBlowCalculator.loadLUTEntry(4.5, 2690, 1);
+                snowBlowCalculator.loadLUTEntry(5, 2850, 1);
 
                 // Controller Triggers
                 t_autoScore               = new SendableTrigger(driver.rightBumper(), "c_autoScore");
@@ -173,14 +161,9 @@ public class RobotContainer implements Sendable {
                 t_climb_home              = new SendableTrigger(operator.start().and(operator.back()), "c_climb_home");
 
                 // Conditional Trigger
-                t_hubLaunchValid = new SendableTrigger(
-                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid())
-                                                .orElse(false),
-                                "nc_hubLaunchValid");
+                t_hubLaunchValid = new SendableTrigger(() -> hubLaunchParameters.map(parameters -> parameters.isValid()).orElse(false), "nc_hubLaunchValid");
 
-                t_snowBlowValid = new SendableTrigger(
-                                () -> snowBlowLaunchSupplier.get().map(parameters -> parameters.isValid())
-                                                .orElse(false),
+                t_snowBlowValid = new SendableTrigger(() -> snowBlowLaunchParameters.map(parameters -> parameters.isValid()).orElse(false),
                                 "nc_snowBlowValid");
 
                 t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
@@ -214,7 +197,8 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Controllers/Driver", driver.getHID());
                 SmartDashboard.putData("Robot Container/Controllers/Operator", operator.getHID());
                 SmartDashboard.putData("Robot Container/Autonomous", autoChooser);
-                SmartDashboard.putData("Robot Container/Launch Calculator", launchCalculator);
+                SmartDashboard.putData("Robot Container/Hub Calculator", hubCalculator);
+                SmartDashboard.putData("Robot Container/SnowBlow Calculator", snowBlowCalculator);
                 SmartDashboard.putData("Robot Container/Triggers", t_autoScore);
                 SmartDashboard.putData("Robot Container/Triggers", t_manualScore);
                 SmartDashboard.putData("Robot Container/Triggers", t_partialManualScore);
@@ -241,7 +225,7 @@ public class RobotContainer implements Sendable {
 
         }
 
-        private LaunchParameters getLaunchParametersFor(Translation2d target) {
+        private LaunchParameters getLaunchParametersFor(ShotCalculator calculator, Translation2d target) {
                 SwerveDriveState driveState = drive.getState();
                 Pigeon2 gyro = drive.getPigeon2();
 
@@ -262,13 +246,15 @@ public class RobotContainer implements Sendable {
                                 0.9,
                                 pitch.in(Degrees),
                                 roll.in(Degrees));
-
-                return launchCalculator.calculate(inputs);
+                                
+                return calculator.calculate(inputs);
         }
 
         public void updateLaunchParameters() {
-                hubLaunchParameters = hubLaunchSupplier.get();
-                snowBlowLaunchParameters = snowBlowLaunchSupplier.get();
+                hubLaunchParameters = DriverStation.getAlliance()
+                                .map(alliance -> getLaunchParametersFor(hubCalculator, drive.getHubTarget(alliance)));
+                snowBlowLaunchParameters = DriverStation.getAlliance()
+                                .map(alliance -> getLaunchParametersFor(snowBlowCalculator, drive.getSnowblowTarget(alliance)));
         }
 
         public Command getAutonomousCommand() {
@@ -309,7 +295,10 @@ public class RobotContainer implements Sendable {
         }
 
         private Optional<Angle> angleToHub() {
-                return hubLaunchParameters.map(parameters -> parameters.driveAngle().getMeasure());
+                Optional<Rotation2d> angle = hubLaunchParameters.map(parameters -> parameters.driveAngle());
+                if (angle.isPresent()) {
+                }
+                return Optional.of(Degrees.of(angle.get().getDegrees()));
         }
 
         private Optional<AngularVelocity> angleToHubWithFF() {
@@ -375,9 +364,9 @@ public class RobotContainer implements Sendable {
                 // t_climb_home.onTrue(climber.home());
 
                 t_incrementLauncherOffset
-                                .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(25).in(RPM))));
+                                .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(25).in(RPM))));
                 t_decrementLauncherOffset
-                                .onTrue(new InstantCommand(() -> launchCalculator.adjustOffset(RPM.of(-25).in(RPM))));
+                                .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(-25).in(RPM))));
 
                 t_resetGyro.onTrue(drive.resetGyroCommand());
         }

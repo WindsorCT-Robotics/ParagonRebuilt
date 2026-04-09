@@ -465,10 +465,9 @@ public class ShotCalculator implements Sendable {
 
     // Heading error for confidence calculation
     // Rotation2d wrappedDriveHeading = new Rotation2d(heading);
-    SmartDashboard.putNumber("Drive Angle", driveAngle.getDegrees());
-    SmartDashboard.putNumber("Drive Heading", Radians.of(heading).in(Degrees));
+    // Offset heading of launcher to hub by difference of the current robot heading.
+    // TODO: Drive angle must be correct because it gives the correct angle to aim, this must mean that heading is wrong.
     double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
-    SmartDashboard.putNumber("Heading Error", Radians.of(headingErrorRad).in(Degrees));
 
     // Angular velocity feedforward: rate of change of aim angle
     double driveAngularVelocity = 0;
@@ -508,7 +507,6 @@ public class ShotCalculator implements Sendable {
         distance,
         iterationsUsed,
         warmStartUsed);
-
     return launchParameters;
   }
 
@@ -528,18 +526,14 @@ public class ShotCalculator implements Sendable {
 
     // 1. Solver quality (passed in, already 0-1)
     double convergenceQuality = solverQuality;
-    SmartDashboard.putNumber("calc/1/convergenceQuality", convergenceQuality);
     
 
     // 2. Velocity stability: penalize rapid speed changes
     double speedDelta = Math.abs(currentSpeed - previousSpeed);
     double velocityStability = MathUtil.clamp(1.0 - speedDelta / 0.5, 0, 1);
-    SmartDashboard.putNumber("calc/2/speedDelta", speedDelta);
-    SmartDashboard.putNumber("calc/2/velocityStability", velocityStability);
 
     // 3. Vision confidence (0-1, from caller)
     double visionConf = MathUtil.clamp(visionConfidence, 0, 1);
-    SmartDashboard.putNumber("calc/3/visionConf", visionConf);
     
     // 4. Heading accuracy with speed scaling and distance scaling.
     // Faster robot = tighter tolerance (because velocity errors compound).
@@ -551,12 +545,6 @@ public class ShotCalculator implements Sendable {
     double headingErr = Math.abs(headingErrorRad);
     double headingAccuracy = MathUtil.clamp(1.0 - headingErr / scaledMaxError, 0, 1);
 
-    SmartDashboard.putNumber("calc/4/distanceScale", distanceScale);
-    SmartDashboard.putNumber("calc/4/speedScale", speedScale);
-    SmartDashboard.putNumber("calc/4/scaledMaxError", scaledMaxError);
-    SmartDashboard.putNumber("calc/4/headingErr", headingErr);
-    SmartDashboard.putNumber("calc/4/headingAccuracy", headingAccuracy);
-
     // Weighted geometric mean (one zero kills it)
     double[] c = { convergenceQuality, velocityStability, visionConf, headingAccuracy};
     double[] w = {
@@ -565,9 +553,6 @@ public class ShotCalculator implements Sendable {
         config.wVisionConfidence,
         config.wHeadingAccuracy
     };
-
-    SmartDashboard.putNumberArray("calc/weighted", c);
-    SmartDashboard.putNumberArray("calc/weighted2", w);
 
     double sumW = 0;
     double logSum = 0;

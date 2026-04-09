@@ -72,10 +72,15 @@ public class RobotContainer implements Sendable {
         private final SendableTrigger t_climb_home;
 
         // Conditional Triggers
-        private final SendableTrigger t_scoreValid;
+        private final SendableTrigger t_hubLaunchValid;
         private final SendableTrigger t_snowBlowValid;
         private final SendableTrigger t_attemptToScore;
         private final SendableTrigger t_onAllianceSide;
+        private final SendableTrigger t_prepareFuel;
+
+        // Command Triggers
+        private final SendableTrigger cmd_autoScore_launchFuel;
+        private final SendableTrigger cmd_autoScore_indexFuel;
 
         private final Drive drive;
         private final Spindexer spindexer;
@@ -132,7 +137,6 @@ public class RobotContainer implements Sendable {
                 launcherCalculatorConfig.maxTiltDeg = 5.0;
                 launcherCalculatorConfig.headingSpeedScalar = 1;
                 launcherCalculatorConfig.headingReferenceDistance = 2.5;
-                launcherCalculatorConfig.headingMaxErrorRad = Degrees.of(1).in(Radians);
 
                 launchCalculator = new ShotCalculator(launcherCalculatorConfig);
                 launchCalculator.loadLUTEntry(1.5, 2000, 1);
@@ -169,9 +173,10 @@ public class RobotContainer implements Sendable {
                 t_climb_home              = new SendableTrigger(operator.start().and(operator.back()), "c_climb_home");
 
                 // Conditional Trigger
-                t_scoreValid = new SendableTrigger(
-                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid()).orElse(false),
-                                "nc_scoreValid");
+                t_hubLaunchValid = new SendableTrigger(
+                                () -> hubLaunchSupplier.get().map(parameters -> parameters.isValid())
+                                                .orElse(false),
+                                "nc_hubLaunchValid");
 
                 t_snowBlowValid = new SendableTrigger(
                                 () -> snowBlowLaunchSupplier.get().map(parameters -> parameters.isValid())
@@ -182,6 +187,12 @@ public class RobotContainer implements Sendable {
                                 "nc_attemptToScore");
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> DriverStation.isTeleop()),
                                 "nc_onAllianceSide");
+
+                t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()), "nc_prepareFuel");
+
+                // Command Trigger
+                cmd_autoScore_launchFuel = new SendableTrigger(t_autoScore.and(t_onAllianceSide), "cmd_autoScore_launchFuel");
+                cmd_autoScore_indexFuel = new SendableTrigger(t_autoScore.and(t_hubLaunchValid).and(t_onAllianceSide).and(t_unjam.negate()), "cmd_autoScore_indexFuel");
 
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
@@ -219,7 +230,7 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Triggers", t_resetGyro);
                 SmartDashboard.putData("Robot Container/Triggers", t_climb);
                 SmartDashboard.putData("Robot Container/Triggers", t_climb_home);
-                SmartDashboard.putData("Robot Container/Triggers", t_scoreValid);
+                SmartDashboard.putData("Robot Container/Triggers", t_hubLaunchValid);
                 SmartDashboard.putData("Robot Container/Triggers", t_snowBlowValid);
                 SmartDashboard.putData("Robot Container/Triggers", t_attemptToScore);
                 SmartDashboard.putData("Robot Container/Triggers", t_onAllianceSide);
@@ -330,23 +341,9 @@ public class RobotContainer implements Sendable {
 
                 t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
-                t_onAllianceSide.whileTrue(
-                                launcher.prepareFuel()
-                                                .unless(t_attemptToScore)
-                                                .until(t_attemptToScore)
-                                                .withName("Launcher Prepare Fuel"));
-
-                t_onAllianceSide.whileTrue(
-                                kicker.prepareFuel()
-                                                .unless(t_attemptToScore)
-                                                .until(t_attemptToScore)
-                                                .withName("Kicker Prepare Fuel"));
-
-                t_onAllianceSide.whileTrue(
-                                spindexer.prepareFuel()
-                                                .unless(t_attemptToScore)
-                                                .until(t_attemptToScore)
-                                                .withName("Spindexer Prepare Fuel"));
+                t_prepareFuel.whileTrue(launcher.prepareFuel().withName("Launcher Prepare Fuel"));
+                t_prepareFuel.whileTrue(kicker.prepareFuel().withName("Kicker Prepare Fuel"));
+                t_prepareFuel.whileTrue(spindexer.prepareFuel().withName("Spindexer Prepare Fuel"));
 
                 bindAutoScore();
                 bindSnowBlow();
@@ -355,7 +352,7 @@ public class RobotContainer implements Sendable {
 
                 t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
 
-                t_autoIntake.getTrigger().onTrue(
+                t_autoIntake.getTrigger().whileTrue(
                                 bayDoor.open().alongWith(intake.intakeFuel())
                                                 .until(t_attemptToScore)
                                                 .unless(t_attemptToScore)
@@ -386,24 +383,12 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindAutoScore() {
-                t_autoScore.whileTrue(
-                                launcher.launchFuel(() -> launchVelocityToHub())
-                                                .withName("Launch Fuel To Hub")
-                                                .repeatedly());
-                t_autoScore.whileTrue(
-                                kicker.kickFuel(() -> launchVelocityToHub())
-                                                .withName("Kick Fuel To Hub")
-                                                .repeatedly());
-                t_autoScore.whileTrue(
-                                spindexer.indexFuel()
-                                                .until(t_scoreValid.negate())
-                                                .unless(t_scoreValid.negate())
-                                                .withName("Index Fuel To Hub")
-                                                .repeatedly());
-                t_autoScore.whileTrue(
-                                drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF())
-                                                .withName("Auto Aim To Hub")
-                                                .repeatedly());
+                cmd_autoScore_launchFuel.whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
+                .withName("Launch Fuel To Hub"));
+                cmd_autoScore_launchFuel.whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
+                .withName("Kick Fuel To Hub"));
+                cmd_autoScore_indexFuel.whileTrue(spindexer.indexFuel().withName("Index Fuel To Hub"));
+                t_autoScore.whileTrue(drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF()).withName("Auto Aim To Hub"));
         }
 
         private void bindSnowBlow() {

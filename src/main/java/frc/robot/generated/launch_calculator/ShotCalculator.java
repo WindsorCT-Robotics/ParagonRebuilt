@@ -475,10 +475,11 @@ public class ShotCalculator implements Sendable {
     }
 
     // Heading error for confidence calculation
-    Rotation2d wrappedDriveHeading = new Rotation2d(heading);
+    // Rotation2d wrappedDriveHeading = new Rotation2d(heading);
     SmartDashboard.putNumber("Drive Angle", driveAngle.getDegrees());
-    SmartDashboard.putNumber("Drive Heading", wrappedDriveHeading.getDegrees());
-    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - wrappedDriveHeading.getRadians());
+    SmartDashboard.putNumber("Drive Heading", Radians.of(heading).in(Degrees));
+    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
+    SmartDashboard.putNumber("Heading Error", Radians.of(headingErrorRad).in(Degrees));
 
     // Angular velocity feedforward: rate of change of aim angle
     double driveAngularVelocity = 0;

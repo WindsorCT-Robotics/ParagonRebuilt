@@ -445,7 +445,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 .withTargetDirection(
                                                                 new Rotation2d(targetAngle.get())));
 
-                SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
+                // SmartDashboard.putNumber("Target Angle", targetAngle.get().in(Degrees));
         }
 
         private void aimToWithFF(

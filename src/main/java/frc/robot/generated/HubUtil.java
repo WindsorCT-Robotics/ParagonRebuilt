@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class HubUtil implements Sendable {
     private HubUtil(){}
-
+//
     static HubUtil _inst = new HubUtil();
     public static HubUtil getInstance(){ return _inst; }
 

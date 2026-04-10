@@ -20,9 +20,11 @@
 
 package frc.robot.generated.launch_calculator;
 
+import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -36,6 +38,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.generated.Elastic;
 import frc.robot.generated.Elastic.Notification;
 import frc.robot.generated.Elastic.NotificationLevel;
+import frc.robot.utils.Round;
 
 /**
  * Shoot-on-the-move fire control solver. Figures out what RPM and heading your
@@ -677,14 +680,13 @@ public class ShotCalculator implements Sendable {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    builder.addDoubleProperty("Confidence", () -> launchParameters.confidence, null);
+    builder.addDoubleProperty("Confidence", () -> Round.round(launchParameters.confidence, 2), null);
     builder.addBooleanProperty("Valid Launch", () -> launchParameters.isValid, null);
-    builder.addDoubleProperty("Launch Angle (Degrees)", () -> launchParameters.driveAngle.getDegrees(), null);
-    builder.addDoubleProperty("Launch Feedforward (Rads/Sec)", () -> launchParameters.driveAngularVelocityRadPerSec,
-        null);
-    builder.addDoubleProperty("Launch Velocity (RPM)", () -> launchParameters.rpm, null);
-    builder.addDoubleProperty("Distance From Hub (M)", () -> launchParameters.solvedDistanceM, null);
-    builder.addDoubleProperty("Time Of Flight (s)", () -> launchParameters.timeOfFlightSec, null);
+    builder.addDoubleProperty("Launch Angle (Degrees)", () -> Round.round(launchParameters.driveAngle.getDegrees(), 2), null);
+    builder.addDoubleProperty("Launch Feedforward (Degrees Per Second)", () -> Round.round(RadiansPerSecond.of(launchParameters.driveAngularVelocityRadPerSec).in(DegreesPerSecond), 2),null);
+    builder.addDoubleProperty("Launch Velocity (RPM)", () -> Round.round(launchParameters.rpm, 2), null);
+    builder.addDoubleProperty("Distance From Target (M)", () -> Round.round(launchParameters.solvedDistanceM, 2), null);
+    builder.addDoubleProperty("Time Of Flight (s)", () -> Round.round(launchParameters.timeOfFlightSec, 2), null);
     builder.addDoubleProperty("Launch Solver Iterations", () -> launchParameters.iterationsUsed, null);
   }
 }

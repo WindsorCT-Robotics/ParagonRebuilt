@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -13,6 +14,7 @@ import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,6 +24,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -46,6 +49,7 @@ import frc.robot.utils.ControllerUtil;
 
 public class RobotContainer implements Sendable {
         private static final Dimensionless DRIVER_CONTROLLER_DEADBAND = Percent.of(5);
+        private static final LinearVelocity MAX_SPEED_LAUNCH = MetersPerSecond.of(2); // Max speed of the robot when aiming
         private static final double MOVE_CURVE = 2.0;
         private static final double TURN_CURVE = 2.0;
 
@@ -97,13 +101,13 @@ public class RobotContainer implements Sendable {
 
                 hubCalculator = new ShotCalculator();
                 hubCalculator.loadLUTEntry(1.5, 2000, 1);
-                hubCalculator.loadLUTEntry(2.0, 2125, 1);
-                hubCalculator.loadLUTEntry(2.5, 2225, 1);
-                hubCalculator.loadLUTEntry(3, 2325, 1);
-                hubCalculator.loadLUTEntry(3.5, 2450, 1);
-                hubCalculator.loadLUTEntry(4, 2590, 1);
-                hubCalculator.loadLUTEntry(4.5, 2690, 1);
-                hubCalculator.loadLUTEntry(5, 2850, 1);
+                hubCalculator.loadLUTEntry(2.0, 2125, 1.05);
+                hubCalculator.loadLUTEntry(2.5, 2225, 1.1);
+                hubCalculator.loadLUTEntry(3, 2325, 1.15);
+                hubCalculator.loadLUTEntry(3.5, 2450, 1.2);
+                hubCalculator.loadLUTEntry(4, 2590, 1.25);
+                hubCalculator.loadLUTEntry(4.5, 2690, 1.3);
+                hubCalculator.loadLUTEntry(5, 2850, 1.35);
 
                 snowBlowCalculator = new ShotCalculator();
                 snowBlowCalculator.loadLUTEntry(1.5, 2000, 1);
@@ -127,8 +131,8 @@ public class RobotContainer implements Sendable {
                                 () -> hubLaunchParameters,
                                 () -> snowBlowLaunchParameters);
 
-                autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
+                autoChooser = AutoBuilder.buildAutoChooser();
                 initSmartdashBoard();
 
                 bindCommands();
@@ -150,24 +154,6 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Autonomous", autoChooser);
                 SmartDashboard.putData("Robot Container/Hub Calculator", hubCalculator);
                 SmartDashboard.putData("Robot Container/SnowBlow Calculator", snowBlowCalculator);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_manualScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_partialManualScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoSnowBlow);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_unjam);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_incrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_decrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_faceRedAlliance);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_openBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_closeBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_switchRelativeReference);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_resetGyro);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_climb);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_climb_home);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_hubLaunchValid);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_snowBlowValid);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_attemptToScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_onAllianceSide);
                 SmartDashboard.putData("Hub", HubUtil.getInstance());
         }
 
@@ -340,6 +326,14 @@ public class RobotContainer implements Sendable {
                 bindings.cmd_autoScore_launchFuel
                                 .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
                                                 .withName("Kick Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(bayDoor.agitateFuel()
+                                                .withName("Agitate Bay Door Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(intake.agitateFuel()
+                                                .withName("Agitate Intake Fuel To Hub"));
 
                 bindings.cmd_autoScore_indexFuel
                                 .whileTrue(spindexer.indexFuel()

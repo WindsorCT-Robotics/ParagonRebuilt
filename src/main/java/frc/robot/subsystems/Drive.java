@@ -55,6 +55,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -128,6 +129,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         private final FieldCentric fieldCentricSwerveRequest = new FieldCentric();
         private final RobotCentric robotCentricSwerveRequest = new RobotCentric();
         private final FieldCentricFacingAngle fieldCentricFacingAngleSwerveRequest = new FieldCentricFacingAngle();
+        private final Field2d field = new Field2d();
 
         public final Trigger onAllianceSide;
         // endregion
@@ -242,6 +244,7 @@ public class Drive extends GeneratedDrive implements Sendable {
 
                 SwerveDriveState robotState = getState();
                 robotPosition.set(robotState.Pose);
+                field.setRobotPose(robotState.Pose);
                 currentModulesStates.set(robotState.ModuleStates);
                 targetModuleStates.set(robotState.ModuleTargets);
         }
@@ -267,6 +270,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         private void initSmartDashboard() {
+                SmartDashboard.putData("Subsystems/" + getName() + "/Field", field);
                 SmartDashboard.putData("Subsystems/" + getName() + "/" + getPigeon2().getClass().getSimpleName(),
                                 getPigeon2());
                 // https://frc-elastic.gitbook.io/docs/additional-features-and-references/custom-widget-examples#swervedrive
@@ -419,16 +423,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                 return run(() -> {
                         LinearVelocity velocityX = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x);
                         LinearVelocity velocityY = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y);
-
-                        Optional<Angle> targetAngle = AllianceUtil.angleOffset(Degrees.zero());
-                        if (targetAngle.isEmpty()) {
-                                aimToFail(velocityX, velocityY);
-                        } else {
-                                aimTo(
-                                                velocityX,
-                                                velocityY,
-                                                targetAngle.get());
-                        }
+                        aimTo(
+                                        velocityX,
+                                        velocityY,
+                                        Degrees.zero());
                 });
         }
 
@@ -446,11 +444,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                         aimToFail(x, y);
                 } else {
                         setControl(
-                                fieldCentricFacingAngleSwerveRequest
-                                                .withVelocityX(y)
-                                                .withVelocityY(x)
-                                                .withTargetDirection(
-                                                                new Rotation2d(normalizedAngle.get())));
+                                        fieldCentricFacingAngleSwerveRequest
+                                                        .withVelocityX(y)
+                                                        .withVelocityY(x)
+                                                        .withTargetDirection(
+                                                                        new Rotation2d(normalizedAngle.get())));
                 }
         }
 

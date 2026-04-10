@@ -32,6 +32,7 @@ import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IClosedLoopMotor;
 import frc.robot.interfaces.IConfiguration;
 import frc.robot.utils.BatteryUtil;
+import frc.robot.utils.Round;
 
 public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonFXConfiguration>, Sendable {
     protected final TalonFX motor;
@@ -169,7 +170,7 @@ public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonF
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
+        builder.addDoubleProperty("Angle (Rotations)", () -> Round.round(getAngle().in(Rotations), 2), null);
         builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
         builder.addDoubleProperty("Power (Watts)", () -> getPower().in(Watts), null);

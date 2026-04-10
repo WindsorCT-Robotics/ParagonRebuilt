@@ -97,13 +97,14 @@ public class BayDoor extends SubsystemBase {
                                                         .withSyncCANcoder(rightAbsoluteEncoder.getEncoder())
                                                         .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
-        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.232);
-        private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD.plus(Degrees.of(10));
-        private static final Angle CLOSE_ANGLE_SETPOINT = Rotations.of(0);
+        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.225);
+        private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD.plus(Degrees.of(5));
+        private static final Angle CLOSE_ANGLE_THRESHOLD = Degrees.of(5);
+        private static final Angle CLOSE_ANGLE_SETPOINT = CLOSE_ANGLE_THRESHOLD.minus(Degrees.of(15));
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
-        private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(5);
-        private static final Dimensionless CLOSE_PRESSURE_DUTY_CYCLE = Percent.of(-5);
+        private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(3);
+        private static final Dimensionless CLOSE_PRESSURE_DUTY_CYCLE = Percent.of(-3);
 
         public final Trigger atLeftCloseLimit;
         public final Trigger atRightCloseLimit;
@@ -120,7 +121,7 @@ public class BayDoor extends SubsystemBase {
                 super("Subsystems/" + name);
 
                 atLeftCloseLimit = new Trigger(
-                                () -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                                () -> leftAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_THRESHOLD));
                 atLeftOpenLimit = new Trigger(
                                 () -> leftAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
 
@@ -130,7 +131,7 @@ public class BayDoor extends SubsystemBase {
                                 MIDDLE_TOLERANCE));
 
                 atRightCloseLimit = new Trigger(
-                                () -> rightAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_SETPOINT));
+                                () -> rightAbsoluteEncoder.getAbsolutePosition().lte(CLOSE_ANGLE_THRESHOLD));
                 atRightOpenLimit = new Trigger(
                                 () -> rightAbsoluteEncoder.getAbsolutePosition().gte(OPEN_ANGLE_THRESHOLD));
 
@@ -204,9 +205,8 @@ public class BayDoor extends SubsystemBase {
                                 .withName("Close");
         }
 
-        private Command agitateFuel() {
-                return new RepeatCommand(new ParallelRaceGroup(open(), new WaitCommand(Seconds.of(1)))
-                                .andThen(new ParallelRaceGroup(close(), new WaitCommand(Seconds.of(0.3)))));
+        public Command agitateFuel() {
+                return open().andThen(new WaitCommand(Seconds.one())).andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly();
         }
 
         public Command agitateHighFuel() {

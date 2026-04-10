@@ -79,16 +79,20 @@ public class Bindings {
                 t_autoScore = new SendableTrigger(driver.rightBumper(), "Controller/autoScore");
                 t_manualScore = new SendableTrigger(operator.b(), "Controller/manualScore");
                 t_partialManualScore = new SendableTrigger(operator.povLeft(), "Controller/partialManualScore");
-                t_autoSnowBlow = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)), "Controller/autoSnowBlow");
+                t_autoSnowBlow = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)),
+                                "Controller/autoSnowBlow");
                 t_manualUnjam = new SendableTrigger(operator.a(), "Controller/manualUnjam");
-                t_incrementLauncherOffset = new SendableTrigger(operator.rightBumper(), "Controller/incrementLauncherOffset");
-                t_decrementLauncherOffset = new SendableTrigger(operator.leftBumper(), "Controller/decrementLauncherOffset");
+                t_incrementLauncherOffset = new SendableTrigger(operator.rightBumper(),
+                                "Controller/incrementLauncherOffset");
+                t_decrementLauncherOffset = new SendableTrigger(operator.leftBumper(),
+                                "Controller/decrementLauncherOffset");
                 t_faceRedAlliance = new SendableTrigger(driver.leftStick(), "Controller/faceRedAlliance");
                 t_autoIntake = new ToggleableTrigger(driver.x());
                 t_autoShuttle = new SendableTrigger(driver.b(), "Controller/autoShuttle");
                 t_openBayDoor = new SendableTrigger(operator.povDown(), "Controller/openBayDoor");
                 t_closeBayDoor = new SendableTrigger(operator.povUp(), "Controller/closeBayDoor");
-                t_switchRelativeReference = new SendableTrigger(driver.leftBumper(), "Controller/switchRelativeReference");
+                t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
+                                "Controller/switchRelativeReference");
                 t_resetGyro = new SendableTrigger(driver.povDown(), "Controller/resetGyro");
                 t_climb = new SendableTrigger(operator.rightTrigger(), "Controller/climb");
                 t_climb_home = new SendableTrigger(operator.start().and(operator.back()), "Controller/climb_home");
@@ -108,7 +112,8 @@ public class Bindings {
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> DriverStation.isTeleop()),
                                 "Conditional/onAllianceSide");
 
-                t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()), "Conditional/prepareFuel");
+                t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
+                                "Conditional/prepareFuel");
 
                 t_autoUnjam = new SendableTrigger(spindexer.autoUnjamTrigger, "Conditional/autoUnjam");
 
@@ -137,19 +142,28 @@ public class Bindings {
                                                 .and(t_unjam.negate()),
                                 "Commands/snowBlow_launchFuel");
 
-                cmd_partialManualScore_launchFuel = new SendableTrigger(t_partialManualScore, "Commands/partialManualScore_launchFuel");
-                cmd_partialManualScore_indexFuel = new SendableTrigger(t_partialManualScore.and(t_unjam.negate()), "Commands/partialManualScore_indexFuel");
+                cmd_partialManualScore_launchFuel = new SendableTrigger(t_partialManualScore,
+                                "Commands/partialManualScore_launchFuel");
+                cmd_partialManualScore_indexFuel = new SendableTrigger(t_partialManualScore.and(t_unjam.negate()),
+                                "Commands/partialManualScore_indexFuel");
 
                 cmd_manualScore_launchFuel = new SendableTrigger(t_manualScore, "Commands/manualScore_launchFuel");
-                cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore.and(t_manualUnjam.negate()), "Commands/manualScore_launchFuel");
+                cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore.and(t_manualUnjam.negate()),
+                                "Commands/manualScore_launchFuel");
 
                 cmd_autoIntake = new SendableTrigger(
                                 t_autoIntake.getTrigger()
                                                 .and(t_climb.negate())
-                                                .and(t_autoShuttle.negate()),
+                                                .and(t_autoShuttle.negate())
+                                                .and(t_attemptToScore.negate()),
                                 "Commands/autoIntake");
-                cmd_autoShuttle = new SendableTrigger(t_autoShuttle.and(t_climb.negate()), "Commands/autoIntake");
-                cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(), "Commands/switchRelativeReference");
+                cmd_autoShuttle = new SendableTrigger(
+                                t_autoShuttle
+                                                .and(t_climb.negate())
+                                                .and(t_attemptToScore.negate()),
+                                "Commands/autoIntake");
+                cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
+                                "Commands/switchRelativeReference");
                 cmd_autoUnjam = new SendableTrigger(t_autoUnjam, null);
                 cmd_manualUnjam = new SendableTrigger(t_manualUnjam, null);
                 cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "Commands/prepareFuel");

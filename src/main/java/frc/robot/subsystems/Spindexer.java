@@ -117,11 +117,11 @@ public class Spindexer extends SubsystemBase {
         }, this::stop);
     }
 
-    public Command indexFuel2() {
-        return runEnd(() -> {
-            motor.setPointVelocity(INDEX_FUEL_VELOCITY);
-            indexingToScore = true;
-        }, this::stop);
+    public Command indexFuelAlgorithim() {
+        return indexFuel()
+        .raceWith(new WaitCommand(Seconds.of(2))
+        .andThen(run(() -> motor.setPointVelocity(INDEX_FUEL_VELOCITY.div(2)))
+        .raceWith(new WaitCommand(Seconds.of(0.5)))));
     }
 
     public Command agitateFuel() {

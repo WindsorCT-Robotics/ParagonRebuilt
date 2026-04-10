@@ -49,7 +49,8 @@ import frc.robot.utils.ControllerUtil;
 
 public class RobotContainer implements Sendable {
         private static final Dimensionless DRIVER_CONTROLLER_DEADBAND = Percent.of(5);
-        private static final LinearVelocity MAX_SPEED_LAUNCH = MetersPerSecond.of(2); // Max speed of the robot when aiming
+        private static final LinearVelocity MAX_SPEED_LAUNCH = MetersPerSecond.of(2); // Max speed of the robot when
+                                                                                      // aiming
         private static final double MOVE_CURVE = 2.0;
         private static final double TURN_CURVE = 2.0;
 
@@ -198,13 +199,23 @@ public class RobotContainer implements Sendable {
         }
 
         private void initPathPlannerCommands() {
-                // NamedCommands.registerCommand("score",
-                // angleToHub()
-                // .alongWith(launcher.launchFuel(null))
-                // .alongWith(kicker.kickFuel(null)
-                // .alongWith(spindexer.indexFuel())
-                // .alongWith(bayDoor.agitateHighFuel())));
+                NamedCommands.registerCommand("score",
+                                drive.aimToWithFF(
+                                                () -> Percent.zero(),
+                                                () -> Percent.zero(),
+                                                () -> angleToHub(),
+                                                () -> angleToHubWithFF(),
+                                                MetersPerSecond.zero())
+                                                .alongWith(launcher.launchFuel(() -> launchVelocityToHub()))
+                                                .alongWith(kicker.kickFuel(() -> launchVelocityToHub())
+                                                                .alongWith(spindexer.indexFuel())
+                                                                .alongWith(bayDoor.agitateFuel())));
 
+                NamedCommands.registerCommand("scorenoaim",
+                launcher.launchFuel(() -> launchVelocityToHub())
+                                                .alongWith(kicker.kickFuel(() -> launchVelocityToHub())
+                                                                .alongWith(spindexer.indexFuel())
+                                                                .alongWith(bayDoor.agitateFuel())));
                 NamedCommands.registerCommand("baydooropen", bayDoor.open());
                 NamedCommands.registerCommand("baydoorclose", bayDoor.close());
                 NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
@@ -287,7 +298,7 @@ public class RobotContainer implements Sendable {
                                 bayDoor.open()
                                                 .alongWith(spindexer.agitateFuel())
                                                 .withName("Manual Unjam"));
-                        
+
                 bindings.cmd_autoIntake.whileTrue(
                                 bayDoor.open()
                                                 .alongWith(intake.intakeFuel())
@@ -303,14 +314,14 @@ public class RobotContainer implements Sendable {
                                 .withName("Close Bay Door"));
 
                 bindings.t_faceRedAlliance.whileTrue(angleToRedAlliance()
-                .withName("Face Red Alliance"));
+                                .withName("Face Red Alliance"));
 
                 bindings.t_incrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(25).in(RPM))));
-                
+
                 bindings.t_decrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(-25).in(RPM))));
-                
+
                 bindings.t_resetGyro.onTrue(drive.resetGyroCommand());
         }
 

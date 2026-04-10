@@ -99,24 +99,24 @@ public class RobotContainer implements Sendable {
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
                 hubCalculator = new ShotCalculator();
-                hubCalculator.loadLUTEntry(1.5, 2000, 1);
-                hubCalculator.loadLUTEntry(2.0, 2125, 1.05);
-                hubCalculator.loadLUTEntry(2.5, 2225, 1.1);
-                hubCalculator.loadLUTEntry(3, 2325, 1.15);
-                hubCalculator.loadLUTEntry(3.5, 2450, 1.2);
-                hubCalculator.loadLUTEntry(4, 2590, 1.25);
-                hubCalculator.loadLUTEntry(4.5, 2690, 1.3);
-                hubCalculator.loadLUTEntry(5, 2850, 1.35);
+                hubCalculator.loadLUTEntry(1.5, 1850, 1);
+                hubCalculator.loadLUTEntry(2.0, 1975, 1.05);
+                hubCalculator.loadLUTEntry(2.5, 2075, 1.1);
+                hubCalculator.loadLUTEntry(3, 2175, 1.15);
+                hubCalculator.loadLUTEntry(3.5, 2300, 1.2);
+                hubCalculator.loadLUTEntry(4, 2440, 1.25);
+                hubCalculator.loadLUTEntry(4.5, 2540, 1.3);
+                hubCalculator.loadLUTEntry(5, 2700, 1.35);
 
                 snowBlowCalculator = new ShotCalculator();
-                snowBlowCalculator.loadLUTEntry(1.5, 2000, 1);
-                snowBlowCalculator.loadLUTEntry(2.0, 2125, 1);
-                snowBlowCalculator.loadLUTEntry(2.5, 2225, 1);
-                snowBlowCalculator.loadLUTEntry(3, 2325, 1);
-                snowBlowCalculator.loadLUTEntry(3.5, 2450, 1);
-                snowBlowCalculator.loadLUTEntry(4, 2590, 1);
-                snowBlowCalculator.loadLUTEntry(4.5, 2690, 1);
-                snowBlowCalculator.loadLUTEntry(5, 2850, 1);
+                snowBlowCalculator.loadLUTEntry(1.5, 1850, 1);
+                snowBlowCalculator.loadLUTEntry(2.0, 1975, 1.05);
+                snowBlowCalculator.loadLUTEntry(2.5, 2075, 1.1);
+                snowBlowCalculator.loadLUTEntry(3, 2175, 1.15);
+                snowBlowCalculator.loadLUTEntry(3.5, 2300, 1.2);
+                snowBlowCalculator.loadLUTEntry(4, 2440, 1.25);
+                snowBlowCalculator.loadLUTEntry(4.5, 2540, 1.3);
+                snowBlowCalculator.loadLUTEntry(5, 2700, 1.35);
 
                 bindings = new Bindings(
                                 drive,

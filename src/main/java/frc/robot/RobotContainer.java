@@ -59,7 +59,6 @@ public class RobotContainer implements Sendable {
         private final Intake intake;
         private final Kicker kicker;
         private final Launcher launcher;
-        // private final Climber climber;
 
         private final CommandXboxController driver = new CommandXboxController(0);
         private final CommandXboxController operator = new CommandXboxController(1);
@@ -95,7 +94,6 @@ public class RobotContainer implements Sendable {
                 spindexer = new Spindexer(Spindexer.class.getSimpleName());
                 launcher = new Launcher(Launcher.class.getSimpleName());
                 kicker = new Kicker(Kicker.class.getSimpleName());
-                // climber = new Climber(Climber.class.getSimpleName());
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
@@ -268,8 +266,6 @@ public class RobotContainer implements Sendable {
                                                 .withName("Drive With Percentages"));
 
                 intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
-
-                // climber.setDefaultCommand(climber.home().withName("Home Climber"));
 
                 bindings.cmd_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 

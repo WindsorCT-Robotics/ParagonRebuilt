@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.bindings.Bindings;
+import frc.robot.generated.HubUtil;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
@@ -168,6 +169,7 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Triggers", bindings.t_snowBlowValid);
                 SmartDashboard.putData("Robot Container/Triggers", bindings.t_attemptToScore);
                 SmartDashboard.putData("Robot Container/Triggers", bindings.t_onAllianceSide);
+                SmartDashboard.putData("Hub", HubUtil.getInstance());
         }
 
         @Override

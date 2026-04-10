@@ -1,13 +1,15 @@
-package frc.robot.utils;
+package frc.robot.generated;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-public class HubUtil {
+public class HubUtil implements Sendable {
     private HubUtil(){}
 
     static HubUtil _inst = new HubUtil();
@@ -40,9 +42,9 @@ public class HubUtil {
     private double timeUntilTransition = 0;
     
     /* What to publish over networktables for telemetry */
-    private final NetworkTable inst = NetworkTableInstance.getDefault().getTable("Hub");
-    private final BooleanPublisher isHubActivePublisher = inst.getBooleanTopic("Active").publish();
-    private final DoublePublisher timeUntilSwapPublisher = inst.getDoubleTopic("Time Until Swap").publish();
+    // private final NetworkTable inst = NetworkTableInstance.getDefault().getTable("Hub");
+    // private final BooleanPublisher isHubActivePublisher = inst.getBooleanTopic("Active").publish();
+    // private final DoublePublisher timeUntilSwapPublisher = inst.getDoubleTopic("Time Until Swap").publish();
 
     private void updateStatesForTeleop() {
         if (!DriverStation.isTeleopEnabled()) return;
@@ -102,7 +104,7 @@ public class HubUtil {
         if (DriverStation.isDisabled()) {
             /* If we're disabled, the hub is always inactive */
             isHubActive = false;
-            timeUntilTransition = -1;
+            timeUntilTransition = 0.0;
         } else if (DriverStation.isAutonomous()) {
             /* If we're autonomous, the hub is always active */
             isHubActive = true;
@@ -118,8 +120,8 @@ public class HubUtil {
 
     public void periodic() {
         fetchInputs();
-        isHubActivePublisher.accept(isHubActive);
-        timeUntilSwapPublisher.accept(timeUntilTransition);
+        // isHubActivePublisher.accept(isHubActive);
+        // timeUntilSwapPublisher.accept(timeUntilTransition);
     }
 
     public boolean isOurHubActive() {
@@ -128,5 +130,11 @@ public class HubUtil {
 
     public double timeUntilTransition() {
         return timeUntilTransition;
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addBooleanProperty("Hub Active", this::isOurHubActive, null);
+        builder.addDoubleProperty("Transition", () -> (((double) Math.round(timeUntilTransition() * 100)) / 100), null);
     }
 }

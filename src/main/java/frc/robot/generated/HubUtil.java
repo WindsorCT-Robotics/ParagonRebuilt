@@ -1,9 +1,5 @@
 package frc.robot.generated;
 
-import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -40,11 +36,6 @@ public class HubUtil implements Sendable {
     /* True when our hub is active */
     private boolean isHubActive = false;
     private double timeUntilTransition = 0;
-    
-    /* What to publish over networktables for telemetry */
-    // private final NetworkTable inst = NetworkTableInstance.getDefault().getTable("Hub");
-    // private final BooleanPublisher isHubActivePublisher = inst.getBooleanTopic("Active").publish();
-    // private final DoublePublisher timeUntilSwapPublisher = inst.getDoubleTopic("Time Until Swap").publish();
 
     private void updateStatesForTeleop() {
         if (!DriverStation.isTeleopEnabled()) return;
@@ -120,8 +111,6 @@ public class HubUtil implements Sendable {
 
     public void periodic() {
         fetchInputs();
-        // isHubActivePublisher.accept(isHubActive);
-        // timeUntilSwapPublisher.accept(timeUntilTransition);
     }
 
     public boolean isOurHubActive() {

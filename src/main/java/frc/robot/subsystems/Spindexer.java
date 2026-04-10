@@ -53,6 +53,7 @@ public class Spindexer extends SubsystemBase {
             this::getIndexingToScore);
 
     private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(4800);
+    private static final AngularVelocity PREPARE_FUEL_VELOCITY = RPM.of(800);
     private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
     private AngularVelocity smartDashboardVelocity = RPM.of(0);
 
@@ -125,18 +126,17 @@ public class Spindexer extends SubsystemBase {
     }
 
     public Command agitateFuel() {
-        return run(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY))
-                .raceWith(new WaitCommand(Seconds.of(0.5))
-                        .finallyDo(this::stop));
-    }
-
-    public Command manualAgitateFuel() {
         return runEnd(() -> motor.setPointVelocity(AGITATE_FUEL_VELOCITY), this::stop);
     }
 
-    // TODO: Should actually prepare fuel.
     public Command prepareFuel() {
-        return Commands.none();
+        return runEnd(() -> {
+            if (!fuelSensor.isFuelDetected()) {
+                motor.setPointVelocity(PREPARE_FUEL_VELOCITY);
+            } else {
+                stop();
+            }
+        }, this::stop);
     }
 
     public Command smartDashboardIndexFuel() {

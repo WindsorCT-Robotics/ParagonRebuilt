@@ -31,7 +31,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.bindings.Bindings;
 import frc.robot.generated.HubUtil;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
@@ -297,11 +296,17 @@ public class RobotContainer implements Sendable {
                 bindPartialManualScore();
                 bindManualScore();
 
-                bindings.t_unjam.whileTrue(
+                bindings.cmd_autoUnjam.whileTrue(
                                 bayDoor.open()
                                                 .alongWith(spindexer.agitateFuel())
-                                                .withName("Unjam"));
-                bindings.t_autoIntake.getTrigger().whileTrue(
+                                                .withName("Auto Unjam"));
+
+                bindings.cmd_manualUnjam.whileTrue(
+                                bayDoor.open()
+                                                .alongWith(spindexer.agitateFuel())
+                                                .withName("Manual Unjam"));
+                        
+                bindings.cmd_autoIntake.whileTrue(
                                 bayDoor.open()
                                                 .alongWith(intake.intakeFuel())
                                                 .withName("Auto Intake"));

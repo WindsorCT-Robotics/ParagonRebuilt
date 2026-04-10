@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Value;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -32,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.bindings.Bindings;
 import frc.robot.generated.launch_calculator.ShotCalculator;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
@@ -48,35 +48,6 @@ public class RobotContainer implements Sendable {
         private static final Dimensionless DRIVER_CONTROLLER_DEADBAND = Percent.of(5);
         private static final double MOVE_CURVE = 2.0;
         private static final double TURN_CURVE = 2.0;
-
-        // Controller Triggers
-        private final SendableTrigger t_autoScore;
-        private final SendableTrigger t_manualScore;
-        private final SendableTrigger t_partialManualScore;
-        private final SendableTrigger t_autoSnowBlow;
-        private final SendableTrigger t_unjam;
-        private final SendableTrigger t_incrementLauncherOffset;
-        private final SendableTrigger t_decrementLauncherOffset;
-        private final SendableTrigger t_faceRedAlliance;
-        private final ToggleableTrigger t_autoIntake;
-        private final SendableTrigger t_autoShuttle;
-        private final SendableTrigger t_openBayDoor;
-        private final SendableTrigger t_closeBayDoor;
-        private final SendableTrigger t_switchRelativeReference;
-        private final SendableTrigger t_resetGyro;
-        private final SendableTrigger t_climb;
-        private final SendableTrigger t_climb_home;
-
-        // Conditional Triggers
-        private final SendableTrigger t_hubLaunchValid;
-        private final SendableTrigger t_snowBlowValid;
-        private final SendableTrigger t_attemptToScore;
-        private final SendableTrigger t_onAllianceSide;
-        private final SendableTrigger t_prepareFuel;
-
-        // Command Triggers
-        private final SendableTrigger cmd_autoScore_launchFuel;
-        private final SendableTrigger cmd_autoScore_indexFuel;
 
         private final Drive drive;
         private final Spindexer spindexer;
@@ -105,6 +76,8 @@ public class RobotContainer implements Sendable {
         private final SendableChooser<Command> autoChooser;
 
         private RelativeReference relativeReference;
+
+        private final Bindings bindings;
 
         public RobotContainer() {
                 try {
@@ -142,40 +115,17 @@ public class RobotContainer implements Sendable {
                 snowBlowCalculator.loadLUTEntry(4.5, 2690, 1);
                 snowBlowCalculator.loadLUTEntry(5, 2850, 1);
 
-                // Controller Triggers
-                t_autoScore               = new SendableTrigger(driver.rightBumper(), "c_autoScore");
-                t_manualScore             = new SendableTrigger(operator.b(), "c_manualScore");
-                t_partialManualScore      = new SendableTrigger(operator.povLeft(), "c_partialManualScore");
-                t_autoSnowBlow            = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)), "c_autoSnowBlow");
-                t_unjam                   = new SendableTrigger(operator.a(), "c_unjam");
-                t_incrementLauncherOffset = new SendableTrigger(operator.rightBumper(), "c_incrementLauncherOffset");
-                t_decrementLauncherOffset = new SendableTrigger(operator.leftBumper(), "c_decrementLauncherOffset");
-                t_faceRedAlliance         = new SendableTrigger(driver.leftStick(), "c_faceRedAlliance");
-                t_autoIntake              = new ToggleableTrigger(driver.x());
-                t_autoShuttle             = new SendableTrigger(driver.b(), "c_autoShuttle");
-                t_openBayDoor             = new SendableTrigger(operator.povDown(), "c_openBayDoor");
-                t_closeBayDoor            = new SendableTrigger(operator.povUp(), "c_closeBayDoor");
-                t_switchRelativeReference = new SendableTrigger(driver.leftBumper(), "c_switchRelativeReference");
-                t_resetGyro               = new SendableTrigger(driver.povDown(), "c_resetGyro");
-                t_climb                   = new SendableTrigger(operator.rightTrigger(), "c_climb");
-                t_climb_home              = new SendableTrigger(operator.start().and(operator.back()), "c_climb_home");
-
-                // Conditional Trigger
-                t_hubLaunchValid = new SendableTrigger(() -> hubLaunchParameters.map(parameters -> parameters.isValid()).orElse(false), "nc_hubLaunchValid");
-
-                t_snowBlowValid = new SendableTrigger(() -> snowBlowLaunchParameters.map(parameters -> parameters.isValid()).orElse(false),
-                                "nc_snowBlowValid");
-
-                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
-                                "nc_attemptToScore");
-                t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> DriverStation.isTeleop()),
-                                "nc_onAllianceSide");
-
-                t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()), "nc_prepareFuel");
-
-                // Command Trigger
-                cmd_autoScore_launchFuel = new SendableTrigger(t_autoScore.and(t_onAllianceSide), "cmd_autoScore_launchFuel");
-                cmd_autoScore_indexFuel = new SendableTrigger(t_autoScore.and(t_hubLaunchValid).and(t_onAllianceSide).and(t_unjam.negate()), "cmd_autoScore_indexFuel");
+                bindings = new Bindings(
+                                drive,
+                                launcher,
+                                kicker,
+                                spindexer,
+                                bayDoor,
+                                intake,
+                                driver,
+                                operator,
+                                () -> hubLaunchParameters,
+                                () -> snowBlowLaunchParameters);
 
                 autoChooser = new SendableChooser<>();
                 initPathPlannerCommands();
@@ -184,6 +134,7 @@ public class RobotContainer implements Sendable {
                 bindCommands();
         }
 
+        // region non-bindings
         private void initSmartdashBoard() {
                 SmartDashboard.putData(drive);
                 SmartDashboard.putData(intake);
@@ -199,25 +150,24 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Autonomous", autoChooser);
                 SmartDashboard.putData("Robot Container/Hub Calculator", hubCalculator);
                 SmartDashboard.putData("Robot Container/SnowBlow Calculator", snowBlowCalculator);
-                SmartDashboard.putData("Robot Container/Triggers", t_autoScore);
-                SmartDashboard.putData("Robot Container/Triggers", t_manualScore);
-                SmartDashboard.putData("Robot Container/Triggers", t_partialManualScore);
-                SmartDashboard.putData("Robot Container/Triggers", t_autoSnowBlow);
-                SmartDashboard.putData("Robot Container/Triggers", t_unjam);
-                SmartDashboard.putData("Robot Container/Triggers", t_incrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", t_decrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", t_faceRedAlliance);
-                SmartDashboard.putData("Robot Container/Triggers", t_autoShuttle);
-                SmartDashboard.putData("Robot Container/Triggers", t_openBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", t_closeBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", t_switchRelativeReference);
-                SmartDashboard.putData("Robot Container/Triggers", t_resetGyro);
-                SmartDashboard.putData("Robot Container/Triggers", t_climb);
-                SmartDashboard.putData("Robot Container/Triggers", t_climb_home);
-                SmartDashboard.putData("Robot Container/Triggers", t_hubLaunchValid);
-                SmartDashboard.putData("Robot Container/Triggers", t_snowBlowValid);
-                SmartDashboard.putData("Robot Container/Triggers", t_attemptToScore);
-                SmartDashboard.putData("Robot Container/Triggers", t_onAllianceSide);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoScore);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_manualScore);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_partialManualScore);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoSnowBlow);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_unjam);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_incrementLauncherOffset);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_decrementLauncherOffset);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_faceRedAlliance);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_openBayDoor);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_closeBayDoor);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_switchRelativeReference);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_resetGyro);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_climb);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_climb_home);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_hubLaunchValid);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_snowBlowValid);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_attemptToScore);
+                SmartDashboard.putData("Robot Container/Triggers", bindings.t_onAllianceSide);
         }
 
         @Override
@@ -230,9 +180,9 @@ public class RobotContainer implements Sendable {
                 Pigeon2 gyro = drive.getPigeon2();
 
                 Pose2d drivePosition = drive.getRawPosition();
-                Angle  pitch         = AngleUtil.wrap(gyro.getPitch().getValue());
-                Angle  yaw           = AngleUtil.wrap(gyro.getYaw().getValue());
-                Angle  roll          = AngleUtil.wrap(gyro.getRoll().getValue());
+                Angle pitch = AngleUtil.wrap(gyro.getPitch().getValue());
+                Angle yaw = AngleUtil.wrap(gyro.getYaw().getValue());
+                Angle roll = AngleUtil.wrap(gyro.getRoll().getValue());
 
                 ChassisSpeeds robotSpeeds = driveState.Speeds;
                 ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds,
@@ -246,7 +196,7 @@ public class RobotContainer implements Sendable {
                                 0.9,
                                 pitch.in(Degrees),
                                 roll.in(Degrees));
-                                
+
                 return calculator.calculate(inputs);
         }
 
@@ -254,7 +204,8 @@ public class RobotContainer implements Sendable {
                 hubLaunchParameters = DriverStation.getAlliance()
                                 .map(alliance -> getLaunchParametersFor(hubCalculator, drive.getHubTarget(alliance)));
                 snowBlowLaunchParameters = DriverStation.getAlliance()
-                                .map(alliance -> getLaunchParametersFor(snowBlowCalculator, drive.getSnowblowTarget(alliance)));
+                                .map(alliance -> getLaunchParametersFor(snowBlowCalculator,
+                                                drive.getSnowblowTarget(alliance)));
         }
 
         public Command getAutonomousCommand() {
@@ -318,92 +269,125 @@ public class RobotContainer implements Sendable {
                 return snowBlowLaunchParameters
                                 .map(parameters -> RadiansPerSecond.of(parameters.driveAngularVelocityRadPerSec()));
         }
+        // endregion
 
         private void bindCommands() {
                 drive.setDefaultCommand(
-                                drive.moveWithPercentages(moveX, moveY, turnX, this::getRelativeReference)
+                                drive.moveWithPercentages(
+                                                moveX,
+                                                moveY,
+                                                turnX,
+                                                this::getRelativeReference)
                                                 .withName("Drive With Percentages"));
 
                 intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
 
                 // climber.setDefaultCommand(climber.home().withName("Home Climber"));
 
-                t_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
+                bindings.cmd_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
-                t_prepareFuel.whileTrue(launcher.prepareFuel().withName("Launcher Prepare Fuel"));
-                t_prepareFuel.whileTrue(kicker.prepareFuel().withName("Kicker Prepare Fuel"));
-                t_prepareFuel.whileTrue(spindexer.prepareFuel().withName("Spindexer Prepare Fuel"));
+                bindings.cmd_prepareFuel.whileTrue(launcher.prepareFuel().withName("Launcher Prepare Fuel"));
+                bindings.cmd_prepareFuel.whileTrue(kicker.prepareFuel().withName("Kicker Prepare Fuel"));
+                bindings.cmd_prepareFuel.whileTrue(spindexer.prepareFuel().withName("Spindexer Prepare Fuel"));
 
                 bindAutoScore();
                 bindSnowBlow();
                 bindPartialManualScore();
                 bindManualScore();
 
-                t_unjam.whileTrue(bayDoor.open().alongWith(spindexer.agitateFuel()));
+                bindings.t_unjam.whileTrue(
+                                bayDoor.open()
+                                                .alongWith(spindexer.agitateFuel())
+                                                .withName("Unjam"));
+                bindings.t_autoIntake.getTrigger().whileTrue(
+                                bayDoor.open()
+                                                .alongWith(intake.intakeFuel())
+                                                .withName("Auto Intake"));
+                bindings.cmd_autoShuttle.whileTrue(
+                                bayDoor.open()
+                                                .alongWith(intake.shuttleFuel())
+                                                .withName("Auto Shuttle"));
 
-                t_autoIntake.getTrigger().whileTrue(
-                                bayDoor.open().alongWith(intake.intakeFuel())
-                                                .until(t_attemptToScore)
-                                                .unless(t_attemptToScore)
-                                                .repeatedly());
+                bindings.t_openBayDoor.onTrue(bayDoor.open()
+                                .withName("Open Bay Door"));
+                bindings.t_closeBayDoor.onTrue(bayDoor.close()
+                                .withName("Close Bay Door"));
 
-                t_autoShuttle.onTrue(
-                                bayDoor.open().alongWith(intake.shuttleFuel())
-                                                .until(t_attemptToScore)
-                                                .unless(t_attemptToScore)
-                                                .repeatedly());
-                t_openBayDoor.onTrue(bayDoor.open());
-                t_closeBayDoor.onTrue(bayDoor.close());
+                bindings.t_faceRedAlliance.whileTrue(angleToRedAlliance()
+                .withName("Face Red Alliance"));
 
-                t_faceRedAlliance.whileTrue(angleToRedAlliance());
-
-                // t_climb.whileTrue(bayDoor.close().andThen(climber.open())
-                // .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-                // t_climb.whileFalse(climber.close().unless(() ->
-                // DriverStation.isAutonomous()));
-                // t_climb_home.onTrue(climber.home());
-
-                t_incrementLauncherOffset
+                bindings.t_incrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(25).in(RPM))));
-                t_decrementLauncherOffset
+                
+                bindings.t_decrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(-25).in(RPM))));
-
-                t_resetGyro.onTrue(drive.resetGyroCommand());
+                
+                bindings.t_resetGyro.onTrue(drive.resetGyroCommand());
         }
 
         private void bindAutoScore() {
-                cmd_autoScore_launchFuel.whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
-                .withName("Launch Fuel To Hub"));
-                cmd_autoScore_launchFuel.whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
-                .withName("Kick Fuel To Hub"));
-                cmd_autoScore_indexFuel.whileTrue(spindexer.indexFuel().withName("Index Fuel To Hub"));
-                t_autoScore.whileTrue(drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF()).withName("Auto Aim To Hub"));
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
+                                                .withName("Launch Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
+                                                .withName("Kick Fuel To Hub"));
+
+                bindings.cmd_autoScore_indexFuel
+                                .whileTrue(spindexer.indexFuel()
+                                                .withName("Index Fuel To Hub"));
+
+                bindings.t_autoScore
+                                .whileTrue(
+                                                drive.aimToWithFF(
+                                                                moveX,
+                                                                moveY,
+                                                                () -> angleToHub(),
+                                                                () -> angleToHubWithFF())
+                                                                .withName("Auto Aim To Hub"));
         }
 
         private void bindSnowBlow() {
-                t_autoSnowBlow.whileTrue(launcher.launchFuel(() -> launchVelocityToSnowBlow())
-                                .withName("Launch Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(
-                                kicker.kickFuel(() -> launchVelocityToSnowBlow()).withName("Kick Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(spindexer.indexFuel().until(t_snowBlowValid.negate())
-                                .withName("Index Fuel To SnowBlow"));
-                t_autoSnowBlow.whileTrue(
-                                drive.aimToWithFF(moveX, moveY, () -> angleToSnowBlow(), () -> angleToSnowBlowWithFF())
+                bindings.t_autoSnowBlow.whileTrue(
+                                launcher.launchFuel(() -> launchVelocityToSnowBlow())
+                                                .withName("Launch Fuel To SnowBlow"));
+
+                bindings.t_autoSnowBlow.whileTrue(
+                                kicker.kickFuel(() -> launchVelocityToSnowBlow())
+                                                .withName("Kick Fuel To SnowBlow"));
+
+                bindings.t_autoSnowBlow.whileTrue(
+                                spindexer.indexFuel()
+                                                .withName("Index Fuel To SnowBlow"));
+
+                bindings.t_autoSnowBlow.whileTrue(
+                                drive.aimToWithFF(
+                                                moveX,
+                                                moveY,
+                                                () -> angleToSnowBlow(),
+                                                () -> angleToSnowBlowWithFF())
                                                 .withName("Auto Aim To SnowBlow"));
-                t_autoSnowBlow.whileTrue(bayDoor.open().withName("Open Bay Door To SnowBlow"));
-                t_autoSnowBlow.whileTrue(intake.intakeFuel().withName("Intake Fuel To SnowBlow"));
+
+                bindings.t_autoSnowBlow.whileTrue(
+                                bayDoor.open()
+                                                .withName("Open Bay Door To SnowBlow"));
+
+                bindings.t_autoSnowBlow.whileTrue(
+                                intake.intakeFuel()
+                                                .withName("Intake Fuel To SnowBlow"));
         }
 
         private void bindPartialManualScore() {
-                t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
-                t_partialManualScore.whileTrue(spindexer.indexFuel());
-                t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
+                bindings.t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                bindings.t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
+                bindings.t_partialManualScore.whileTrue(spindexer.indexFuel());
+                bindings.t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
         }
 
         private void bindManualScore() {
-                t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
-                t_manualScore.whileTrue(spindexer.indexFuel());
+                bindings.t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
+                bindings.t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
+                bindings.t_manualScore.whileTrue(spindexer.indexFuel());
         }
 }

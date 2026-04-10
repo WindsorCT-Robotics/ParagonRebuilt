@@ -131,8 +131,8 @@ public class RobotContainer implements Sendable {
                                 () -> hubLaunchParameters,
                                 () -> snowBlowLaunchParameters);
 
-                initPathPlannerCommands();
                 autoChooser = AutoBuilder.buildAutoChooser();
+                initPathPlannerCommands();
                 initSmartdashBoard();
 
                 bindCommands();
@@ -345,7 +345,8 @@ public class RobotContainer implements Sendable {
                                                                 moveX,
                                                                 moveY,
                                                                 () -> angleToHub(),
-                                                                () -> angleToHubWithFF())
+                                                                () -> angleToHubWithFF(),
+                                                                MAX_SPEED_LAUNCH)
                                                                 .withName("Auto Aim To Hub"));
         }
 
@@ -367,7 +368,8 @@ public class RobotContainer implements Sendable {
                                                 moveX,
                                                 moveY,
                                                 () -> angleToSnowBlow(),
-                                                () -> angleToSnowBlowWithFF())
+                                                () -> angleToSnowBlowWithFF(),
+                                                MAX_SPEED_LAUNCH)
                                                 .withName("Auto Aim To SnowBlow"));
 
                 bindings.t_autoSnowBlow.whileTrue(

@@ -34,6 +34,7 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -456,8 +457,11 @@ public class Drive extends GeneratedDrive implements Sendable {
                         LinearVelocity x,
                         LinearVelocity y,
                         Angle targetAngle,
-                        AngularVelocity feedforward) {
+                        AngularVelocity feedforward,
+                        LinearVelocity maxLinearVelocity) {
                 Optional<Angle> normalizedAngle = AllianceUtil.angleOffset(targetAngle);
+                x = MetersPerSecond.of(MathUtil.clamp(x.in(MetersPerSecond), maxLinearVelocity.unaryMinus().in(MetersPerSecond), maxLinearVelocity.in(MetersPerSecond)));
+                y = MetersPerSecond.of(MathUtil.clamp(y.in(MetersPerSecond), maxLinearVelocity.unaryMinus().in(MetersPerSecond), maxLinearVelocity.in(MetersPerSecond)));
                 if (normalizedAngle.isEmpty()) {
                         aimToFail(x, y);
                 } else {
@@ -501,7 +505,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                         Supplier<Dimensionless> x,
                         Supplier<Dimensionless> y,
                         Supplier<Optional<Angle>> targetAngle,
-                        Supplier<Optional<AngularVelocity>> feedforward) {
+                        Supplier<Optional<AngularVelocity>> feedforward,
+                        LinearVelocity maxLinearVelocity) {
                 return run(() -> {
                         LinearVelocity velocityX = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, x);
                         LinearVelocity velocityY = percentageToLinearVelocity(MAX_LINEAR_VELOCITY, y);
@@ -513,7 +518,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                                 velocityX,
                                                 velocityY,
                                                 targetAngle.get().get(),
-                                                feedforward.get().get());
+                                                feedforward.get().get(),
+                                                maxLinearVelocity);
                         }
                 });
         }

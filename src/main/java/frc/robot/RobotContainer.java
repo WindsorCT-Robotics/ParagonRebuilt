@@ -242,10 +242,7 @@ public class RobotContainer implements Sendable {
         }
 
         private Optional<Angle> angleToHub() {
-                Optional<Rotation2d> angle = hubLaunchParameters.map(parameters -> parameters.driveAngle());
-                if (angle.isPresent()) {
-                }
-                return Optional.of(Degrees.of(angle.get().getDegrees()));
+                return hubLaunchParameters.map(parameters -> parameters.driveAngle().getMeasure());
         }
 
         private Optional<AngularVelocity> angleToHubWithFF() {

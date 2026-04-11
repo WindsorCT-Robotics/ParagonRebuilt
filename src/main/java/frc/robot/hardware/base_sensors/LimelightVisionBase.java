@@ -193,4 +193,8 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
 
         perceivedTags.set(tags);
     }
+
+    public String getVisionName() {
+        return name;
+    }
 }

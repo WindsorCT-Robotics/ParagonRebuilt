@@ -63,6 +63,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.GeneratedDrive;
+import frc.robot.generated.LimelightHelpers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hardware.base_sensors.LimelightVisionBase;
 import frc.robot.hardware.base_sensors.LimelightVisionBase.VisionMeasurements;
@@ -269,6 +270,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                 field.setRobotPose(robotState.Pose);
                 currentModulesStates.set(robotState.ModuleStates);
                 targetModuleStates.set(robotState.ModuleTargets);
+                if (DriverStation.isDisabled()) {
+                        LimelightHelpers.SetIMUMode(launcherVision.getVisionName(), 1);
+                        LimelightHelpers.SetIMUMode(backLauncherVision.getVisionName(), 1);
+                } else {
+                        LimelightHelpers.SetIMUMode(launcherVision.getVisionName(), 3);
+                        LimelightHelpers.SetIMUMode(backLauncherVision.getVisionName(), 3);
+                }
         }
 
         // region Senables

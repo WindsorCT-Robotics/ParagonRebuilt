@@ -7,9 +7,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
-import frc.robot.hardware.base_motors.KrakenMotorBase;
+import frc.robot.hardware.base_motors.KrakenMotorX60Base;
 
-public class LauncherMotor extends KrakenMotorBase {
+public class LauncherMotor extends KrakenMotorX60Base {
         public AngularVelocity targetVelocity = RPM.zero();
 
         public LauncherMotor(

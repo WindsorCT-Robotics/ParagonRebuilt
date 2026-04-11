@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Watts;
 
 import java.util.function.Supplier;
 
@@ -16,45 +17,34 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.interfaces.ISystemDynamics;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.KickerMotor;
 
-public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor> {
-    private final KickerMotor motor;
-    private final SysIdRoutine routine;
+public class Kicker extends SubsystemBase {
+    private final KickerMotor motor = new KickerMotor(
+            "Motor",
+            new CanId((byte) 17),
+            new TalonFXConfiguration()
+                    .withMotorOutput(new MotorOutputConfigs()
+                            .withInverted(InvertedValue.CounterClockwise_Positive)
+                            .withNeutralMode(NeutralModeValue.Brake))
+                    .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)))
+                    .withMotionMagic(new MotionMagicConfigs()
+                            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
+                    .withSlot0(new Slot0Configs()
+                            .withKS(0.03)
+                            .withKV(0.01)));
+
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
 
-    public Kicker(String name, CanId motorId) {
+    public Kicker(String name) {
         super("Subsystems/" + name);
-        motor = new KickerMotor("Motor", motorId, new TalonFXConfiguration()
-                .withMotorOutput(new MotorOutputConfigs()
-                        .withInverted(InvertedValue.CounterClockwise_Positive)
-                        .withNeutralMode(NeutralModeValue.Brake))
-                .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)))
-                .withMotionMagic(new MotionMagicConfigs()
-                        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
-                .withSlot0(new Slot0Configs()
-                        .withKS(0.03)
-                        .withKV(0.01)));
-
         addChild(motor.getClass().getName(), motor);
-
-        routine = new SysIdRoutine(new Config(),
-                new Mechanism(this::setSysIdVoltage, log -> log(log, motor, "Kicker Motor"), this));
-
         initSmartDashboard();
     }
 
@@ -65,6 +55,7 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
                 "Motor Velocity (RPM)",
                 () -> getTargetVelocity().in(RPM),
                 this::setTargetVelocity);
+        builder.addDoubleProperty("Power (Watts)", () -> motor.getPower().in(Watts), null);
     }
 
     private void initSmartDashboard() {
@@ -89,16 +80,6 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
 
     }
 
-    public Command kickFuelToHub(Supplier<AngularVelocity> velocity, Trigger onAllianceSide) {
-        return runEnd(() -> {
-            if (onAllianceSide.getAsBoolean()) {
-                motor.setPointVelocity(velocity.get());
-            } else {
-                motor.setPointVelocity(RPM.zero());
-            }
-        }, this::hardStop);
-    }
-
     public Command prepareFuel() {
         return runEnd(() -> {
             motor.setPointVelocity(PREP_ANGULAR_VELOCITY);
@@ -112,25 +93,4 @@ public class Kicker extends SubsystemBase implements ISystemDynamics<KickerMotor
     private void setTargetVelocity(double rpm) {
         kickVelocity = RPM.of(rpm);
     }
-
-    // region SysId
-    private void setSysIdVoltage(Voltage voltage) {
-        motor.setVoltage(voltage);
-    }
-
-    @Override
-    public void log(SysIdRoutineLog log, KickerMotor motor, String name) {
-        log.motor(name).angularPosition(motor.getAngle()).angularVelocity(motor.getVelocity());
-    }
-
-    @Override
-    public Command sysIdDynamic(Direction direction) {
-        return routine.dynamic(direction).withName(getSubsystem() + "/sysIdDynamic");
-    }
-
-    @Override
-    public Command sysIdQuasistatic(Direction direction) {
-        return routine.quasistatic(direction).withName(getSubsystem() + "/sysIdQuasistatic");
-    }
-    // endregion
 }

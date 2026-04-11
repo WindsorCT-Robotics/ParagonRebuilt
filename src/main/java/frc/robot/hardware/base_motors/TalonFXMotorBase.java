@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Value;
 import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Watts;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -22,14 +23,18 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Power;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.hardware.CanId;
 import frc.robot.interfaces.IClosedLoopMotor;
+import frc.robot.interfaces.IConfiguration;
+import frc.robot.utils.BatteryUtil;
+import frc.robot.utils.Round;
 
-public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
+public class TalonFXMotorBase implements IClosedLoopMotor, IConfiguration<TalonFXConfiguration>, Sendable {
     protected final TalonFX motor;
     protected final TalonFXConfigurator configurator;
     private final CanId canId;
@@ -37,6 +42,15 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
     private TalonFXConfiguration currentConfiguration;
     private final String name;
 
+    private final MotionMagicVelocityDutyCycle motionMagicVelocityDutyCycle = new MotionMagicVelocityDutyCycle(0);
+    private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
+
+    /**
+     * 
+     * @param name
+     * @param canId
+     * @param configuration
+     */
     public TalonFXMotorBase(
             String name,
             CanId canId,
@@ -69,23 +83,26 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
 
     @Override
     public void setPointPosition(Angle angle) {
-        motor.setControl(new PositionDutyCycle(angle));
+        motor.setControl(positionDutyCycle.withPosition(angle));
     }
 
     @Override
     public void setPointVelocity(AngularVelocity angularVelocity) {
-        motor.setControl(new MotionMagicVelocityDutyCycle(angularVelocity));
+        motor.setControl(motionMagicVelocityDutyCycle.withVelocity(angularVelocity));
     }
 
+    @Override
     public void configure(TalonFXConfiguration configuration) {
         currentConfiguration = configuration;
         configurator.apply(configuration);
     }
 
+    @Override
     public TalonFXConfiguration getCurrentConfiguration() {
         return currentConfiguration.clone();
     }
 
+    @Override
     public TalonFXConfiguration getDefaultConfiguration() {
         return defaultConfiguration.clone();
     }
@@ -124,22 +141,22 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
     }
 
     @Override
-    public boolean isMoving() {
-        return motor.getVelocity().getValueAsDouble() != 0;
-    }
-
-    @Override
     public void resetRelativeEncoder() {
         motor.setPosition(Degrees.zero());
     }
 
     @Override
     public Current getCurrent() {
-        return motor.getTorqueCurrent().getValue();
+        return motor.getSupplyCurrent().getValue();
     }
 
     @Override
-    public Temperature getTemperarure() {
+    public Power getPower() {
+        return BatteryUtil.getPower(getCurrent());
+    }
+
+    @Override
+    public Temperature getTemperature() {
         return motor.getDeviceTemp().getValue();
     }
 
@@ -153,10 +170,10 @@ public class TalonFXMotorBase implements IClosedLoopMotor, Sendable {
         builder.setActuator(true);
         builder.setSafeState(this::stop);
 
-        builder.addDoubleProperty("Angle (Rotations)", () -> getAngle().in(Rotations), null);
+        builder.addDoubleProperty("Angle (Rotations)", () -> Round.round(getAngle().in(Rotations), 2), null);
         builder.addDoubleProperty("Velocity (RPM)", () -> getVelocity().in(RPM), null);
-        builder.addBooleanProperty("Is Moving", this::isMoving, null);
         builder.addDoubleProperty("Current (Amps)", () -> getCurrent().in(Amps), null);
-        builder.addDoubleProperty("Temperature (C)", () -> getTemperarure().in(Celsius), null);
+        builder.addDoubleProperty("Power (Watts)", () -> getPower().in(Watts), null);
+        builder.addDoubleProperty("Temperature (C)", () -> getTemperature().in(Celsius), null);
     }
 }

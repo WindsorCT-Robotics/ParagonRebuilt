@@ -1,0 +1,87 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.801622516556291,
+        "y": 5.363567880794702
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.426707519997105,
+        "y": 5.316280878036069
+      },
+      "isLocked": false,
+      "linkedName": "[LB NZ]"
+    },
+    {
+      "anchor": {
+        "x": 5.01032326201647,
+        "y": 5.340464438314003
+      },
+      "prevControl": {
+        "x": 5.718515391006788,
+        "y": 5.328372658175036
+      },
+      "nextControl": {
+        "x": 4.302131133026153,
+        "y": 5.352556218452969
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.246125827814569,
+        "y": 5.340464438314003
+      },
+      "prevControl": {
+        "x": 3.5797395010092874,
+        "y": 5.325566102183707
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.497994269340976,
+      "rotationDegrees": 135.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "baydooropen",
+      "waypointRelativePos": 0.2,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.0,
+    "rotation": -125.49975868466271
+  },
+  "reversed": false,
+  "folder": "Left Paths",
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": 135.0
+  },
+  "useDefaultConstraints": true
+}

@@ -12,7 +12,7 @@
         "y": 7.377712997241367
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "[TL Start]"
     },
     {
       "anchor": {
@@ -73,7 +73,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "[LB NZ]"
     }
   ],
   "rotationTargets": [
@@ -89,7 +89,12 @@
       "name": "baydooropen",
       "waypointRelativePos": 0.5437665782493474,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
     }
   ],
   "globalConstraints": {

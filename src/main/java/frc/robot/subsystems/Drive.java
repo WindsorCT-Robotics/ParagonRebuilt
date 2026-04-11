@@ -183,13 +183,13 @@ public class Drive extends GeneratedDrive implements Sendable {
                 middleLauncherVision = new LauncherVision(
                                 "limelight-middle",
                                 new Pose3d(
-                                                Inches.of(-7.3),
-                                                Inches.of(-12.3),
-                                                Inches.of(20.3),
+                                                Inches.of(-7.13),
+                                                Inches.of(-2),
+                                                Inches.of(19.905),
                                                 new Rotation3d(
                                                                 Degrees.zero(),
                                                                 Degrees.of(25),
-                                                                Degrees.of(90))),
+                                                                Degrees.of(180))),
                                 getPigeon2().getYaw().asSupplier(),
                                 getPigeon2().getAngularVelocityZDevice().asSupplier(),
                                 getPigeon2().getPitch().asSupplier(),

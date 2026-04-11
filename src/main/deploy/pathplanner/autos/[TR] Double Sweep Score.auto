@@ -13,9 +13,9 @@
                 "data": {
                   "commands": [
                     {
-                      "type": "named",
+                      "type": "wait",
                       "data": {
-                        "name": "baydoorhome"
+                        "waitTime": 0.5
                       }
                     },
                     {
@@ -62,7 +62,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 20.0
                 }
               },
               {
@@ -95,12 +95,6 @@
                       }
                     }
                   ]
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "baydooropen"
                 }
               }
             ]

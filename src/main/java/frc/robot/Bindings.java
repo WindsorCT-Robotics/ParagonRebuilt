@@ -34,8 +34,6 @@ public class Bindings {
         public final SendableTrigger t_closeBayDoor;
         public final SendableTrigger t_switchRelativeReference;
         public final SendableTrigger t_resetGyro;
-        public final SendableTrigger t_climb;
-        public final SendableTrigger t_climb_home;
 
         // Conditional Triggers
         public final SendableTrigger t_hubLaunchValid;
@@ -94,8 +92,6 @@ public class Bindings {
                 t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "Controller/switchRelativeReference");
                 t_resetGyro = new SendableTrigger(driver.povDown(), "Controller/resetGyro");
-                t_climb = new SendableTrigger(operator.rightTrigger(), "Controller/climb");
-                t_climb_home = new SendableTrigger(operator.start().and(operator.back()), "Controller/climb_home");
 
                 // Conditional Triggers
                 t_hubLaunchValid = new SendableTrigger(
@@ -109,7 +105,7 @@ public class Bindings {
 
                 t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
                                 "Conditional/attemptToScore");
-                t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> DriverStation.isTeleop()),
+                t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> !DriverStation.isAutonomous()),
                                 "Conditional/onAllianceSide");
 
                 t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
@@ -117,7 +113,7 @@ public class Bindings {
 
                 t_autoUnjam = new SendableTrigger(spindexer.autoUnjamTrigger, "Conditional/autoUnjam");
 
-                t_unjam = new SendableTrigger(t_autoUnjam.or(t_manualUnjam), "Conditional/unjam");
+                t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "Conditional/unjam");
 
                 // Command Triggers
                 cmd_autoScore_launchFuel = new SendableTrigger(
@@ -153,13 +149,12 @@ public class Bindings {
 
                 cmd_autoIntake = new SendableTrigger(
                                 t_autoIntake.getTrigger()
-                                                .and(t_climb.negate())
                                                 .and(t_autoShuttle.negate())
-                                                .and(t_attemptToScore.negate()),
+                                                .and(t_attemptToScore.negate())
+                                                .and(t_autoSnowBlow.negate()),
                                 "Commands/autoIntake");
                 cmd_autoShuttle = new SendableTrigger(
                                 t_autoShuttle
-                                                .and(t_climb.negate())
                                                 .and(t_attemptToScore.negate()),
                                 "Commands/autoIntake");
                 cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(),

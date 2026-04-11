@@ -38,8 +38,8 @@ public class Intake extends SubsystemBase {
                             .withKS(0.001)
                             .withKV(0.0105)));
 
-    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(400);
-    private AngularVelocity intakeVelocity = RPM.of(3200);
+    private final static AngularVelocity AGITATION_VELOCITY = RPM.of(4000);
+    private AngularVelocity intakeVelocity = RPM.of(4800);
     private AngularVelocity shuttleVelocity = RPM.of(-4800);
 
     public Intake(String name) {

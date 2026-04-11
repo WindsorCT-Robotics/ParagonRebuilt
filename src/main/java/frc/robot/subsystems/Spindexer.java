@@ -51,7 +51,7 @@ public class Spindexer extends SubsystemBase {
             Milliseconds.of(20),
             this::getIndexingToScore);
 
-    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(4800);
+    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(6000);
     private static final AngularVelocity PREPARE_FUEL_VELOCITY = RPM.of(800);
     private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
     private AngularVelocity smartDashboardVelocity = RPM.of(0);

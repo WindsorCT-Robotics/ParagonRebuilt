@@ -144,6 +144,7 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 TunerConstants.FrontRight,
                                 TunerConstants.BackLeft,
                                 TunerConstants.BackRight);
+                resetGyro();
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
@@ -221,6 +222,10 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 STANDARD_DEVIATION_SCALAR,
                                 "SmartDashboard/Subsystems/Drive/Visions");
 
+                LimelightHelpers.SetIMUMode(launcherVision.getVisionName(), 0);
+                LimelightHelpers.SetIMUMode(middleLauncherVision.getVisionName(), 0);
+                LimelightHelpers.SetIMUMode(backLauncherVision.getVisionName(), 0);
+
                 visions = new LimelightVisionBase[] { launcherVision, middleLauncherVision, backLauncherVision };
 
                 onAllianceSide = new Trigger(() -> {
@@ -248,7 +253,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 FACING_ANGLE_PID.kD);
                 fieldCentricFacingAngleSwerveRequest.withDriveRequestType(DriveRequestType.Velocity);
 
-                resetGyro();
                 initSmartDashboard();
         }
 
@@ -270,13 +274,6 @@ public class Drive extends GeneratedDrive implements Sendable {
                 field.setRobotPose(robotState.Pose);
                 currentModulesStates.set(robotState.ModuleStates);
                 targetModuleStates.set(robotState.ModuleTargets);
-                if (DriverStation.isDisabled()) {
-                        LimelightHelpers.SetIMUMode(launcherVision.getVisionName(), 1);
-                        LimelightHelpers.SetIMUMode(backLauncherVision.getVisionName(), 1);
-                } else {
-                        LimelightHelpers.SetIMUMode(launcherVision.getVisionName(), 3);
-                        LimelightHelpers.SetIMUMode(backLauncherVision.getVisionName(), 3);
-                }
         }
 
         // region Senables

@@ -343,7 +343,7 @@ public class RobotContainer implements Sendable {
                                                 .withName("Agitate Intake Fuel To Hub"));
 
                 bindings.cmd_autoScore_indexFuel
-                                .whileTrue(spindexer.indexFuel()
+                                .whileTrue(spindexer.indexFuelAlgorithim()
                                                 .withName("Index Fuel To Hub"));
 
                 bindings.t_autoScore
@@ -389,15 +389,15 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindPartialManualScore() {
-                bindings.t_partialManualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                bindings.t_partialManualScore.whileTrue(kicker.smartDashboardKickFuel());
-                bindings.t_partialManualScore.whileTrue(spindexer.indexFuel());
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel());
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel());
+                bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel());
                 bindings.t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
         }
 
         private void bindManualScore() {
-                bindings.t_manualScore.whileTrue(launcher.smartDashboardLaunchFuel());
-                bindings.t_manualScore.whileTrue(kicker.smartDashboardKickFuel());
-                bindings.t_manualScore.whileTrue(spindexer.indexFuel());
+                bindings.cmd_manualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel());
+                bindings.cmd_manualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel());
+                bindings.cmd_manualScore_indexFuel.whileTrue(spindexer.indexFuel());
         }
 }

@@ -114,7 +114,8 @@ public class Spindexer extends SubsystemBase {
     public Command indexFuelAlgorithim() {
         return new WaitCommand(Seconds.of(2)).deadlineFor(indexFuel())
                 .andThen(new WaitCommand(Seconds.of(0.5)).deadlineFor(
-                        runEnd(() -> motor.setPointVelocity(INDEX_FUEL_VELOCITY.div(1.5)), this::stop)));
+                        runEnd(() -> motor.setPointVelocity(INDEX_FUEL_VELOCITY.div(1.5)), this::stop))
+                        .repeatedly());
     }
 
     public Command agitateFuel() {

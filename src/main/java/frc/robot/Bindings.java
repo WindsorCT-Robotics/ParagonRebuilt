@@ -18,8 +18,6 @@ import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Spindexer;
 
 public class Bindings {
-        private static final String NAME = "Trigger";
-
         // Controller Triggers
         public final SendableTrigger t_autoScore;
         public final SendableTrigger t_manualScore;
@@ -169,41 +167,41 @@ public class Bindings {
         }
 
         public void initSmartdashBoard(String dir) {
-                SmartDashboard.putData(dir + NAME, cmd_autoIntake);
-                SmartDashboard.putData(dir + NAME, cmd_autoScore_indexFuel);
-                SmartDashboard.putData(dir + NAME, cmd_autoScore_launchFuel);
-                SmartDashboard.putData(dir + NAME, cmd_autoShuttle);
-                SmartDashboard.putData(dir + NAME, cmd_autoUnjam);
-                SmartDashboard.putData(dir + NAME, cmd_bayDoor_close);
-                SmartDashboard.putData(dir + NAME, cmd_bayDoor_open);
-                SmartDashboard.putData(dir + NAME, cmd_manualScore_indexFuel);
-                SmartDashboard.putData(dir + NAME, cmd_manualScore_launchFuel);
-                SmartDashboard.putData(dir + NAME, cmd_manualUnjam);
-                SmartDashboard.putData(dir + NAME, cmd_partialManualScore_indexFuel);
-                SmartDashboard.putData(dir + NAME, cmd_partialManualScore_launchFuel);
-                SmartDashboard.putData(dir + NAME, cmd_prepareFuel);
-                SmartDashboard.putData(dir + NAME, cmd_snowBlow_indexFuel);
-                SmartDashboard.putData(dir + NAME, cmd_snowBlow_launchFuel);
-                SmartDashboard.putData(dir + NAME, cmd_switchRelativeReference);
-                SmartDashboard.putData(dir + NAME, t_attemptToScore);
-                SmartDashboard.putData(dir + NAME, t_autoScore);
-                SmartDashboard.putData(dir + NAME, t_autoShuttle);
-                SmartDashboard.putData(dir + NAME, t_autoSnowBlow);
-                SmartDashboard.putData(dir + NAME, t_autoUnjam);
-                SmartDashboard.putData(dir + NAME, t_closeBayDoor);
-                SmartDashboard.putData(dir + NAME, t_decrementLauncherOffset);
-                SmartDashboard.putData(dir + NAME, t_faceRedAlliance);
-                SmartDashboard.putData(dir + NAME, t_hubLaunchValid);
-                SmartDashboard.putData(dir + NAME, t_incrementLauncherOffset);
-                SmartDashboard.putData(dir + NAME, t_manualScore);
-                SmartDashboard.putData(dir + NAME, t_manualUnjam);
-                SmartDashboard.putData(dir + NAME, t_onAllianceSide);
-                SmartDashboard.putData(dir + NAME, t_openBayDoor);
-                SmartDashboard.putData(dir + NAME, t_partialManualScore);
-                SmartDashboard.putData(dir + NAME, t_prepareFuel);
-                SmartDashboard.putData(dir + NAME, t_resetGyro);
-                SmartDashboard.putData(dir + NAME, t_snowBlowValid);
-                SmartDashboard.putData(dir + NAME, t_switchRelativeReference);
-                SmartDashboard.putData(dir + NAME, t_unjam);
+                SmartDashboard.putData(dir + "cmd_autoIntake", cmd_autoIntake);
+                SmartDashboard.putData(dir + "cmd_autoScore_indexFuel", cmd_autoScore_indexFuel);
+                SmartDashboard.putData(dir + "cmd_autoScore_launchFuel", cmd_autoScore_launchFuel);
+                SmartDashboard.putData(dir + "cmd_autoShuttle", cmd_autoShuttle);
+                SmartDashboard.putData(dir + "cmd_autoUnjam", cmd_autoUnjam);
+                SmartDashboard.putData(dir + "cmd_bayDoor_close", cmd_bayDoor_close);
+                SmartDashboard.putData(dir + "cmd_bayDoor_open", cmd_bayDoor_open);
+                SmartDashboard.putData(dir + "cmd_manualScore_indexFuel", cmd_manualScore_indexFuel);
+                SmartDashboard.putData(dir + "cmd_manualScore_launchFuel", cmd_manualScore_launchFuel);
+                SmartDashboard.putData(dir + "cmd_manualUnjam", cmd_manualUnjam);
+                SmartDashboard.putData(dir + "cmd_partialManualScore_indexFuel", cmd_partialManualScore_indexFuel);
+                SmartDashboard.putData(dir + "cmd_partialManualScore_launchFuel", cmd_partialManualScore_launchFuel);
+                SmartDashboard.putData(dir + "cmd_prepareFuel", cmd_prepareFuel);
+                SmartDashboard.putData(dir + "cmd_snowBlow_indexFuel", cmd_snowBlow_indexFuel);
+                SmartDashboard.putData(dir + "cmd_snowBlow_launchFuel", cmd_snowBlow_launchFuel);
+                SmartDashboard.putData(dir + "cmd_switchRelativeReference", cmd_switchRelativeReference);
+                SmartDashboard.putData(dir + "t_attemptToScore", t_attemptToScore);
+                SmartDashboard.putData(dir + "t_autoScore", t_autoScore);
+                SmartDashboard.putData(dir + "t_autoShuttle", t_autoShuttle);
+                SmartDashboard.putData(dir + "t_autoSnowBlow", t_autoSnowBlow);
+                SmartDashboard.putData(dir + "t_autoUnjam", t_autoUnjam);
+                SmartDashboard.putData(dir + "t_closeBayDoor", t_closeBayDoor);
+                SmartDashboard.putData(dir + "t_decrementLauncherOffset", t_decrementLauncherOffset);
+                SmartDashboard.putData(dir + "t_faceRedAlliance", t_faceRedAlliance);
+                SmartDashboard.putData(dir + "t_hubLaunchValid", t_hubLaunchValid);
+                SmartDashboard.putData(dir + "t_incrementLauncherOffset", t_incrementLauncherOffset);
+                SmartDashboard.putData(dir + "t_manualScore", t_manualScore);
+                SmartDashboard.putData(dir + "t_manualUnjam", t_manualUnjam);
+                SmartDashboard.putData(dir + "t_onAllianceSide", t_onAllianceSide);
+                SmartDashboard.putData(dir + "t_openBayDoor", t_openBayDoor);
+                SmartDashboard.putData(dir + "t_partialManualScore", t_partialManualScore);
+                SmartDashboard.putData(dir + "t_prepareFuel", t_prepareFuel);
+                SmartDashboard.putData(dir + "t_resetGyro", t_resetGyro);
+                SmartDashboard.putData(dir + "t_snowBlowValid", t_snowBlowValid);
+                SmartDashboard.putData(dir + "t_switchRelativeReference", t_switchRelativeReference);
+                SmartDashboard.putData(dir + "t_unjam", t_unjam);
         }
 }

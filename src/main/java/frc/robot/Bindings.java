@@ -74,134 +74,135 @@ public class Bindings {
                         Supplier<Optional<LaunchParameters>> snowBlowLaunchParameters) {
 
                 // Controller Triggers
-                t_autoScore = new SendableTrigger(driver.rightBumper(), "Controller/autoScore");
-                t_manualScore = new SendableTrigger(operator.b(), "Controller/manualScore");
-                t_partialManualScore = new SendableTrigger(operator.povLeft(), "Controller/partialManualScore");
+                t_autoScore = new SendableTrigger(driver.rightBumper(), "autoScore");
+                t_manualScore = new SendableTrigger(operator.b(), "manualScore");
+                t_partialManualScore = new SendableTrigger(operator.povLeft(), "partialManualScore");
                 t_autoSnowBlow = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)),
-                                "Controller/autoSnowBlow");
-                t_manualUnjam = new SendableTrigger(operator.a(), "Controller/manualUnjam");
+                                "autoSnowBlow");
+                t_manualUnjam = new SendableTrigger(operator.a(), "manualUnjam");
                 t_incrementLauncherOffset = new SendableTrigger(operator.rightBumper(),
-                                "Controller/incrementLauncherOffset");
+                                "incrementLauncherOffset");
                 t_decrementLauncherOffset = new SendableTrigger(operator.leftBumper(),
-                                "Controller/decrementLauncherOffset");
-                t_faceRedAlliance = new SendableTrigger(driver.leftStick(), "Controller/faceRedAlliance");
+                                "decrementLauncherOffset");
+                t_faceRedAlliance = new SendableTrigger(driver.leftStick(), "faceRedAlliance");
                 t_autoIntake = new ToggleableTrigger(driver.x());
-                t_autoShuttle = new SendableTrigger(driver.b(), "Controller/autoShuttle");
-                t_openBayDoor = new SendableTrigger(operator.povDown(), "Controller/openBayDoor");
-                t_closeBayDoor = new SendableTrigger(operator.povUp(), "Controller/closeBayDoor");
+                t_autoShuttle = new SendableTrigger(driver.b(), "autoShuttle");
+                t_openBayDoor = new SendableTrigger(operator.povDown(), "openBayDoor");
+                t_closeBayDoor = new SendableTrigger(operator.povUp(), "closeBayDoor");
                 t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
-                                "Controller/switchRelativeReference");
-                t_resetGyro = new SendableTrigger(driver.povDown(), "Controller/resetGyro");
+                                "switchRelativeReference");
+                t_resetGyro = new SendableTrigger(driver.povDown(), "resetGyro");
 
                 // Conditional Triggers
                 t_hubLaunchValid = new SendableTrigger(
                                 () -> hubLaunchParameters.get().map(parameters -> parameters.isValid()).orElse(false),
-                                "Conditional/hubLaunchValid");
+                                "hubLaunchValid");
 
                 t_snowBlowValid = new SendableTrigger(
                                 () -> snowBlowLaunchParameters.get().map(parameters -> parameters.isValid())
                                                 .orElse(false),
-                                "Conditional/snowBlowValid");
+                                "snowBlowValid");
 
                 t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
-                                "Conditional/attemptToScore");
+                                "attemptToScore");
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> !DriverStation.isAutonomous()),
-                                "Conditional/onAllianceSide");
+                                "onAllianceSide");
 
                 t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
-                                "Conditional/prepareFuel");
+                                "prepareFuel");
 
-                t_autoUnjam = new SendableTrigger(spindexer.autoUnjamTrigger, "Conditional/autoUnjam");
+                t_autoUnjam = new SendableTrigger(spindexer.autoUnjamTrigger, "autoUnjam");
 
-                t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "Conditional/unjam");
+                t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "unjam");
 
                 // Command Triggers
                 cmd_autoScore_launchFuel = new SendableTrigger(
                                 t_autoScore
                                                 .and(t_onAllianceSide),
-                                "Commands/autoScore_launchFuel");
+                                "autoScore_launchFuel");
                 cmd_autoScore_indexFuel = new SendableTrigger(
                                 t_autoScore
                                                 .and(t_hubLaunchValid)
                                                 .and(t_onAllianceSide)
                                                 .and(t_unjam.negate()),
-                                "Commands/autoScore_indexFuel");
+                                "autoScore_indexFuel");
                 cmd_snowBlow_launchFuel = new SendableTrigger(
                                 t_autoSnowBlow
                                                 .and(t_onAllianceSide.negate()),
-                                "Commands/snowBlow_launchFuel");
+                                "snowBlow_launchFuel");
 
                 cmd_snowBlow_indexFuel = new SendableTrigger(
                                 t_autoSnowBlow
                                                 .and(t_onAllianceSide.negate())
                                                 .and(t_snowBlowValid)
                                                 .and(t_unjam.negate()),
-                                "Commands/snowBlow_launchFuel");
+                                "snowBlow_indexFuel");
 
                 cmd_partialManualScore_launchFuel = new SendableTrigger(t_partialManualScore,
-                                "Commands/partialManualScore_launchFuel");
+                                "partialManualScore_launchFuel");
                 cmd_partialManualScore_indexFuel = new SendableTrigger(t_partialManualScore.and(t_unjam.negate()),
-                                "Commands/partialManualScore_indexFuel");
+                                "partialManualScore_indexFuel");
 
-                cmd_manualScore_launchFuel = new SendableTrigger(t_manualScore, "Commands/manualScore_launchFuel");
+                cmd_manualScore_launchFuel = new SendableTrigger(t_manualScore, "manualScore_launchFuel");
                 cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore.and(t_manualUnjam.negate()),
-                                "Commands/manualScore_launchFuel");
+                                "manualScore_indexFuel");
 
                 cmd_autoIntake = new SendableTrigger(
                                 t_autoIntake.getTrigger()
                                                 .and(t_autoShuttle.negate())
                                                 .and(t_attemptToScore.negate())
                                                 .and(t_autoSnowBlow.negate()),
-                                "Commands/autoIntake");
+                                "autoIntake");
                 cmd_autoShuttle = new SendableTrigger(
                                 t_autoShuttle
                                                 .and(t_attemptToScore.negate()),
-                                "Commands/autoIntake");
+                                "autoShuttle");
                 cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
-                                "Commands/switchRelativeReference");
-                cmd_autoUnjam = new SendableTrigger(t_autoUnjam, null);
-                cmd_manualUnjam = new SendableTrigger(t_manualUnjam, null);
-                cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "Commands/prepareFuel");
-                cmd_bayDoor_open = new SendableTrigger(t_openBayDoor, "Commands/bayDoor_open");
-                cmd_bayDoor_close = new SendableTrigger(t_closeBayDoor, "Commands/bayDoor_close");
+                                "switchRelativeReference");
+                cmd_autoUnjam = new SendableTrigger(t_autoUnjam, "autoUnjam_cmd");
+                cmd_manualUnjam = new SendableTrigger(t_manualUnjam, "manualUnjam_cmd");
+                cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "prepareFuel");
+                cmd_bayDoor_open = new SendableTrigger(t_openBayDoor, "bayDoor_open");
+                cmd_bayDoor_close = new SendableTrigger(t_closeBayDoor, "bayDoor_close");
         }
 
         public void initSmartdashBoard(String dir) {
-                SmartDashboard.putData(dir + "cmd_autoIntake", cmd_autoIntake);
-                SmartDashboard.putData(dir + "cmd_autoScore_indexFuel", cmd_autoScore_indexFuel);
-                SmartDashboard.putData(dir + "cmd_autoScore_launchFuel", cmd_autoScore_launchFuel);
-                SmartDashboard.putData(dir + "cmd_autoShuttle", cmd_autoShuttle);
-                SmartDashboard.putData(dir + "cmd_autoUnjam", cmd_autoUnjam);
-                SmartDashboard.putData(dir + "cmd_bayDoor_close", cmd_bayDoor_close);
-                SmartDashboard.putData(dir + "cmd_bayDoor_open", cmd_bayDoor_open);
-                SmartDashboard.putData(dir + "cmd_manualScore_indexFuel", cmd_manualScore_indexFuel);
-                SmartDashboard.putData(dir + "cmd_manualScore_launchFuel", cmd_manualScore_launchFuel);
-                SmartDashboard.putData(dir + "cmd_manualUnjam", cmd_manualUnjam);
-                SmartDashboard.putData(dir + "cmd_partialManualScore_indexFuel", cmd_partialManualScore_indexFuel);
-                SmartDashboard.putData(dir + "cmd_partialManualScore_launchFuel", cmd_partialManualScore_launchFuel);
-                SmartDashboard.putData(dir + "cmd_prepareFuel", cmd_prepareFuel);
-                SmartDashboard.putData(dir + "cmd_snowBlow_indexFuel", cmd_snowBlow_indexFuel);
-                SmartDashboard.putData(dir + "cmd_snowBlow_launchFuel", cmd_snowBlow_launchFuel);
-                SmartDashboard.putData(dir + "cmd_switchRelativeReference", cmd_switchRelativeReference);
-                SmartDashboard.putData(dir + "t_attemptToScore", t_attemptToScore);
-                SmartDashboard.putData(dir + "t_autoScore", t_autoScore);
-                SmartDashboard.putData(dir + "t_autoShuttle", t_autoShuttle);
-                SmartDashboard.putData(dir + "t_autoSnowBlow", t_autoSnowBlow);
-                SmartDashboard.putData(dir + "t_autoUnjam", t_autoUnjam);
-                SmartDashboard.putData(dir + "t_closeBayDoor", t_closeBayDoor);
-                SmartDashboard.putData(dir + "t_decrementLauncherOffset", t_decrementLauncherOffset);
-                SmartDashboard.putData(dir + "t_faceRedAlliance", t_faceRedAlliance);
-                SmartDashboard.putData(dir + "t_hubLaunchValid", t_hubLaunchValid);
-                SmartDashboard.putData(dir + "t_incrementLauncherOffset", t_incrementLauncherOffset);
-                SmartDashboard.putData(dir + "t_manualScore", t_manualScore);
-                SmartDashboard.putData(dir + "t_manualUnjam", t_manualUnjam);
-                SmartDashboard.putData(dir + "t_onAllianceSide", t_onAllianceSide);
-                SmartDashboard.putData(dir + "t_openBayDoor", t_openBayDoor);
-                SmartDashboard.putData(dir + "t_partialManualScore", t_partialManualScore);
-                SmartDashboard.putData(dir + "t_prepareFuel", t_prepareFuel);
-                SmartDashboard.putData(dir + "t_resetGyro", t_resetGyro);
-                SmartDashboard.putData(dir + "t_snowBlowValid", t_snowBlowValid);
-                SmartDashboard.putData(dir + "t_switchRelativeReference", t_switchRelativeReference);
-                SmartDashboard.putData(dir + "t_unjam", t_unjam);
+                String category = "Triggers/";
+                SmartDashboard.putData(category + "cmd_autoIntake", cmd_autoIntake);
+                SmartDashboard.putData(category + "cmd_autoScore_indexFuel", cmd_autoScore_indexFuel);
+                SmartDashboard.putData(category + "cmd_autoScore_launchFuel", cmd_autoScore_launchFuel);
+                SmartDashboard.putData(category + "cmd_autoShuttle", cmd_autoShuttle);
+                SmartDashboard.putData(category + "cmd_autoUnjam", cmd_autoUnjam);
+                SmartDashboard.putData(category + "cmd_bayDoor_close", cmd_bayDoor_close);
+                SmartDashboard.putData(category + "cmd_bayDoor_open", cmd_bayDoor_open);
+                SmartDashboard.putData(category + "cmd_manualScore_indexFuel", cmd_manualScore_indexFuel);
+                SmartDashboard.putData(category + "cmd_manualScore_launchFuel", cmd_manualScore_launchFuel);
+                SmartDashboard.putData(category + "cmd_manualUnjam", cmd_manualUnjam);
+                SmartDashboard.putData(category + "cmd_partialManualScore_indexFuel", cmd_partialManualScore_indexFuel);
+                SmartDashboard.putData(category + "cmd_partialManualScore_launchFuel", cmd_partialManualScore_launchFuel);
+                SmartDashboard.putData(category + "cmd_prepareFuel", cmd_prepareFuel);
+                SmartDashboard.putData(category + "cmd_snowBlow_indexFuel", cmd_snowBlow_indexFuel);
+                SmartDashboard.putData(category + "cmd_snowBlow_launchFuel", cmd_snowBlow_launchFuel);
+                SmartDashboard.putData(category + "cmd_switchRelativeReference", cmd_switchRelativeReference);
+                SmartDashboard.putData(category + "t_attemptToScore", t_attemptToScore);
+                SmartDashboard.putData(category + "t_autoScore", t_autoScore);
+                SmartDashboard.putData(category + "t_autoShuttle", t_autoShuttle);
+                SmartDashboard.putData(category + "t_autoSnowBlow", t_autoSnowBlow);
+                SmartDashboard.putData(category + "t_autoUnjam", t_autoUnjam);
+                SmartDashboard.putData(category + "t_closeBayDoor", t_closeBayDoor);
+                SmartDashboard.putData(category + "t_decrementLauncherOffset", t_decrementLauncherOffset);
+                SmartDashboard.putData(category + "t_faceRedAlliance", t_faceRedAlliance);
+                SmartDashboard.putData(category + "t_hubLaunchValid", t_hubLaunchValid);
+                SmartDashboard.putData(category + "t_incrementLauncherOffset", t_incrementLauncherOffset);
+                SmartDashboard.putData(category + "t_manualScore", t_manualScore);
+                SmartDashboard.putData(category + "t_manualUnjam", t_manualUnjam);
+                SmartDashboard.putData(category + "t_onAllianceSide", t_onAllianceSide);
+                SmartDashboard.putData(category + "t_openBayDoor", t_openBayDoor);
+                SmartDashboard.putData(category + "t_partialManualScore", t_partialManualScore);
+                SmartDashboard.putData(category + "t_prepareFuel", t_prepareFuel);
+                SmartDashboard.putData(category + "t_resetGyro", t_resetGyro);
+                SmartDashboard.putData(category + "t_snowBlowValid", t_snowBlowValid);
+                SmartDashboard.putData(category + "t_switchRelativeReference", t_switchRelativeReference);
+                SmartDashboard.putData(category + "t_unjam", t_unjam);
         }
 }

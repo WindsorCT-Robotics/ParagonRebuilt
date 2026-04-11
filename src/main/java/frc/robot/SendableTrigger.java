@@ -23,6 +23,10 @@ public class SendableTrigger extends Trigger implements Sendable {
         this.name = name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addBooleanProperty(name, condition, null);

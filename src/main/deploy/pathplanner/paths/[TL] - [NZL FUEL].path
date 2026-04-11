@@ -3,58 +3,95 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.422235099337748,
-        "y": 7.4225
+        "x": 4.414975165562914,
+        "y": 7.425
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.422235099337748,
-        "y": 7.4225
+        "x": 5.040060169003728,
+        "y": 7.377712997241367
       },
       "isLocked": false,
-      "linkedName": "[TL]"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.286,
-        "y": 4.539
+        "x": 7.790844370860928,
+        "y": 6.779254966887418
       },
       "prevControl": {
-        "x": 7.286,
-        "y": 6.539
+        "x": 7.016582581984751,
+        "y": 7.598970208868021
+      },
+      "nextControl": {
+        "x": 8.374488951784668,
+        "y": 6.161347218169778
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.514966887417218,
+        "y": 4.521415562917538
+      },
+      "prevControl": {
+        "x": 8.210140660716478,
+        "y": 4.445493278480669
+      },
+      "nextControl": {
+        "x": 7.028369592687029,
+        "y": 4.574558503050886
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.280778145695364,
+        "y": 5.363567880794702
+      },
+      "prevControl": {
+        "x": 6.814723570455899,
+        "y": 5.193260093639788
+      },
+      "nextControl": {
+        "x": 6.022896888048444,
+        "y": 5.445821954529429
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.801622516556291,
+        "y": 5.363567880794702
+      },
+      "prevControl": {
+        "x": 6.1352361897510095,
+        "y": 5.348669544664406
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[NZL FUEL]"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.14383954154727804,
-      "rotationDegrees": 180.0
-    },
-    {
-      "waypointRelativePos": 0.733509234828497,
-      "rotationDegrees": -45.0
+      "waypointRelativePos": 0.9501432664756436,
+      "rotationDegrees": -100.0
     }
   ],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7261273209549036,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 1.75,
-        "maxAcceleration": 4.0,
-        "maxAngularVelocity": 360.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "baydooropen",
+      "waypointRelativePos": 0.5437665782493474,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 4.0,
@@ -64,13 +101,13 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -45.0
+    "velocity": 2.0,
+    "rotation": 135.0
   },
   "reversed": false,
   "folder": "Left Paths",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 0.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true

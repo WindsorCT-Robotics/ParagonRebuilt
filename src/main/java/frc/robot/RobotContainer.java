@@ -159,42 +159,7 @@ public class RobotContainer implements Sendable {
                 SmartDashboard.putData("Robot Container/Hub Calculator", hubCalculator);
                 SmartDashboard.putData("Robot Container/SnowBlow Calculator", snowBlowCalculator);
                 SmartDashboard.putData("Hub", HubUtil.getInstance());
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_autoIntake);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_autoScore_indexFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_autoScore_launchFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_autoShuttle);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_autoUnjam);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_bayDoor_close);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_bayDoor_open);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_manualScore_indexFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_manualScore_launchFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_manualUnjam);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_partialManualScore_indexFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_partialManualScore_launchFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_prepareFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_snowBlow_indexFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_snowBlow_launchFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.cmd_switchRelativeReference);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_attemptToScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoShuttle);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoSnowBlow);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_autoUnjam);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_closeBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_decrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_faceRedAlliance);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_hubLaunchValid);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_incrementLauncherOffset);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_manualScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_manualUnjam);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_onAllianceSide);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_openBayDoor);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_partialManualScore);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_prepareFuel);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_resetGyro);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_snowBlowValid);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_switchRelativeReference);
-                SmartDashboard.putData("Robot Container/Triggers", bindings.t_unjam);
+                bindings.initSmartdashBoard("Robot Container/");
         }
 
         @Override

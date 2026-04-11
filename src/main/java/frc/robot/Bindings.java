@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.launch_calculator.ShotCalculator.LaunchParameters;
 import frc.robot.subsystems.BayDoor;
@@ -17,6 +18,7 @@ import frc.robot.subsystems.Launcher;
 import frc.robot.subsystems.Spindexer;
 
 public class Bindings {
+        private static final String NAME = "Trigger";
 
         // Controller Triggers
         public final SendableTrigger t_autoScore;
@@ -164,5 +166,44 @@ public class Bindings {
                 cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "Commands/prepareFuel");
                 cmd_bayDoor_open = new SendableTrigger(t_openBayDoor, "Commands/bayDoor_open");
                 cmd_bayDoor_close = new SendableTrigger(t_closeBayDoor, "Commands/bayDoor_close");
+        }
+
+        public void initSmartdashBoard(String dir) {
+                SmartDashboard.putData(dir + NAME, cmd_autoIntake);
+                SmartDashboard.putData(dir + NAME, cmd_autoScore_indexFuel);
+                SmartDashboard.putData(dir + NAME, cmd_autoScore_launchFuel);
+                SmartDashboard.putData(dir + NAME, cmd_autoShuttle);
+                SmartDashboard.putData(dir + NAME, cmd_autoUnjam);
+                SmartDashboard.putData(dir + NAME, cmd_bayDoor_close);
+                SmartDashboard.putData(dir + NAME, cmd_bayDoor_open);
+                SmartDashboard.putData(dir + NAME, cmd_manualScore_indexFuel);
+                SmartDashboard.putData(dir + NAME, cmd_manualScore_launchFuel);
+                SmartDashboard.putData(dir + NAME, cmd_manualUnjam);
+                SmartDashboard.putData(dir + NAME, cmd_partialManualScore_indexFuel);
+                SmartDashboard.putData(dir + NAME, cmd_partialManualScore_launchFuel);
+                SmartDashboard.putData(dir + NAME, cmd_prepareFuel);
+                SmartDashboard.putData(dir + NAME, cmd_snowBlow_indexFuel);
+                SmartDashboard.putData(dir + NAME, cmd_snowBlow_launchFuel);
+                SmartDashboard.putData(dir + NAME, cmd_switchRelativeReference);
+                SmartDashboard.putData(dir + NAME, t_attemptToScore);
+                SmartDashboard.putData(dir + NAME, t_autoScore);
+                SmartDashboard.putData(dir + NAME, t_autoShuttle);
+                SmartDashboard.putData(dir + NAME, t_autoSnowBlow);
+                SmartDashboard.putData(dir + NAME, t_autoUnjam);
+                SmartDashboard.putData(dir + NAME, t_closeBayDoor);
+                SmartDashboard.putData(dir + NAME, t_decrementLauncherOffset);
+                SmartDashboard.putData(dir + NAME, t_faceRedAlliance);
+                SmartDashboard.putData(dir + NAME, t_hubLaunchValid);
+                SmartDashboard.putData(dir + NAME, t_incrementLauncherOffset);
+                SmartDashboard.putData(dir + NAME, t_manualScore);
+                SmartDashboard.putData(dir + NAME, t_manualUnjam);
+                SmartDashboard.putData(dir + NAME, t_onAllianceSide);
+                SmartDashboard.putData(dir + NAME, t_openBayDoor);
+                SmartDashboard.putData(dir + NAME, t_partialManualScore);
+                SmartDashboard.putData(dir + NAME, t_prepareFuel);
+                SmartDashboard.putData(dir + NAME, t_resetGyro);
+                SmartDashboard.putData(dir + NAME, t_snowBlowValid);
+                SmartDashboard.putData(dir + NAME, t_switchRelativeReference);
+                SmartDashboard.putData(dir + NAME, t_unjam);
         }
 }

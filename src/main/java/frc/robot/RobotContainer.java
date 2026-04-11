@@ -51,7 +51,7 @@ import frc.robot.utils.ControllerUtil;
 
 public class RobotContainer implements Sendable {
         private static final Dimensionless DRIVER_CONTROLLER_DEADBAND = Percent.of(5);
-        private static final LinearVelocity MAX_SPEED_LAUNCH = MetersPerSecond.of(2); // Max speed of the robot when
+        private static final LinearVelocity MAX_SPEED_LAUNCH = MetersPerSecond.of(1); // Max speed of the robot when
                                                                                       // aiming
         private static final double MOVE_CURVE = 2.0;
         private static final double TURN_CURVE = 2.0;

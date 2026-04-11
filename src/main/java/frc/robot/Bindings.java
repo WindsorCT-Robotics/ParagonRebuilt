@@ -23,7 +23,6 @@ public class Bindings {
         public final SendableTrigger t_manualScore;
         public final SendableTrigger t_partialManualScore;
         public final SendableTrigger t_autoSnowBlow;
-        public final SendableTrigger t_autoUnjam;
         public final SendableTrigger t_manualUnjam;
         public final SendableTrigger t_incrementLauncherOffset;
         public final SendableTrigger t_decrementLauncherOffset;
@@ -54,7 +53,6 @@ public class Bindings {
         public final SendableTrigger cmd_manualScore_indexFuel;
         public final SendableTrigger cmd_autoIntake;
         public final SendableTrigger cmd_autoShuttle;
-        public final SendableTrigger cmd_autoUnjam;
         public final SendableTrigger cmd_manualUnjam;
         public final SendableTrigger cmd_switchRelativeReference;
         public final SendableTrigger cmd_prepareFuel;
@@ -110,9 +108,7 @@ public class Bindings {
 
                 t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
                                 "prepareFuel");
-
-                t_autoUnjam = new SendableTrigger(spindexer.autoUnjamTrigger, "autoUnjam");
-
+ 
                 t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "unjam");
 
                 // Command Triggers
@@ -159,7 +155,6 @@ public class Bindings {
                                 "autoShuttle");
                 cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "switchRelativeReference");
-                cmd_autoUnjam = new SendableTrigger(t_autoUnjam, "autoUnjam_cmd");
                 cmd_manualUnjam = new SendableTrigger(t_manualUnjam, "manualUnjam_cmd");
                 cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "prepareFuel");
                 cmd_bayDoor_open = new SendableTrigger(t_openBayDoor, "bayDoor_open");
@@ -172,7 +167,6 @@ public class Bindings {
                 SmartDashboard.putData(category + cmd_autoScore_indexFuel.getName(), cmd_autoScore_indexFuel);
                 SmartDashboard.putData(category + cmd_autoScore_launchFuel.getName(), cmd_autoScore_launchFuel);
                 SmartDashboard.putData(category + cmd_autoShuttle.getName(), cmd_autoShuttle);
-                SmartDashboard.putData(category + cmd_autoUnjam.getName(), cmd_autoUnjam);
                 SmartDashboard.putData(category + cmd_bayDoor_close.getName(), cmd_bayDoor_close);
                 SmartDashboard.putData(category + cmd_bayDoor_open.getName(), cmd_bayDoor_open);
                 SmartDashboard.putData(category + cmd_manualScore_indexFuel.getName(), cmd_manualScore_indexFuel);
@@ -188,7 +182,6 @@ public class Bindings {
                 SmartDashboard.putData(category + t_autoScore.getName(), t_autoScore);
                 SmartDashboard.putData(category + t_autoShuttle.getName(), t_autoShuttle);
                 SmartDashboard.putData(category + t_autoSnowBlow.getName(), t_autoSnowBlow);
-                SmartDashboard.putData(category + t_autoUnjam.getName(), t_autoUnjam);
                 SmartDashboard.putData(category + t_closeBayDoor.getName(), t_closeBayDoor);
                 SmartDashboard.putData(category + t_decrementLauncherOffset.getName(), t_decrementLauncherOffset);
                 SmartDashboard.putData(category + t_faceRedAlliance.getName(), t_faceRedAlliance);

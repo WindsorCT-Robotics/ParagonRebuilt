@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.hardware.CanId;
 import frc.robot.hardware.motors.SpindexterMotor;
 import frc.robot.hardware.sensors.FuelSensor;
@@ -51,21 +50,17 @@ public class Spindexer extends SubsystemBase {
             Milliseconds.of(20),
             this::getIndexingToScore);
 
-    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(6000);
-    private static final AngularVelocity PREPARE_FUEL_VELOCITY = RPM.of(800);
+    private static final AngularVelocity INDEX_FUEL_VELOCITY = RPM.of(4800);
+    private static final AngularVelocity PREPARE_FUEL_VELOCITY = RPM.of(-400);
     private static final AngularVelocity AGITATE_FUEL_VELOCITY = RPM.of(-800);
     private AngularVelocity smartDashboardVelocity = RPM.of(0);
 
     private static final Distance FUEL_SENSOR_THRESHOLD = Millimeters.of(50);
-    public final Trigger autoUnjamTrigger;
 
     private boolean indexingToScore = false;
 
     public Spindexer(String name) {
         super("Subsystems/" + name);
-
-        autoUnjamTrigger = new Trigger(() -> indexingToScore
-                && fuelSensor.getElapsedSinceNofuel().gt(Seconds.of(2)));
 
         addChild(this.getName(), motor);
 
@@ -85,7 +80,6 @@ public class Spindexer extends SubsystemBase {
                 "Indexing Target Velocity (RPM)",
                 () -> getSmartdashBoardVelocity().in(RPM),
                 this::setSmartdashBoardVelocity);
-        builder.addBooleanProperty("Unjam Fuel", autoUnjamTrigger, null);
     }
 
     private AngularVelocity getSmartdashBoardVelocity() {
@@ -130,11 +124,7 @@ public class Spindexer extends SubsystemBase {
 
     public Command prepareFuel() {
         return runEnd(() -> {
-            if (!fuelSensor.isFuelDetected()) {
-                motor.setPointVelocity(PREPARE_FUEL_VELOCITY);
-            } else {
-                stop();
-            }
+            motor.setPointVelocity(PREPARE_FUEL_VELOCITY);
         }, this::stop);
     }
 

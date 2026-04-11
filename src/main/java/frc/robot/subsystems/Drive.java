@@ -74,7 +74,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         // region
         private static final LinearVelocity MAX_LINEAR_VELOCITY = TunerConstants.kSpeedAt12Volts;
         private static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(1);
-        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(4, 0, 0.05);
+        private static final PIDConstants FACING_ANGLE_PID = new PIDConstants(4, 0, 0.025);
         private static final PIDConstants DEFAULT_TRANSLATION_PID = new PIDConstants(1);
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
 

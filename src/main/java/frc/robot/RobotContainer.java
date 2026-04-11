@@ -281,6 +281,8 @@ public class RobotContainer implements Sendable {
 
                 intake.setDefaultCommand(intake.stopIntake().withName("Stop Intake"));
 
+                spindexer.setDefaultCommand(spindexer.prepareFuel());
+
                 bindings.cmd_switchRelativeReference.onTrue(new InstantCommand(() -> switchRelativeReference()));
 
                 bindings.cmd_prepareFuel.whileTrue(launcher.prepareFuel().withName("Launcher Prepare Fuel"));
@@ -291,11 +293,6 @@ public class RobotContainer implements Sendable {
                 bindSnowBlow();
                 bindPartialManualScore();
                 bindManualScore();
-
-                bindings.cmd_autoUnjam.whileTrue(
-                                bayDoor.open()
-                                                .alongWith(spindexer.agitateFuel())
-                                                .withName("Auto Unjam"));
 
                 bindings.cmd_manualUnjam.whileTrue(
                                 bayDoor.open()

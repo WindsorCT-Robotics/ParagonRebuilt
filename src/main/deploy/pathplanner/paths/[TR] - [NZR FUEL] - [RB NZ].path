@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 4.415,
-        "y": 7.425
+        "y": 0.644326
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.959620159137886,
-        "y": 7.392338255970023
+        "x": 5.811190236278735,
+        "y": 0.7837758720463388
       },
       "isLocked": false,
-      "linkedName": "[TL Start]"
+      "linkedName": "[TR Start]"
     },
     {
       "anchor": {
         "x": 7.9,
-        "y": 6.779
+        "y": 1.290326
       },
       "prevControl": {
-        "x": 7.208556329793439,
-        "y": 7.5091737358976
+        "x": 7.3407698786981745,
+        "y": 0.6125882438851843
       },
       "nextControl": {
-        "x": 8.350195524299549,
-        "y": 6.303587523139841
+        "x": 8.39215064832337,
+        "y": 1.8867693304999156
       },
       "isLocked": false,
       "linkedName": null
@@ -33,31 +33,47 @@
     {
       "anchor": {
         "x": 7.6,
-        "y": 4.521
+        "y": 3.548
       },
       "prevControl": {
-        "x": 8.12103224823159,
-        "y": 4.679703181347785
+        "x": 8.251584495720383,
+        "y": 3.5117149067842233
       },
       "nextControl": {
-        "x": 7.281674266699082,
-        "y": 4.424039962015427
+        "x": 7.232596437239132,
+        "y": 3.5684597755320246
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.054,
-        "y": 5.6
+        "x": 6.827045454545454,
+        "y": 2.7672613636363645
       },
       "prevControl": {
-        "x": 6.659614487122612,
-        "y": 5.4454504134748625
+        "x": 7.082504358635089,
+        "y": 3.027949695436176
       },
       "nextControl": {
-        "x": 5.803006571859857,
-        "y": 5.664052183962588
+        "x": 6.652068780910143,
+        "y": 2.588702791499595
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.249863636363637,
+        "y": 2.469326
+      },
+      "prevControl": {
+        "x": 6.962531243391734,
+        "y": 2.920827012534391
+      },
+      "nextControl": {
+        "x": 6.038678273609057,
+        "y": 2.335532343355836
       },
       "isLocked": false,
       "linkedName": null
@@ -65,25 +81,25 @@
     {
       "anchor": {
         "x": 5.817,
-        "y": 5.6
+        "y": 2.469
       },
       "prevControl": {
-        "x": 6.228425773094916,
-        "y": 5.369099739546072
+        "x": 6.354526104638346,
+        "y": 2.5212876022901156
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[LB NZ]"
+      "linkedName": "[RB NZ]"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9501432664756436,
-      "rotationDegrees": -100.0
+      "waypointRelativePos": 0.95,
+      "rotationDegrees": 100.0
     },
     {
-      "waypointRelativePos": 2.6100628930817695,
-      "rotationDegrees": 163.642
+      "waypointRelativePos": 2.783018867924534,
+      "rotationDegrees": -163.642
     }
   ],
   "constraintZones": [],
@@ -91,7 +107,7 @@
   "eventMarkers": [
     {
       "name": "baydooropen",
-      "waypointRelativePos": 0.5437665782493474,
+      "waypointRelativePos": 0.54,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -107,16 +123,16 @@
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
-    "unlimited": true
+    "unlimited": false
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": -140.133
+    "rotation": -45.0
   },
   "reversed": false,
-  "folder": "Left Paths",
+  "folder": "Right Paths",
   "idealStartingState": {
-    "velocity": 0.0,
+    "velocity": 0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true

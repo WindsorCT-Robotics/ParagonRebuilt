@@ -217,11 +217,6 @@ public class RobotContainer implements Sendable {
                                                                 .alongWith(spindexer.indexFuel())
                                                                 .alongWith(bayDoor.agitateFuel())));
 
-                NamedCommands.registerCommand("scorenoaim",
-                launcher.launchFuel(() -> launchVelocityToHub())
-                                                .alongWith(kicker.kickFuel(() -> launchVelocityToHub())
-                                                                .alongWith(spindexer.indexFuel())
-                                                                .alongWith(bayDoor.agitateFuel())));
                 NamedCommands.registerCommand("baydooropen", bayDoor.open());
                 NamedCommands.registerCommand("baydoorclose", bayDoor.close());
                 NamedCommands.registerCommand("intakefuel", intake.intakeFuel());

@@ -52,13 +52,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[LB SCORE] - [TL] - [NZL FUEL]"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "[LB NZ] - [LB SCORE]"
+                        "pathName": "[LB SCORE] - [NZL FUEL] - [LB SCORE]"
                       }
                     },
                     {

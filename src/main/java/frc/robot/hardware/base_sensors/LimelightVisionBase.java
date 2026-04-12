@@ -41,7 +41,7 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
     private final NetworkTable table;
     private final StructArrayPublisher<Pose2d> perceivedTags;
 
-    private static final Angle GYRO_DEVIATION = Radians.of(Integer.MAX_VALUE); // Uses gyro and not vision estimate to
+    private static final Angle GYRO_DEVIATION = Radians.of(Double.MAX_VALUE); // Uses gyro and not vision estimate to
                                                                                // determine theta.
     public LimelightVisionBase(
             String name,
@@ -160,9 +160,9 @@ public class LimelightVisionBase implements IBoundedPoseEstimateCamera {
 
     public record StandardVisionDeviations(Distance deviationX, Distance deviationY, Angle deviationRotation,
             Distance tagDistance) {
-        public static Matrix<N3, N1> toMatrix(StandardVisionDeviations dvs) {
-            return VecBuilder.fill(dvs.deviationX.in(Meters), dvs.deviationY.in(Meters),
-                    dvs.deviationRotation.in(Radians));
+        public static Matrix<N3, N1> toMatrix(StandardVisionDeviations dev) {
+            return VecBuilder.fill(dev.deviationX.in(Meters), dev.deviationY.in(Meters),
+                    dev.deviationRotation.in(Radians));
         }
     }
 

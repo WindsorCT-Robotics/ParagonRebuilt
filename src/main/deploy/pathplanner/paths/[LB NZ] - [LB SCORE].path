@@ -3,41 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.801622516556291,
-        "y": 5.363567880794702
+        "x": 5.816977272727272,
+        "y": 5.6
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.174751459514655,
-        "y": 5.363567880794702
+        "x": 5.550220239612023,
+        "y": 5.592881118727603
       },
       "isLocked": false,
       "linkedName": "[LB NZ]"
     },
     {
       "anchor": {
-        "x": 5.01032326201647,
-        "y": 5.340464438314003
-      },
-      "prevControl": {
-        "x": 5.718515391006788,
-        "y": 5.328372658175036
-      },
-      "nextControl": {
-        "x": 4.302131133026153,
-        "y": 5.352556218452969
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
         "x": 3.246125827814569,
-        "y": 5.340464438314003
+        "y": 5.6
       },
       "prevControl": {
-        "x": 3.5797395010092874,
-        "y": 5.325566102183707
+        "x": 6.094040219216888,
+        "y": 5.605373084226001
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,8 +30,8 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.497994269340976,
-      "rotationDegrees": 135.0
+      "waypointRelativePos": 0.75,
+      "rotationDegrees": -140.133
     }
   ],
   "constraintZones": [],
@@ -55,7 +39,7 @@
   "eventMarkers": [
     {
       "name": "baydooropen",
-      "waypointRelativePos": 0.2,
+      "waypointRelativePos": 0.1,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -74,14 +58,14 @@
     "unlimited": true
   },
   "goalEndState": {
-    "velocity": 2.0,
-    "rotation": -140.13339758891027
+    "velocity": 0.0,
+    "rotation": -144.1988414618018
   },
   "reversed": false,
   "folder": "Left Paths",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": 135.0
+    "rotation": -140.133
   },
   "useDefaultConstraints": true
 }

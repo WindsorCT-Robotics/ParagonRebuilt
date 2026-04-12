@@ -145,6 +145,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 TunerConstants.BackLeft,
                                 TunerConstants.BackRight);
                 resetGyro();
+                resetPose(new Pose2d());
+                
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 

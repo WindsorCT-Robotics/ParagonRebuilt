@@ -6,9 +6,12 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.generated.HubUtil;
@@ -17,6 +20,8 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private final RobotContainer m_robotContainer;
   private final HubUtil hubUtil = HubUtil.getInstance();
+  private static final Alert LOW_BATTERY_WARNING = new Alert("Power", "Battery had below 12V!", AlertType.kWarning);
+  private static final Alert BROWNOUT_WARNING = new Alert("Power", "Battery BROWNING OUT!", AlertType.kWarning);
 
   public Robot() {
     SignalLogger.enableAutoLogging(false);
@@ -30,6 +35,8 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     m_robotContainer.updateLaunchParameters();
     hubUtil.periodic();
+    LOW_BATTERY_WARNING.set(RobotController.getBatteryVoltage() < 12);
+    BROWNOUT_WARNING.set(RobotController.getBatteryVoltage() <= RobotController.getBrownoutVoltage());
   }
 
   @Override

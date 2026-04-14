@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.HubUtil;
 import frc.robot.generated.launch_calculator.ShotCalculator;
@@ -103,24 +104,24 @@ public class RobotContainer implements Sendable {
                 hubCalculator = new ShotCalculator();
                 hubCalculator.loadLUTEntry(1.5, 1900, 1);
                 hubCalculator.loadLUTEntry(2.0, 2025, 1.05);
-                hubCalculator.loadLUTEntry(2.5, 2125, 1.1);
-                hubCalculator.loadLUTEntry(3, 2225, 1.15);
-                hubCalculator.loadLUTEntry(3.5, 2350, 1.2);
-                hubCalculator.loadLUTEntry(4, 2490, 1.25);
-                hubCalculator.loadLUTEntry(4.5, 2590, 1.3);
-                hubCalculator.loadLUTEntry(5, 2725, 1.35);
+                hubCalculator.loadLUTEntry(2.5, 2175, 1.1);
+                hubCalculator.loadLUTEntry(3, 2310, 1.15);
+                hubCalculator.loadLUTEntry(3.5, 2425, 1.2);
+                hubCalculator.loadLUTEntry(4, 2550, 1.25);
+                hubCalculator.loadLUTEntry(4.5, 2660, 1.3);
+                hubCalculator.loadLUTEntry(5, 2750, 1.35);
 
                 final ShotCalculator.Config config = new Config();
                 config.headingMaxErrorRad = Degrees.of(30).in(Radians);
                 snowBlowCalculator = new ShotCalculator();
-                snowBlowCalculator.loadLUTEntry(1.5, 1850, 1);
-                snowBlowCalculator.loadLUTEntry(2.0, 1975, 1.05);
-                snowBlowCalculator.loadLUTEntry(2.5, 2075, 1.1);
-                snowBlowCalculator.loadLUTEntry(3, 2175, 1.15);
-                snowBlowCalculator.loadLUTEntry(3.5, 2300, 1.2);
-                snowBlowCalculator.loadLUTEntry(4, 2440, 1.25);
-                snowBlowCalculator.loadLUTEntry(4.5, 2540, 1.3);
-                snowBlowCalculator.loadLUTEntry(5, 2700, 1.35);
+                snowBlowCalculator.loadLUTEntry(1.5, 1900, 1);
+                snowBlowCalculator.loadLUTEntry(2.0, 2025, 1.05);
+                snowBlowCalculator.loadLUTEntry(2.5, 2175, 1.1);
+                snowBlowCalculator.loadLUTEntry(3, 2310, 1.15);
+                snowBlowCalculator.loadLUTEntry(3.5, 2425, 1.2);
+                snowBlowCalculator.loadLUTEntry(4, 2550, 1.25);
+                snowBlowCalculator.loadLUTEntry(4.5, 2660, 1.3);
+                snowBlowCalculator.loadLUTEntry(5, 2750, 1.35);
 
                 bindings = new Bindings(
                                 drive,
@@ -217,11 +218,6 @@ public class RobotContainer implements Sendable {
                                                                 .alongWith(spindexer.indexFuel())
                                                                 .alongWith(bayDoor.agitateFuel())));
 
-                NamedCommands.registerCommand("scorenoaim",
-                launcher.launchFuel(() -> launchVelocityToHub())
-                                                .alongWith(kicker.kickFuel(() -> launchVelocityToHub())
-                                                                .alongWith(spindexer.indexFuel())
-                                                                .alongWith(bayDoor.agitateFuel())));
                 NamedCommands.registerCommand("baydooropen", bayDoor.open());
                 NamedCommands.registerCommand("baydoorclose", bayDoor.close());
                 NamedCommands.registerCommand("intakefuel", intake.intakeFuel());
@@ -343,7 +339,7 @@ public class RobotContainer implements Sendable {
                                                 .withName("Agitate Intake Fuel To Hub"));
 
                 bindings.cmd_autoScore_indexFuel
-                                .whileTrue(spindexer.indexFuelAlgorithim()
+                                .whileTrue(spindexer.indexFuel()
                                                 .withName("Index Fuel To Hub"));
 
                 bindings.t_autoScore
@@ -389,10 +385,10 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindPartialManualScore() {
-                bindings.cmd_partialManualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel());
-                bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel());
-                bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel());
-                bindings.t_partialManualScore.whileTrue(drive.aimTo(moveX, moveY, () -> angleToHub()));
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("smartDashboardLaunchFuel"));
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("smartDashboardKickFuel"));
+                bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Index Fuel"));
+                bindings.t_partialManualScore.whileTrue(drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF(), MAX_SPEED_LAUNCH));
         }
 
         private void bindManualScore() {

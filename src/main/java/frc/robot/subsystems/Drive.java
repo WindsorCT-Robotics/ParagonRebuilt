@@ -60,7 +60,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.GeneratedDrive;
 import frc.robot.generated.LimelightHelpers;
@@ -145,6 +144,8 @@ public class Drive extends GeneratedDrive implements Sendable {
                                 TunerConstants.BackLeft,
                                 TunerConstants.BackRight);
                 resetGyro();
+                resetPose();
+                
                 SendableRegistry.addLW(this, "Subsystems/" + name, "Subsystems/" + name);
                 CommandScheduler.getInstance().registerSubsystem(this);
 
@@ -165,9 +166,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                 launcherVision = new LauncherVision(
                                 "limelight-launch",
                                 new Pose3d(
-                                                Inches.of(-7.3),
-                                                Inches.of(-12.3),
-                                                Inches.of(20.3),
+                                                Inches.of(-7.37),
+                                                Inches.of(-12.26),
+                                                Inches.of(20.193),
                                                 new Rotation3d(
                                                                 Degrees.zero(),
                                                                 Degrees.of(25),
@@ -205,9 +206,9 @@ public class Drive extends GeneratedDrive implements Sendable {
                 backLauncherVision = new LauncherVision(
                                 "limelight-reverse",
                                 new Pose3d(
-                                                Inches.of(-7.3),
-                                                Inches.of(-7.5),
-                                                Inches.of(20.3),
+                                                Inches.of(-7.84),
+                                                Inches.of(-7.37),
+                                                Inches.of(20.193),
                                                 new Rotation3d(
                                                                 Degrees.zero(),
                                                                 Degrees.of(25),
@@ -341,14 +342,6 @@ public class Drive extends GeneratedDrive implements Sendable {
         public Angle getAngle() {
                 Angle rawGyroAngle = getPigeon2().getYaw().getValue();
                 return AngleUtil.wrap(rawGyroAngle);
-        }
-
-        public Translation2d getHubDirection(Alliance alliance) {
-                if (alliance == Alliance.Blue) {
-                        return new Translation2d(1, 0);
-                } else {
-                        return new Translation2d(-1, 0);
-                }
         }
 
         public SwerveModuleState[] getSwerveModuleStates() {
@@ -682,6 +675,14 @@ public class Drive extends GeneratedDrive implements Sendable {
         }
 
         public Command resetGyroCommand() {
-                return Commands.runOnce(this::resetGyro);
+                return runOnce(this::resetGyro);
+        }
+
+        public void resetPose() {
+                resetPose(new Pose2d());
+        }
+
+        public Command resetPoseCommand() {
+                return runOnce(this::resetPose);
         }
 }

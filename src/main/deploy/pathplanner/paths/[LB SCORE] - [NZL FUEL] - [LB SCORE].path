@@ -1,0 +1,194 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.246125827814569,
+        "y": 5.6
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.420304865630362,
+        "y": 5.731185992272347
+      },
+      "isLocked": false,
+      "linkedName": "[LB SCORE]"
+    },
+    {
+      "anchor": {
+        "x": 5.802,
+        "y": 5.6
+      },
+      "prevControl": {
+        "x": 4.404907837670857,
+        "y": 5.289606917915568
+      },
+      "nextControl": {
+        "x": 7.113297553606199,
+        "y": 5.8913320253082295
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.301,
+        "y": 5.581
+      },
+      "prevControl": {
+        "x": 8.01979724221449,
+        "y": 5.781668851042081
+      },
+      "nextControl": {
+        "x": 8.70467698845559,
+        "y": 5.292932421632585
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.301,
+        "y": 3.983
+      },
+      "prevControl": {
+        "x": 8.629100825107665,
+        "y": 4.21945971962451
+      },
+      "nextControl": {
+        "x": 7.805873593159885,
+        "y": 3.626166239214162
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.312,
+        "y": 4.179
+      },
+      "prevControl": {
+        "x": 6.632230848735985,
+        "y": 3.753869518222545
+      },
+      "nextControl": {
+        "x": 6.161584578737246,
+        "y": 4.378687758879577
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.802,
+        "y": 5.076
+      },
+      "prevControl": {
+        "x": 6.217318476305941,
+        "y": 4.2385758220540435
+      },
+      "nextControl": {
+        "x": 5.522900392927882,
+        "y": 5.638760320937987
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.621,
+        "y": 5.797
+      },
+      "prevControl": {
+        "x": 4.868821738189657,
+        "y": 5.764069982073226
+      },
+      "nextControl": {
+        "x": 4.178673732797432,
+        "y": 5.855775360123235
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.246125827814569,
+        "y": 5.6
+      },
+      "prevControl": {
+        "x": 3.5692023282688616,
+        "y": 5.746066232247394
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "[LB SCORE]"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.34905660377358494,
+      "rotationDegrees": 45.0
+    },
+    {
+      "waypointRelativePos": 1.2452830188679247,
+      "rotationDegrees": -20.30898471506777
+    },
+    {
+      "waypointRelativePos": 3.2924528301886875,
+      "rotationDegrees": 176.9953664487915
+    },
+    {
+      "waypointRelativePos": 4.566037735849066,
+      "rotationDegrees": 123.29696191493824
+    },
+    {
+      "waypointRelativePos": 5.55,
+      "rotationDegrees": -135.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "baydoorclose",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydoorclose"
+        }
+      }
+    },
+    {
+      "name": "baydooropen",
+      "waypointRelativePos": 0.9048473967684023,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": true
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": -144.1988414618018
+  },
+  "reversed": false,
+  "folder": "Left Paths",
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": -144.1988414618018
+  },
+  "useDefaultConstraints": true
+}

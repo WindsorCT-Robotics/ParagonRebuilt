@@ -3,55 +3,44 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.559,
-        "y": 7.418129139072849
+        "x": 5.816977272727272,
+        "y": 5.6
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.559,
-        "y": 7.418129139072849
+        "x": 5.550220239612023,
+        "y": 5.592881118727603
       },
       "isLocked": false,
-      "linkedName": "[TL SCORE]"
+      "linkedName": "[LB NZ]"
     },
     {
       "anchor": {
-        "x": 2.3546192052980133,
-        "y": 6.690564569536424
+        "x": 3.246,
+        "y": 5.6
       },
       "prevControl": {
-        "x": 2.70692880794702,
-        "y": 7.054346854304637
-      },
-      "nextControl": {
-        "x": 2.0023096026490066,
-        "y": 6.326782284768212
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 0.65,
-        "y": 5.963
-      },
-      "prevControl": {
-        "x": 1.65,
-        "y": 5.963
+        "x": 6.093914391402318,
+        "y": 5.605373084226001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[DEPOT]"
+      "linkedName": "[LB SCORE]"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.75,
+      "rotationDegrees": -140.133
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.7705570291777093,
-      "maxWaypointRelativePos": 2.0,
+      "minWaypointRelativePos": 0.6768402154398548,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 0.75,
+        "maxVelocity": 1.5,
         "maxAcceleration": 4.0,
         "maxAngularVelocity": 360.0,
         "maxAngularAcceleration": 720.0,
@@ -61,24 +50,36 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "baydooropen",
+      "waypointRelativePos": 0.1,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 4.0,
     "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
-    "unlimited": false
+    "unlimited": true
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 0.0,
+    "rotation": -144.199
   },
   "reversed": false,
   "folder": "Left Paths",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -165.69484864295003
+    "velocity": 2.0,
+    "rotation": -140.133
   },
   "useDefaultConstraints": true
 }

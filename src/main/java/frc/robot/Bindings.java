@@ -109,7 +109,7 @@ public class Bindings {
                 t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
                                 "prepareFuel");
  
-                t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "unjam");
+                t_unjam = new SendableTrigger(t_manualUnjam.and(() -> !DriverStation.isAutonomous()), "unjam");
 
                 // Command Triggers
                 cmd_autoScore_launchFuel = new SendableTrigger(

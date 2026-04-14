@@ -34,7 +34,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.HubUtil;
 import frc.robot.generated.launch_calculator.ShotCalculator;
@@ -113,7 +112,7 @@ public class RobotContainer implements Sendable {
 
                 final ShotCalculator.Config config = new Config();
                 config.headingMaxErrorRad = Degrees.of(30).in(Radians);
-                snowBlowCalculator = new ShotCalculator();
+                snowBlowCalculator = new ShotCalculator(config);
                 snowBlowCalculator.loadLUTEntry(1.5, 1900, 1);
                 snowBlowCalculator.loadLUTEntry(2.0, 2025, 1.05);
                 snowBlowCalculator.loadLUTEntry(2.5, 2175, 1.1);
@@ -385,9 +384,9 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindPartialManualScore() {
-                bindings.cmd_partialManualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("smartDashboardLaunchFuel"));
-                bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("smartDashboardKickFuel"));
-                bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Index Fuel"));
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(launcher.smartDashboardLaunchFuel().withName("smartDashboardLaunchFuel"));
+                bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel().withName("smartDashboardKickFuel"));
+                bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel().withName("Index Fuel"));
                 bindings.t_partialManualScore.whileTrue(drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF(), MAX_SPEED_LAUNCH));
         }
 

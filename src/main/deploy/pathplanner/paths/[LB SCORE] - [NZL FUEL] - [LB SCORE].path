@@ -112,16 +112,16 @@
     },
     {
       "anchor": {
-        "x": 3.246125827814569,
+        "x": 3.0,
         "y": 5.6
       },
       "prevControl": {
-        "x": 3.5692023282688616,
+        "x": 3.3230765004542926,
         "y": 5.746066232247394
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "[LB SCORE]"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
@@ -150,19 +150,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "baydoorclose",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "baydoorclose"
-        }
-      }
-    },
-    {
       "name": "baydooropen",
-      "waypointRelativePos": 0.9048473967684023,
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

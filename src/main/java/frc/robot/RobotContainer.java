@@ -317,6 +317,8 @@ public class RobotContainer implements Sendable {
                 bindings.t_decrementLauncherOffset
                                 .onTrue(new InstantCommand(() -> hubCalculator.adjustOffset(RPM.of(-25).in(RPM))));
 
+                bindings.cmd_bayDoor_agitation.whileTrue(bayDoor.removeStuckFuel());
+
                 bindings.t_resetGyro.onTrue(drive.resetGyroCommand());
         }
 

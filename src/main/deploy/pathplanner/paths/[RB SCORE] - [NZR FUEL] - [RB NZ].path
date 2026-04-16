@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.246,
+        "x": 3.0,
         "y": 2.469326
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.8940860888705418,
+        "x": 3.6480860888705418,
         "y": 2.6693139781672537
       },
       "isLocked": false,
@@ -121,7 +121,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "[RB SCORE]"
     }
   ],
   "rotationTargets": [
@@ -149,10 +149,10 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 5.680430879712747,
-      "maxWaypointRelativePos": 7.0,
+      "minWaypointRelativePos": 5.718132854578096,
+      "maxWaypointRelativePos": 6.2459605026929985,
       "constraints": {
-        "maxVelocity": 1.5,
+        "maxVelocity": 2.0,
         "maxAcceleration": 4.0,
         "maxAngularVelocity": 360.0,
         "maxAngularAcceleration": 720.0,
@@ -180,13 +180,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -46.93293581061828
+    "rotation": -51.26391313625349
   },
   "reversed": false,
   "folder": "Right Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -46.93293581061828
+    "rotation": -51.26391313625349
   },
   "useDefaultConstraints": true
 }

@@ -67,7 +67,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withSensorDirection(
                                                                                         SensorDirectionValue.Clockwise_Positive)
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(-0.394287109375))));
+                                                                                        Rotations.of(0.772))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",

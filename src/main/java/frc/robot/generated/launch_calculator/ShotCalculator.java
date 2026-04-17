@@ -634,6 +634,13 @@ public class ShotCalculator implements Sendable {
     return rpmMap.get(distance);
   }
 
+  // RPM Of launcher with offset.
+  public double getRPM(double distance) {
+    if (shotLUT != null)
+      return shotLUT.getRPM(distance) + rpmOffset;
+    return rpmMap.get(distance) + rpmOffset;
+  }
+
   /**
    * Reset the warm start state. Call this after a pose reset so the solver
    * doesn't use stale data.

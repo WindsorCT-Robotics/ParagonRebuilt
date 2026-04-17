@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
@@ -109,6 +110,7 @@ public class RobotContainer implements Sendable {
                 hubCalculator.loadLUTEntry(4, 2475, 1.25);
                 hubCalculator.loadLUTEntry(4.5, 2635, 1.3);
                 hubCalculator.loadLUTEntry(5, 2775, 1.35);
+                hubCalculator.loadLUTEntry(5.5, 2825, 1.4);
 
                 final ShotCalculator.Config config = new Config();
                 config.headingMaxErrorRad = Degrees.of(30).in(Radians);
@@ -121,6 +123,7 @@ public class RobotContainer implements Sendable {
                 snowBlowCalculator.loadLUTEntry(4, 2475, 1.25);
                 snowBlowCalculator.loadLUTEntry(4.5, 2635, 1.3);
                 snowBlowCalculator.loadLUTEntry(5, 2775, 1.35);
+                snowBlowCalculator.loadLUTEntry(5.5, 2825, 1.4);
 
                 bindings = new Bindings(
                                 drive,
@@ -287,6 +290,7 @@ public class RobotContainer implements Sendable {
                 bindAutoScore();
                 bindSnowBlow();
                 bindPartialManualScore();
+                bindTowerScore();
                 bindManualScore();
 
                 bindings.cmd_manualUnjam.whileTrue(
@@ -390,6 +394,14 @@ public class RobotContainer implements Sendable {
                 bindings.cmd_partialManualScore_launchFuel.whileTrue(kicker.smartDashboardKickFuel().withName("smartDashboardKickFuel"));
                 bindings.cmd_partialManualScore_indexFuel.whileTrue(spindexer.indexFuel().withName("Index Fuel"));
                 bindings.t_partialManualScore.whileTrue(drive.aimToWithFF(moveX, moveY, () -> angleToHub(), () -> angleToHubWithFF(), MAX_SPEED_LAUNCH));
+        }
+
+        private void bindTowerScore() {
+                bindings.cmd_towerScore_launchFuel.whileTrue(launcher.launchFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters)))));
+                bindings.cmd_towerScore_launchFuel.whileTrue(kicker.kickFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters)))));
+                bindings.cmd_towerScore_launchFuel.whileTrue(intake.intakeFuel());
+                bindings.cmd_towerScore_indexFuel.whileTrue(spindexer.indexFuel());
+                bindings.cmd_towerScore_indexFuel.whileTrue(bayDoor.agitateFuel());
         }
 
         private void bindManualScore() {

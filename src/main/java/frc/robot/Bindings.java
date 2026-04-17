@@ -22,6 +22,7 @@ public class Bindings {
         public final SendableTrigger t_autoScore;
         public final SendableTrigger t_manualScore;
         public final SendableTrigger t_partialManualScore;
+        public final SendableTrigger t_towerScore;
         public final SendableTrigger t_autoSnowBlow;
         public final SendableTrigger t_manualUnjam;
         public final SendableTrigger t_incrementLauncherOffset;
@@ -50,6 +51,8 @@ public class Bindings {
         public final SendableTrigger cmd_snowBlow_indexFuel;
         public final SendableTrigger cmd_partialManualScore_launchFuel;
         public final SendableTrigger cmd_partialManualScore_indexFuel;
+        public final SendableTrigger cmd_towerScore_launchFuel;
+        public final SendableTrigger cmd_towerScore_indexFuel;
         public final SendableTrigger cmd_manualScore_launchFuel;
         public final SendableTrigger cmd_manualScore_indexFuel;
         public final SendableTrigger cmd_autoIntake;
@@ -93,6 +96,7 @@ public class Bindings {
                 t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "switchRelativeReference");
                 t_resetGyro = new SendableTrigger(driver.povDown(), "resetGyro");
+                t_towerScore = new SendableTrigger(driver.a(), "towerScore");
 
                 // Conditional Triggers
                 t_hubLaunchValid = new SendableTrigger(
@@ -104,7 +108,7 @@ public class Bindings {
                                                 .orElse(false),
                                 "snowBlowValid");
 
-                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
+                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore).or(t_towerScore),
                                 "attemptToScore");
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> !DriverStation.isAutonomous()),
                                 "onAllianceSide");
@@ -145,6 +149,17 @@ public class Bindings {
                                 .and(t_unjam.negate())
                                 .and(t_bayDoorAgitation.negate()),
                                 "partialManualScore_indexFuel");
+
+                cmd_towerScore_launchFuel = new SendableTrigger(
+                                t_towerScore
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
+                                "towerScore_launchFuel");
+                cmd_towerScore_indexFuel = new SendableTrigger(
+                                t_towerScore
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
+                                "towerScore_indexFuel");
 
                 cmd_manualScore_launchFuel = new SendableTrigger(t_manualScore, "manualScore_launchFuel");
                 cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore

@@ -123,7 +123,7 @@ public class RobotContainer implements Sendable {
                 snowBlowCalculator.loadLUTEntry(4, 2475, 1.25);
                 snowBlowCalculator.loadLUTEntry(4.5, 2635, 1.3);
                 snowBlowCalculator.loadLUTEntry(5, 2775, 1.35);
-                snowBlowCalculator.loadLUTEntry(5.5, 2825, 1.4);
+                snowBlowCalculator.loadLUTEntry(5.5, 3025, 1.4);
 
                 bindings = new Bindings(
                                 drive,
@@ -397,8 +397,8 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindTowerScore() {
-                bindings.cmd_towerScore_launchFuel.whileTrue(launcher.launchFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters)))));
-                bindings.cmd_towerScore_launchFuel.whileTrue(kicker.kickFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters)))));
+                bindings.cmd_towerScore_launchFuel.whileTrue(launcher.launchFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters) + 125))));
+                bindings.cmd_towerScore_launchFuel.whileTrue(kicker.kickFuel(() -> RPM.of(hubCalculator.getRPM(Meters.of(4.23).in(Meters) + 125))));
                 bindings.cmd_towerScore_launchFuel.whileTrue(intake.intakeFuel());
                 bindings.cmd_towerScore_indexFuel.whileTrue(spindexer.indexFuel());
                 bindings.cmd_towerScore_indexFuel.whileTrue(bayDoor.agitateFuel());

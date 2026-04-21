@@ -22,6 +22,7 @@ public class Bindings {
         public final SendableTrigger t_autoScore;
         public final SendableTrigger t_manualScore;
         public final SendableTrigger t_partialManualScore;
+        public final SendableTrigger t_towerScore;
         public final SendableTrigger t_autoSnowBlow;
         public final SendableTrigger t_manualUnjam;
         public final SendableTrigger t_incrementLauncherOffset;
@@ -31,6 +32,7 @@ public class Bindings {
         public final SendableTrigger t_autoShuttle;
         public final SendableTrigger t_openBayDoor;
         public final SendableTrigger t_closeBayDoor;
+        public final SendableTrigger t_bayDoorAgitation;
         public final SendableTrigger t_switchRelativeReference;
         public final SendableTrigger t_resetGyro;
 
@@ -49,6 +51,8 @@ public class Bindings {
         public final SendableTrigger cmd_snowBlow_indexFuel;
         public final SendableTrigger cmd_partialManualScore_launchFuel;
         public final SendableTrigger cmd_partialManualScore_indexFuel;
+        public final SendableTrigger cmd_towerScore_launchFuel;
+        public final SendableTrigger cmd_towerScore_indexFuel;
         public final SendableTrigger cmd_manualScore_launchFuel;
         public final SendableTrigger cmd_manualScore_indexFuel;
         public final SendableTrigger cmd_autoIntake;
@@ -58,6 +62,7 @@ public class Bindings {
         public final SendableTrigger cmd_prepareFuel;
         public final SendableTrigger cmd_bayDoor_open;
         public final SendableTrigger cmd_bayDoor_close;
+        public final SendableTrigger cmd_bayDoor_agitation;
 
         public Bindings(
                         Drive drive,
@@ -87,9 +92,11 @@ public class Bindings {
                 t_autoShuttle = new SendableTrigger(driver.b(), "autoShuttle");
                 t_openBayDoor = new SendableTrigger(operator.povDown(), "openBayDoor");
                 t_closeBayDoor = new SendableTrigger(operator.povUp(), "closeBayDoor");
+                t_bayDoorAgitation = new SendableTrigger(operator.povRight(), "bayDoorAgitation");
                 t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "switchRelativeReference");
                 t_resetGyro = new SendableTrigger(driver.povDown(), "resetGyro");
+                t_towerScore = new SendableTrigger(driver.a(), "towerScore");
 
                 // Conditional Triggers
                 t_hubLaunchValid = new SendableTrigger(
@@ -101,15 +108,15 @@ public class Bindings {
                                                 .orElse(false),
                                 "snowBlowValid");
 
-                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore),
+                t_attemptToScore = new SendableTrigger(t_autoScore.or(t_partialManualScore).or(t_manualScore).or(t_towerScore),
                                 "attemptToScore");
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> !DriverStation.isAutonomous()),
                                 "onAllianceSide");
 
                 t_prepareFuel = new SendableTrigger(t_onAllianceSide.and(t_attemptToScore.negate()),
                                 "prepareFuel");
- 
-                t_unjam = new SendableTrigger(() -> t_manualUnjam.getAsBoolean() && DriverStation.isTeleop(), "unjam");
+
+                t_unjam = new SendableTrigger(t_manualUnjam.and(() -> !DriverStation.isAutonomous()), "unjam");
 
                 // Command Triggers
                 cmd_autoScore_launchFuel = new SendableTrigger(
@@ -120,7 +127,8 @@ public class Bindings {
                                 t_autoScore
                                                 .and(t_hubLaunchValid)
                                                 .and(t_onAllianceSide)
-                                                .and(t_unjam.negate()),
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
                                 "autoScore_indexFuel");
                 cmd_snowBlow_launchFuel = new SendableTrigger(
                                 t_autoSnowBlow
@@ -131,34 +139,53 @@ public class Bindings {
                                 t_autoSnowBlow
                                                 .and(t_onAllianceSide.negate())
                                                 .and(t_snowBlowValid)
-                                                .and(t_unjam.negate()),
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
                                 "snowBlow_indexFuel");
 
                 cmd_partialManualScore_launchFuel = new SendableTrigger(t_partialManualScore,
                                 "partialManualScore_launchFuel");
-                cmd_partialManualScore_indexFuel = new SendableTrigger(t_partialManualScore.and(t_unjam.negate()),
+                cmd_partialManualScore_indexFuel = new SendableTrigger(t_partialManualScore
+                                .and(t_unjam.negate())
+                                .and(t_bayDoorAgitation.negate()),
                                 "partialManualScore_indexFuel");
 
+                cmd_towerScore_launchFuel = new SendableTrigger(
+                                t_towerScore
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
+                                "towerScore_launchFuel");
+                cmd_towerScore_indexFuel = new SendableTrigger(
+                                t_towerScore
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
+                                "towerScore_indexFuel");
+
                 cmd_manualScore_launchFuel = new SendableTrigger(t_manualScore, "manualScore_launchFuel");
-                cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore.and(t_manualUnjam.negate()),
+                cmd_manualScore_indexFuel = new SendableTrigger(t_manualScore
+                                .and(t_manualUnjam.negate())
+                                .and(t_bayDoorAgitation.negate()),
                                 "manualScore_indexFuel");
 
                 cmd_autoIntake = new SendableTrigger(
                                 t_autoIntake.getTrigger()
                                                 .and(t_autoShuttle.negate())
                                                 .and(t_attemptToScore.negate())
-                                                .and(t_autoSnowBlow.negate()),
+                                                .and(t_autoSnowBlow.negate())
+                                                .and(t_bayDoorAgitation.negate()),
                                 "autoIntake");
                 cmd_autoShuttle = new SendableTrigger(
                                 t_autoShuttle
-                                                .and(t_attemptToScore.negate()),
+                                                .and(t_attemptToScore.negate())
+                                                .and(t_bayDoorAgitation.negate()),
                                 "autoShuttle");
                 cmd_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "switchRelativeReference");
                 cmd_manualUnjam = new SendableTrigger(t_manualUnjam, "manualUnjam_cmd");
                 cmd_prepareFuel = new SendableTrigger(t_prepareFuel, "prepareFuel");
-                cmd_bayDoor_open = new SendableTrigger(t_openBayDoor, "bayDoor_open");
-                cmd_bayDoor_close = new SendableTrigger(t_closeBayDoor, "bayDoor_close");
+                cmd_bayDoor_open = new SendableTrigger(t_openBayDoor.and(t_attemptToScore.negate()), "bayDoor_open");
+                cmd_bayDoor_close = new SendableTrigger(t_closeBayDoor.and(t_attemptToScore.negate()), "bayDoor_close");
+                cmd_bayDoor_agitation = new SendableTrigger(t_bayDoorAgitation, "bayDoor_agitation");
         }
 
         public void initSmartdashBoard(String dir) {
@@ -172,8 +199,10 @@ public class Bindings {
                 SmartDashboard.putData(category + cmd_manualScore_indexFuel.getName(), cmd_manualScore_indexFuel);
                 SmartDashboard.putData(category + cmd_manualScore_launchFuel.getName(), cmd_manualScore_launchFuel);
                 SmartDashboard.putData(category + cmd_manualUnjam.getName(), cmd_manualUnjam);
-                SmartDashboard.putData(category + cmd_partialManualScore_indexFuel.getName(), cmd_partialManualScore_indexFuel);
-                SmartDashboard.putData(category + cmd_partialManualScore_launchFuel.getName(), cmd_partialManualScore_launchFuel);
+                SmartDashboard.putData(category + cmd_partialManualScore_indexFuel.getName(),
+                                cmd_partialManualScore_indexFuel);
+                SmartDashboard.putData(category + cmd_partialManualScore_launchFuel.getName(),
+                                cmd_partialManualScore_launchFuel);
                 SmartDashboard.putData(category + cmd_prepareFuel.getName(), cmd_prepareFuel);
                 SmartDashboard.putData(category + cmd_snowBlow_indexFuel.getName(), cmd_snowBlow_indexFuel);
                 SmartDashboard.putData(category + cmd_snowBlow_launchFuel.getName(), cmd_snowBlow_launchFuel);

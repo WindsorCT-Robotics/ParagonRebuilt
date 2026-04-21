@@ -32,7 +32,7 @@ public class Kicker extends SubsystemBase {
                     .withMotorOutput(new MotorOutputConfigs()
                             .withInverted(InvertedValue.CounterClockwise_Positive)
                             .withNeutralMode(NeutralModeValue.Brake))
-                    .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)))
+                    .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(50)))
                     .withMotionMagic(new MotionMagicConfigs()
                             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2000)))
                     .withSlot0(new Slot0Configs()

@@ -21,13 +21,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[TL] - [NZL FUEL] - [LB NZ]"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "[LB NZ] - [LB SCORE]"
+                        "pathName": "[H] - [AZM SCORE]"
                       }
                     },
                     {
@@ -37,7 +31,7 @@
                           {
                             "type": "wait",
                             "data": {
-                              "waitTime": 5.0
+                              "waitTime": 4.0
                             }
                           },
                           {
@@ -52,7 +46,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[LB SCORE] - [NZL FUEL] - [LB SCORE]"
+                        "pathName": "[AZM SCORE] - [DEPOT INTAKE]"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "[DEPOT INTAKE] - [DEPOT SCORE]"
                       }
                     },
                     {

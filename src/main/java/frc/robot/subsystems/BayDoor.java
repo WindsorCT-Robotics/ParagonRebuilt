@@ -67,7 +67,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withSensorDirection(
                                                                                         SensorDirectionValue.Clockwise_Positive)
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(-0.394287109375))));
+                                                                                        Rotations.of(0.772))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",
@@ -204,6 +204,10 @@ public class BayDoor extends SubsystemBase {
         }
 
         public Command agitateFuel() {
-                return open().andThen(new WaitCommand(Seconds.one())).andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly();
+                return open().andThen(new WaitCommand(Seconds.one())).andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly().andThen(open());
+        }
+
+        public Command removeStuckFuel() {
+                return open().andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly();
         }
 }

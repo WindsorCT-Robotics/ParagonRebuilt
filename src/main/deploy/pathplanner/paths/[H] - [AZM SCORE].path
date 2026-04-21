@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.580397727272727,
+        "y": 4.034663
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.330397727272727,
+        "y": 4.034663
+      },
+      "isLocked": false,
+      "linkedName": "[H Start]"
+    },
+    {
+      "anchor": {
+        "x": 2.539409090909091,
+        "y": 4.034663
+      },
+      "prevControl": {
+        "x": 2.789409090909091,
+        "y": 4.034663
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "[AZM SCORE]"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -95.7639553970741
+  },
+  "reversed": false,
+  "folder": "Middle Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

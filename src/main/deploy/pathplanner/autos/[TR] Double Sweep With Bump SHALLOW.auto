@@ -21,13 +21,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[TL] - [NZL FUEL] - [LB NZ]"
+                        "pathName": "[TR] - [NZR FUEL] - [RB NZ]"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[LB NZ] - [LB SCORE]"
+                        "pathName": "[RB NZ] - [RB SCORE]"
                       }
                     },
                     {
@@ -52,7 +52,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "[LB SCORE] - [NZL FUEL] - [LB SCORE]"
+                        "pathName": "[RB SCORE] - [NZR FUEL] - [RB NZ] SHALLOW"
                       }
                     },
                     {

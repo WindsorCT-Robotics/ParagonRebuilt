@@ -93,6 +93,8 @@ public class RobotContainer implements Sendable {
                         throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
                 }
 
+                drive.seedFieldCentric();
+
                 intake = new Intake(Intake.class.getSimpleName());
                 bayDoor = new BayDoor(BayDoor.class.getSimpleName());
                 spindexer = new Spindexer(Spindexer.class.getSimpleName());
@@ -139,10 +141,7 @@ public class RobotContainer implements Sendable {
 
                 initPathPlannerCommands();
                 autoChooser = AutoBuilder.buildAutoChooser();
-
-                drive.seedFieldCentric();
                 initSmartdashBoard();
-
                 bindCommands();
         }
 

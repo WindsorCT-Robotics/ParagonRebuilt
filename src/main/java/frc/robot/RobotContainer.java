@@ -140,6 +140,7 @@ public class RobotContainer implements Sendable {
                 initPathPlannerCommands();
                 autoChooser = AutoBuilder.buildAutoChooser();
 
+                drive.seedFieldCentric();
                 initSmartdashBoard();
 
                 bindCommands();

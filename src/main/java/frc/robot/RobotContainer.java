@@ -344,7 +344,7 @@ public class RobotContainer implements Sendable {
                                                 .withName("Agitate Intake Fuel To Hub"));
 
                 bindings.cmd_autoScore_indexFuel
-                                .whileTrue(spindexer.indexFuel()
+                                .whileTrue(spindexer.smartDashboardIndexFuel()
                                                 .withName("Index Fuel To Hub"));
 
                 bindings.t_autoScore

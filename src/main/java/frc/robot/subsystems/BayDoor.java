@@ -55,8 +55,10 @@ public class BayDoor extends SubsystemBase {
                                                         new MagnetSensorConfigs()
                                                                         .withSensorDirection(
                                                                                         SensorDirectionValue.CounterClockwise_Positive)
+                                                                        .withAbsoluteSensorDiscontinuityPoint(
+                                                                                        Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(0.18017578125))));
+                                                                                        Rotations.of(0.178466796875))));
 
         private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
                         "Right Bay Door Encoder",
@@ -66,8 +68,10 @@ public class BayDoor extends SubsystemBase {
                                                         new MagnetSensorConfigs()
                                                                         .withSensorDirection(
                                                                                         SensorDirectionValue.Clockwise_Positive)
+                                                                        .withAbsoluteSensorDiscontinuityPoint(
+                                                                                        Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(0.772))));
+                                                                                        Rotations.of(0.8051765))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",
@@ -79,7 +83,7 @@ public class BayDoor extends SubsystemBase {
                                         .withSlot0(SLOT0_CONFIGS)
                                         .withCurrentLimits(currentLimitsConfigs)
                                         .withFeedback(new FeedbackConfigs()
-                                                        .withSyncCANcoder(leftAbsoluteEncoder.getEncoder())
+                                                        .withFusedCANcoder(leftAbsoluteEncoder.getEncoder())
                                                         .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
         private final BayDoorMotor rightMotor = new BayDoorMotor(
@@ -92,7 +96,7 @@ public class BayDoor extends SubsystemBase {
                                         .withSlot0(SLOT0_CONFIGS)
                                         .withCurrentLimits(currentLimitsConfigs)
                                         .withFeedback(new FeedbackConfigs()
-                                                        .withSyncCANcoder(rightAbsoluteEncoder.getEncoder())
+                                                        .withFusedCANcoder(rightAbsoluteEncoder.getEncoder())
                                                         .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
         private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.225);
@@ -204,7 +208,9 @@ public class BayDoor extends SubsystemBase {
         }
 
         public Command agitateFuel() {
-                return open().andThen(new WaitCommand(Seconds.one())).andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly().andThen(open());
+                return open().andThen(new WaitCommand(Seconds.one()))
+                                .andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly()
+                                .andThen(open());
         }
 
         public Command removeStuckFuel() {

@@ -208,7 +208,7 @@ public class BayDoor extends SubsystemBase {
         }
 
         public Command agitateFuel() {
-                return open().andThen(new WaitCommand(Seconds.one()))
+                return open().raceWith(new WaitCommand(Seconds.of(0.5)))
                                 .andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly()
                                 .andThen(open());
         }

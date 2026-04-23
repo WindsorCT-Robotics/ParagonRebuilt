@@ -58,7 +58,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withAbsoluteSensorDiscontinuityPoint(
                                                                                         Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(0.178466796875))));
+                                                                                        Rotations.of(-0.8173828125))));
 
         private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
                         "Right Bay Door Encoder",
@@ -71,7 +71,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withAbsoluteSensorDiscontinuityPoint(
                                                                                         Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(0.8051765))));
+                                                                                        Rotations.of(-0.225341796875))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",

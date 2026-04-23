@@ -695,5 +695,6 @@ public class ShotCalculator implements Sendable {
     builder.addDoubleProperty("Distance From Target (M)", () -> Round.round(launchParameters.solvedDistanceM, 2), null);
     builder.addDoubleProperty("Time Of Flight (s)", () -> Round.round(launchParameters.timeOfFlightSec, 2), null);
     builder.addDoubleProperty("Launch Solver Iterations", () -> launchParameters.iterationsUsed, null);
+    builder.addDoubleProperty("Launch Offset (RPM)", () -> Round.round(rpmOffset, 2), null);
   }
 }

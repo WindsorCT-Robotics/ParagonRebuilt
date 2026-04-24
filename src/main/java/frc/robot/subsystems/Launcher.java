@@ -30,12 +30,12 @@ import frc.robot.hardware.motors.LauncherMotor;
 
 public class Launcher extends SubsystemBase {
     private static final Slot0Configs slot0Configs = new Slot0Configs()
-            .withKP(0.04)
+            .withKP(0.025)
             .withKS(0.0185)
             .withKV(0.0098);
 
     private static final MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs()
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2500));
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(150));
 
     private static final NeutralModeValue neutralModeValue = NeutralModeValue.Coast;
 

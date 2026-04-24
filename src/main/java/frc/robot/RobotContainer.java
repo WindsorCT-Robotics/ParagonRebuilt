@@ -111,21 +111,21 @@ public class RobotContainer implements Sendable {
                 lutEntries.add(new LUTEntry(Meters.of(2.5), RPM.of(2125), Seconds.of(1.1)));
                 lutEntries.add(new LUTEntry(Meters.of(3), RPM.of(2235), Seconds.of(1.15)));
                 lutEntries.add(new LUTEntry(Meters.of(3.5), RPM.of(2350), Seconds.of(1.2)));
-                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2475), Seconds.of(1.25)));
-                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2635), Seconds.of(1.3)));
+                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2550), Seconds.of(1.25)));
+                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2675), Seconds.of(1.3)));
                 lutEntries.add(new LUTEntry(Meters.of(5), RPM.of(2775), Seconds.of(1.35)));
-                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3050), Seconds.of(1.4)));
-
-
-                lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3150), Seconds.of(1.45)));
+                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3025), Seconds.of(1.4)));
+                lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3125), Seconds.of(1.45)));
                 lutEntries.add(new LUTEntry(Meters.of(6.5), RPM.of(3250), Seconds.of(1.5)));
                 lutEntries.add(new LUTEntry(Meters.of(7), RPM.of(3350), Seconds.of(1.55)));
-                lutEntries.add(new LUTEntry(Meters.of(7.5), RPM.of(3450), Seconds.of(1.6)));
-                lutEntries.add(new LUTEntry(Meters.of(8), RPM.of(3550), Seconds.of(1.65)));
-                lutEntries.add(new LUTEntry(Meters.of(8.5), RPM.of(3650), Seconds.of(1.7)));
-                lutEntries.add(new LUTEntry(Meters.of(9), RPM.of(3750), Seconds.of(1.75)));
-                lutEntries.add(new LUTEntry(Meters.of(9.5), RPM.of(3850), Seconds.of(1.8)));
-                lutEntries.add(new LUTEntry(Meters.of(10), RPM.of(3950), Seconds.of(1.85)));
+                lutEntries.add(new LUTEntry(Meters.of(7.5), RPM.of(3650), Seconds.of(1.6)));
+                lutEntries.add(new LUTEntry(Meters.of(8), RPM.of(3850), Seconds.of(1.65)));
+                lutEntries.add(new LUTEntry(Meters.of(8.5), RPM.of(3950), Seconds.of(1.7)));
+                lutEntries.add(new LUTEntry(Meters.of(9), RPM.of(4050), Seconds.of(1.75)));
+                lutEntries.add(new LUTEntry(Meters.of(9.5), RPM.of(4350), Seconds.of(1.8)));
+                lutEntries.add(new LUTEntry(Meters.of(10), RPM.of(4900), Seconds.of(1.85)));
+                // lutEntries.add(new LUTEntry(Meters.of(10.5), RPM.of(5300), Seconds.of(1.9)));
+                // lutEntries.add(new LUTEntry(Meters.of(11), RPM.of(5600), Seconds.of(1.95)));
 
                 hubCalculator = new ShotCalculator();
 

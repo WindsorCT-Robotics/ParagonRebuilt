@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.145959359629214,
-        "y": 2.2564462959605587
+        "x": 4.161545838518672,
+        "y": 2.469326
       },
       "isLocked": false,
       "linkedName": "[RB SCORE]"
@@ -88,8 +88,8 @@
         "y": 3.2637687733040774
       },
       "nextControl": {
-        "x": 4.545926303322689,
-        "y": 2.4613884002461863
+        "x": 5.341542136142614,
+        "y": 2.7981191245609414
       },
       "isLocked": false,
       "linkedName": null
@@ -100,12 +100,12 @@
         "y": 2.472
       },
       "prevControl": {
-        "x": 4.84663393665916,
-        "y": 2.5796537348524913
+        "x": 5.621,
+        "y": 2.472
       },
       "nextControl": {
-        "x": 4.355776185363074,
-        "y": 2.3454572704786827
+        "x": 4.327134836625251,
+        "y": 2.472
       },
       "isLocked": false,
       "linkedName": null
@@ -116,8 +116,8 @@
         "y": 2.469326
       },
       "prevControl": {
-        "x": 3.316483157991951,
-        "y": 2.4040908012225715
+        "x": 2.95,
+        "y": 2.469326
       },
       "nextControl": null,
       "isLocked": false,
@@ -130,16 +130,12 @@
       "rotationDegrees": -45.0
     },
     {
-      "waypointRelativePos": 1.6619496855345912,
+      "waypointRelativePos": 1.4232044198895144,
       "rotationDegrees": -7.6937421238598676
     },
     {
       "waypointRelativePos": 2.8946540880503147,
-      "rotationDegrees": 159.3215181883973
-    },
-    {
-      "waypointRelativePos": 3.5550314465408817,
-      "rotationDegrees": -161.63537074718448
+      "rotationDegrees": 145.9879432552123
     },
     {
       "waypointRelativePos": 5.55,

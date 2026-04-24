@@ -64,12 +64,12 @@ public class Launcher extends SubsystemBase {
                     .withSlot0(slot0Configs));
 
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
-    private static final AngularVelocity NEAR_TARGET_VELOCITY_THRESHHOLD = RPM.of(100);
+    private static final AngularVelocity NEAR_TARGET_VELOCITY_TOLERANCE = RPM.of(2000);
 
     private AngularVelocity smartDashboardLaunchVelocity = RotationsPerSecond.of(0);
     private AngularVelocity launcherOffset = RPM.of(0);
 
-    public final Trigger nearTargetRPM;
+    public final Trigger nearTargetVelocity;
 
     public Launcher(String name) {
         super("Subsystems/" + name);
@@ -79,8 +79,7 @@ public class Launcher extends SubsystemBase {
         addChild(getName(), leadMotor);
         addChild(getName(), followerMotor);
 
-        nearTargetRPM = new Trigger(
-                () -> leadMotor.getVelocity().isNear(leadMotor.getTargetVelocity(), NEAR_TARGET_VELOCITY_THRESHHOLD));
+        nearTargetVelocity = new Trigger(this::isNearTargetVelocity);
 
         initSmartDashboard();
     }
@@ -99,7 +98,7 @@ public class Launcher extends SubsystemBase {
                 () -> getSmartDashboardLaunchTargetVelocity().in(RPM),
                 velocity -> setSmartDashboardLaunchTargetVelocity(RPM.of(velocity)));
 
-        builder.addBooleanProperty("Near Target Velocity (RPM)", nearTargetRPM, null);
+        builder.addBooleanProperty("Near Target Velocity (RPM)", nearTargetVelocity, null);
 
         builder.addDoubleProperty("Power (Watts)", () -> getTotalPower().in(Watts), null);
     }
@@ -139,5 +138,15 @@ public class Launcher extends SubsystemBase {
 
     private void stop() {
         leadMotor.stop();
+    }
+
+    private boolean isNearTargetVelocity() {
+        AngularVelocity velocity = leadMotor.getVelocity().plus(followerMotor.getVelocity()).div(2);
+        AngularVelocity targetThreshold = leadMotor.getTargetVelocity()
+                .plus(followerMotor.getTargetVelocity())
+                .div(2)
+                .minus(NEAR_TARGET_VELOCITY_TOLERANCE);
+
+        return velocity.gte(targetThreshold);
     }
 }

@@ -64,32 +64,32 @@
     },
     {
       "anchor": {
-        "x": 6.497,
-        "y": 3.19
+        "x": 6.239556818181818,
+        "y": 3.303215909090909
       },
       "prevControl": {
-        "x": 6.73640840895213,
-        "y": 3.2619973174709282
+        "x": 6.87932001030617,
+        "y": 3.5739846823949866
       },
       "nextControl": {
-        "x": 6.211064151382171,
-        "y": 3.1040104804197863
+        "x": 5.779098954324432,
+        "y": 3.1083350336518505
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.802,
-        "y": 2.993
+        "x": 5.311943181818182,
+        "y": 2.472
       },
       "prevControl": {
-        "x": 6.441763192124352,
-        "y": 3.2637687733040774
+        "x": 5.561943181818182,
+        "y": 2.472
       },
       "nextControl": {
-        "x": 5.341542136142614,
-        "y": 2.7981191245609414
+        "x": 5.061943181818182,
+        "y": 2.472
       },
       "isLocked": false,
       "linkedName": null
@@ -138,7 +138,7 @@
       "rotationDegrees": 145.9879432552123
     },
     {
-      "waypointRelativePos": 5.55,
+      "waypointRelativePos": 5.1,
       "rotationDegrees": -45.0
     }
   ],
@@ -163,7 +163,12 @@
       "name": "baydooropen",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
     }
   ],
   "globalConstraints": {

@@ -58,7 +58,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withAbsoluteSensorDiscontinuityPoint(
                                                                                         Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(-0.8173828125))));
+                                                                                        Rotations.of(-0.6572265625).plus(WEIRD_OFFSET_PREVENTION))));
 
         private final BayDoorAbsoluteEncoder rightAbsoluteEncoder = new BayDoorAbsoluteEncoder(
                         "Right Bay Door Encoder",
@@ -71,7 +71,7 @@ public class BayDoor extends SubsystemBase {
                                                                         .withAbsoluteSensorDiscontinuityPoint(
                                                                                         Rotations.of(1))
                                                                         .withMagnetOffset(
-                                                                                        Rotations.of(-0.225341796875))));
+                                                                                        Rotations.of(-0.2255859375).plus(WEIRD_OFFSET_PREVENTION))));
 
         private final BayDoorMotor leftMotor = new BayDoorMotor(
                         "Left Bay Door Motor",
@@ -83,7 +83,7 @@ public class BayDoor extends SubsystemBase {
                                         .withSlot0(SLOT0_CONFIGS)
                                         .withCurrentLimits(currentLimitsConfigs)
                                         .withFeedback(new FeedbackConfigs()
-                                                        .withFusedCANcoder(leftAbsoluteEncoder.getEncoder())
+                                                        .withRemoteCANcoder(leftAbsoluteEncoder.getEncoder())
                                                         .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
         private final BayDoorMotor rightMotor = new BayDoorMotor(
@@ -96,13 +96,14 @@ public class BayDoor extends SubsystemBase {
                                         .withSlot0(SLOT0_CONFIGS)
                                         .withCurrentLimits(currentLimitsConfigs)
                                         .withFeedback(new FeedbackConfigs()
-                                                        .withFusedCANcoder(rightAbsoluteEncoder.getEncoder())
+                                                        .withRemoteCANcoder(rightAbsoluteEncoder.getEncoder())
                                                         .withRotorToSensorRatio(MOTOR_SCALE_FACTOR)));
 
-        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.225);
-        private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD.plus(Degrees.of(5));
-        private static final Angle CLOSE_ANGLE_THRESHOLD = Degrees.of(5);
-        private static final Angle CLOSE_ANGLE_SETPOINT = CLOSE_ANGLE_THRESHOLD.minus(Degrees.of(15));
+        private static final Angle WEIRD_OFFSET_PREVENTION = Rotations.of(0.1);
+        private static final Angle OPEN_ANGLE_THRESHOLD = Rotations.of(0.225).plus(WEIRD_OFFSET_PREVENTION);
+        private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD;
+        private static final Angle CLOSE_ANGLE_THRESHOLD = Degrees.of(5).plus(WEIRD_OFFSET_PREVENTION);
+        private static final Angle CLOSE_ANGLE_SETPOINT = CLOSE_ANGLE_THRESHOLD;
         private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
         private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(3);
@@ -140,7 +141,6 @@ public class BayDoor extends SubsystemBase {
                 isBayDoorClosed = new Trigger(atLeftCloseLimit.and(atRightCloseLimit));
                 isBayDoorMiddle = new Trigger(atLeftMiddleLimit.and(atRightMiddleLimit));
                 isBayDoorOpen = new Trigger(atLeftOpenLimit.and(atRightOpenLimit));
-
                 initSmartDashboard();
         }
 

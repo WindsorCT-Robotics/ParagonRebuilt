@@ -353,7 +353,7 @@ public class RobotContainer implements Sendable {
                                 .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
                                                 .withName("Kick Fuel To Hub"));
 
-                bindings.cmd_autoScore_indexFuel
+                bindings.cmd_autoScore_launchFuel
                                 .whileTrue(bayDoor.agitateFuel()
                                                 .withName("Agitate Bay Door Fuel To Hub"));
 
@@ -362,7 +362,7 @@ public class RobotContainer implements Sendable {
                                                 .withName("Agitate Intake Fuel To Hub"));
 
                 bindings.cmd_autoScore_indexFuel
-                                .whileTrue(spindexer.smartDashboardIndexFuel()
+                                .whileTrue(spindexer.indexFuel()
                                                 .withName("Index Fuel To Hub"));
 
                 bindings.t_autoScore

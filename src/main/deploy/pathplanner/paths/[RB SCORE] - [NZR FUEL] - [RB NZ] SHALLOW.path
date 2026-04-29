@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.145959359629214,
-        "y": 2.2564462959605587
+        "x": 4.161545838518672,
+        "y": 2.469326
       },
       "isLocked": false,
       "linkedName": "[RB SCORE]"
@@ -64,32 +64,32 @@
     },
     {
       "anchor": {
-        "x": 6.497,
-        "y": 3.19
+        "x": 6.239556818181818,
+        "y": 3.303215909090909
       },
       "prevControl": {
-        "x": 6.73640840895213,
-        "y": 3.2619973174709282
+        "x": 6.87932001030617,
+        "y": 3.5739846823949866
       },
       "nextControl": {
-        "x": 6.211064151382171,
-        "y": 3.1040104804197863
+        "x": 5.779098954324432,
+        "y": 3.1083350336518505
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.802,
-        "y": 2.993
+        "x": 5.311943181818182,
+        "y": 2.472
       },
       "prevControl": {
-        "x": 6.441763192124352,
-        "y": 3.2637687733040774
+        "x": 5.561943181818182,
+        "y": 2.472
       },
       "nextControl": {
-        "x": 4.545926303322689,
-        "y": 2.4613884002461863
+        "x": 5.061943181818182,
+        "y": 2.472
       },
       "isLocked": false,
       "linkedName": null
@@ -100,12 +100,12 @@
         "y": 2.472
       },
       "prevControl": {
-        "x": 4.84663393665916,
-        "y": 2.5796537348524913
+        "x": 5.621,
+        "y": 2.472
       },
       "nextControl": {
-        "x": 4.355776185363074,
-        "y": 2.3454572704786827
+        "x": 4.327134836625251,
+        "y": 2.472
       },
       "isLocked": false,
       "linkedName": null
@@ -116,8 +116,8 @@
         "y": 2.469326
       },
       "prevControl": {
-        "x": 3.316483157991951,
-        "y": 2.4040908012225715
+        "x": 2.95,
+        "y": 2.469326
       },
       "nextControl": null,
       "isLocked": false,
@@ -130,19 +130,15 @@
       "rotationDegrees": -45.0
     },
     {
-      "waypointRelativePos": 1.6619496855345912,
+      "waypointRelativePos": 1.4232044198895144,
       "rotationDegrees": -7.6937421238598676
     },
     {
       "waypointRelativePos": 2.8946540880503147,
-      "rotationDegrees": 159.3215181883973
+      "rotationDegrees": 145.9879432552123
     },
     {
-      "waypointRelativePos": 3.5550314465408817,
-      "rotationDegrees": -161.63537074718448
-    },
-    {
-      "waypointRelativePos": 5.55,
+      "waypointRelativePos": 5.1,
       "rotationDegrees": -45.0
     }
   ],
@@ -167,7 +163,12 @@
       "name": "baydooropen",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "baydooropen"
+        }
+      }
     }
   ],
   "globalConstraints": {

@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.959620159137886,
-        "y": 7.392338255970023
+        "x": 4.981290823542355,
+        "y": 7.387694510287778
       },
       "isLocked": false,
       "linkedName": "[TL Start]"
@@ -20,12 +20,12 @@
         "y": 6.779
       },
       "prevControl": {
-        "x": 7.208556329793439,
-        "y": 7.5091737358976
+        "x": 7.02749814696918,
+        "y": 7.484663417477194
       },
       "nextControl": {
-        "x": 8.350195524299549,
-        "y": 6.303587523139841
+        "x": 8.709081944128414,
+        "y": 6.124629435938194
       },
       "isLocked": false,
       "linkedName": null
@@ -33,15 +33,15 @@
     {
       "anchor": {
         "x": 7.6,
-        "y": 4.521
+        "y": 4.969
       },
       "prevControl": {
-        "x": 8.12103224823159,
-        "y": 4.679703181347785
+        "x": 8.228377131781876,
+        "y": 5.080689769073948
       },
       "nextControl": {
-        "x": 7.281674266699082,
-        "y": 4.424039962015427
+        "x": 7.3538579069356915,
+        "y": 4.925249914035266
       },
       "isLocked": false,
       "linkedName": null
@@ -52,12 +52,12 @@
         "y": 5.6
       },
       "prevControl": {
-        "x": 6.659614487122612,
-        "y": 5.4454504134748625
+        "x": 7.024255642154971,
+        "y": 5.156307319703917
       },
       "nextControl": {
-        "x": 5.803006571859857,
-        "y": 5.664052183962588
+        "x": 5.826644429263439,
+        "y": 5.703968478179938
       },
       "isLocked": false,
       "linkedName": null
@@ -68,8 +68,8 @@
         "y": 5.6
       },
       "prevControl": {
-        "x": 6.228425773094916,
-        "y": 5.369099739546072
+        "x": 6.276320219460135,
+        "y": 5.310200153014665
       },
       "nextControl": null,
       "isLocked": false,
@@ -79,7 +79,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.9501432664756436,
-      "rotationDegrees": -100.0
+      "rotationDegrees": -82.36343789018149
     },
     {
       "waypointRelativePos": 2.6100628930817695,
@@ -105,7 +105,7 @@
   "eventMarkers": [
     {
       "name": "baydooropen",
-      "waypointRelativePos": 0.5437665782493474,
+      "waypointRelativePos": 0.3806104129263914,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

@@ -7,8 +7,10 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -103,29 +105,45 @@ public class RobotContainer implements Sendable {
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
+                ArrayList<LUTEntry> lutEntries = new ArrayList<>();
+                lutEntries.add(new LUTEntry(Meters.of(1.5), RPM.of(1900), Seconds.of(1)));
+                lutEntries.add(new LUTEntry(Meters.of(2), RPM.of(2000), Seconds.of(1.05)));
+                lutEntries.add(new LUTEntry(Meters.of(2.5), RPM.of(2125), Seconds.of(1.1)));
+                lutEntries.add(new LUTEntry(Meters.of(3), RPM.of(2235), Seconds.of(1.15)));
+                lutEntries.add(new LUTEntry(Meters.of(3.5), RPM.of(2350), Seconds.of(1.2)));
+                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2550), Seconds.of(1.25)));
+                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2675), Seconds.of(1.3)));
+                lutEntries.add(new LUTEntry(Meters.of(5), RPM.of(2775), Seconds.of(1.35)));
+                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3025), Seconds.of(1.4)));
+                lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3125), Seconds.of(1.45)));
+                lutEntries.add(new LUTEntry(Meters.of(6.5), RPM.of(3250), Seconds.of(1.5)));
+                lutEntries.add(new LUTEntry(Meters.of(7), RPM.of(3350), Seconds.of(1.55)));
+                lutEntries.add(new LUTEntry(Meters.of(7.5), RPM.of(3650), Seconds.of(1.6)));
+                lutEntries.add(new LUTEntry(Meters.of(8), RPM.of(3850), Seconds.of(1.65)));
+                lutEntries.add(new LUTEntry(Meters.of(8.5), RPM.of(3950), Seconds.of(1.7)));
+                lutEntries.add(new LUTEntry(Meters.of(9), RPM.of(4050), Seconds.of(1.75)));
+                lutEntries.add(new LUTEntry(Meters.of(9.5), RPM.of(4350), Seconds.of(1.8)));
+                lutEntries.add(new LUTEntry(Meters.of(10), RPM.of(4900), Seconds.of(1.85)));
+                // lutEntries.add(new LUTEntry(Meters.of(10.5), RPM.of(5300), Seconds.of(1.9)));
+                // lutEntries.add(new LUTEntry(Meters.of(11), RPM.of(5600), Seconds.of(1.95)));
+
                 hubCalculator = new ShotCalculator();
-                hubCalculator.loadLUTEntry(1.5, 1900, 1);
-                hubCalculator.loadLUTEntry(2.0, 2000, 1.05);
-                hubCalculator.loadLUTEntry(2.5, 2125, 1.1);
-                hubCalculator.loadLUTEntry(3, 2235, 1.15);
-                hubCalculator.loadLUTEntry(3.5, 2350, 1.2);
-                hubCalculator.loadLUTEntry(4, 2475, 1.25);
-                hubCalculator.loadLUTEntry(4.5, 2635, 1.3);
-                hubCalculator.loadLUTEntry(5, 2775, 1.35);
-                hubCalculator.loadLUTEntry(5.5, 3050, 1.4);
 
                 final ShotCalculator.Config config = new Config();
                 config.headingMaxErrorRad = Degrees.of(30).in(Radians);
                 snowBlowCalculator = new ShotCalculator(config);
-                snowBlowCalculator.loadLUTEntry(1.5, 1900, 1);
-                snowBlowCalculator.loadLUTEntry(2.0, 2000, 1.05);
-                snowBlowCalculator.loadLUTEntry(2.5, 2125, 1.1);
-                snowBlowCalculator.loadLUTEntry(3, 2235, 1.15);
-                snowBlowCalculator.loadLUTEntry(3.5, 2350, 1.2);
-                snowBlowCalculator.loadLUTEntry(4, 2475, 1.25);
-                snowBlowCalculator.loadLUTEntry(4.5, 2635, 1.3);
-                snowBlowCalculator.loadLUTEntry(5, 2775, 1.35);
-                snowBlowCalculator.loadLUTEntry(5.5, 3050, 1.4);
+
+                for (LUTEntry entry : lutEntries) {
+                        hubCalculator.loadLUTEntry(
+                                entry.distance().in(Meters), 
+                                entry.angularVelocity().in(RPM), 
+                                entry.timeOfFlight().in(Seconds));
+                        snowBlowCalculator.loadLUTEntry(
+                                entry.distance().in(Meters), 
+                                entry.angularVelocity().in(RPM), 
+                                entry.timeOfFlight().in(Seconds));
+                }
+
 
                 bindings = new Bindings(
                                 drive,
@@ -335,7 +353,7 @@ public class RobotContainer implements Sendable {
                                 .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
                                                 .withName("Kick Fuel To Hub"));
 
-                bindings.cmd_autoScore_indexFuel
+                bindings.cmd_autoScore_launchFuel
                                 .whileTrue(bayDoor.agitateFuel()
                                                 .withName("Agitate Bay Door Fuel To Hub"));
 

@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Watts;
 
@@ -40,7 +39,7 @@ public class Kicker extends SubsystemBase {
                             .withKV(0.01)));
 
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
-    private AngularVelocity kickVelocity = RotationsPerSecond.of(0);
+    private AngularVelocity kickVelocity = RPM.of(2000);
 
     public Kicker(String name) {
         super("Subsystems/" + name);

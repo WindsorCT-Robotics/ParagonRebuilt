@@ -107,16 +107,16 @@ public class RobotContainer implements Sendable {
 
                 ArrayList<LUTEntry> lutEntries = new ArrayList<>();
                 lutEntries.add(new LUTEntry(Meters.of(1.5), RPM.of(1900), Seconds.of(1)));
-                lutEntries.add(new LUTEntry(Meters.of(2), RPM.of(2000), Seconds.of(1.05)));
-                lutEntries.add(new LUTEntry(Meters.of(2.5), RPM.of(2125), Seconds.of(1.1)));
-                lutEntries.add(new LUTEntry(Meters.of(3), RPM.of(2235), Seconds.of(1.15)));
-                lutEntries.add(new LUTEntry(Meters.of(3.5), RPM.of(2350), Seconds.of(1.2)));
-                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2550), Seconds.of(1.25)));
-                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2675), Seconds.of(1.3)));
+                lutEntries.add(new LUTEntry(Meters.of(2), RPM.of(2150), Seconds.of(1.05)));
+                lutEntries.add(new LUTEntry(Meters.of(2.5), RPM.of(2225), Seconds.of(1.1)));
+                lutEntries.add(new LUTEntry(Meters.of(3), RPM.of(2375), Seconds.of(1.15)));
+                lutEntries.add(new LUTEntry(Meters.of(3.5), RPM.of(2475), Seconds.of(1.2)));
+                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2625), Seconds.of(1.25)));
+                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2800), Seconds.of(1.3)));
                 lutEntries.add(new LUTEntry(Meters.of(5), RPM.of(2775), Seconds.of(1.35)));
-                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3025), Seconds.of(1.4)));
+                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3075), Seconds.of(1.4)));
 
-                
+
                 lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3125), Seconds.of(1.45)));
                 lutEntries.add(new LUTEntry(Meters.of(6.5), RPM.of(3250), Seconds.of(1.5)));
                 lutEntries.add(new LUTEntry(Meters.of(7), RPM.of(3350), Seconds.of(1.55)));
@@ -343,7 +343,7 @@ public class RobotContainer implements Sendable {
 
                 bindings.cmd_bayDoor_agitation.whileTrue(bayDoor.removeStuckFuel());
 
-                bindings.t_resetGyro.onTrue(drive.resetGyroCommand());
+                bindings.t_resetOdometry.onTrue(drive.resetOdometry());
         }
 
         private void bindAutoScore() {

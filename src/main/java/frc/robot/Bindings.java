@@ -34,7 +34,7 @@ public class Bindings {
         public final SendableTrigger t_closeBayDoor;
         public final SendableTrigger t_bayDoorAgitation;
         public final SendableTrigger t_switchRelativeReference;
-        public final SendableTrigger t_resetGyro;
+        public final SendableTrigger t_resetOdometry;
 
         // Conditional Triggers
         public final SendableTrigger t_hubLaunchValid;
@@ -96,7 +96,7 @@ public class Bindings {
                 t_bayDoorAgitation = new SendableTrigger(operator.povRight(), "bayDoorAgitation");
                 t_switchRelativeReference = new SendableTrigger(driver.leftBumper(),
                                 "switchRelativeReference");
-                t_resetGyro = new SendableTrigger(driver.povDown(), "resetGyro");
+                t_resetOdometry = new SendableTrigger(driver.povDown(), "resetOdometry");
                 t_towerScore = new SendableTrigger(driver.a(), "towerScore");
 
                 // Conditional Triggers
@@ -230,7 +230,7 @@ public class Bindings {
                 SmartDashboard.putData(category + t_openBayDoor.getName(), t_openBayDoor);
                 SmartDashboard.putData(category + t_partialManualScore.getName(), t_partialManualScore);
                 SmartDashboard.putData(category + t_prepareFuel.getName(), t_prepareFuel);
-                SmartDashboard.putData(category + t_resetGyro.getName(), t_resetGyro);
+                SmartDashboard.putData(category + t_resetOdometry.getName(), t_resetOdometry);
                 SmartDashboard.putData(category + t_snowBlowValid.getName(), t_snowBlowValid);
                 SmartDashboard.putData(category + t_switchRelativeReference.getName(), t_switchRelativeReference);
                 SmartDashboard.putData(category + t_unjam.getName(), t_unjam);

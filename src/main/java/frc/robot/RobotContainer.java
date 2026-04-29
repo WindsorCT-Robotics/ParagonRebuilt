@@ -115,6 +115,8 @@ public class RobotContainer implements Sendable {
                 lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2675), Seconds.of(1.3)));
                 lutEntries.add(new LUTEntry(Meters.of(5), RPM.of(2775), Seconds.of(1.35)));
                 lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3025), Seconds.of(1.4)));
+
+                
                 lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3125), Seconds.of(1.45)));
                 lutEntries.add(new LUTEntry(Meters.of(6.5), RPM.of(3250), Seconds.of(1.5)));
                 lutEntries.add(new LUTEntry(Meters.of(7), RPM.of(3350), Seconds.of(1.55)));

@@ -79,7 +79,7 @@ public class Drive extends GeneratedDrive implements Sendable {
         private static final PIDConstants DEFAULT_ROTATION_PID = new PIDConstants(2);
 
         private static final AprilTagFieldLayout layout = AprilTagFieldLayout
-                        .loadField(AprilTagFields.k2026RebuiltAndymark);
+                        .loadField(AprilTagFields.k2026RebuiltWelded);
         private static final Distance HALF_FIELD_Y = Meters.of(layout.getFieldWidth()).div(2);
         private final Pose3d blueHubYCenter = layout.getTagPose(26).get();
         private final Pose3d blueHubXCenter = layout.getTagPose(21).get();

@@ -14,7 +14,7 @@ import frc.robot.generated.RectanglePoseArea;
 
 public class FieldUtil {
     private static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT = AprilTagFieldLayout
-            .loadField(AprilTagFields.k2026RebuiltAndymark);
+            .loadField(AprilTagFields.k2026RebuiltWelded);
     private static final RectanglePoseArea AREA = new RectanglePoseArea(
             new Translation2d(),
             new Translation2d(getFieldLength(), getFieldWidth()));

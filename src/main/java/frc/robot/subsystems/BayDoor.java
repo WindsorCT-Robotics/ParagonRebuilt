@@ -104,7 +104,7 @@ public class BayDoor extends SubsystemBase {
         private static final Angle OPEN_ANGLE_SETPOINT = OPEN_ANGLE_THRESHOLD;
         private static final Angle CLOSE_ANGLE_THRESHOLD = Degrees.of(5).plus(WEIRD_OFFSET_PREVENTION);
         private static final Angle CLOSE_ANGLE_SETPOINT = CLOSE_ANGLE_THRESHOLD;
-        private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(2);
+        private static final Angle MIDDLE_ANGLE = OPEN_ANGLE_SETPOINT.div(1.5);
         private static final Angle MIDDLE_TOLERANCE = Degrees.of(2);
         private static final Dimensionless OPEN_PRESSURE_DUTY_CYCLE = Percent.of(3);
         private static final Dimensionless CLOSE_PRESSURE_DUTY_CYCLE = Percent.of(-3);

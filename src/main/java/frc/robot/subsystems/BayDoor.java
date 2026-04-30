@@ -213,6 +213,12 @@ public class BayDoor extends SubsystemBase {
                                 .andThen(open());
         }
 
+        public Command agitateFuel2() {
+                return open().raceWith(new WaitCommand(Seconds.of(0.5)))
+                                .andThen(middle().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly()
+                                .andThen(open());
+        }
+
         public Command removeStuckFuel() {
                 return open().andThen(close().raceWith(new WaitCommand(Seconds.of(0.3)))).repeatedly();
         }

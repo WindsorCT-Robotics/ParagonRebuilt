@@ -105,7 +105,7 @@
   "eventMarkers": [
     {
       "name": "baydooropen",
-      "waypointRelativePos": 0.3806104129263914,
+      "waypointRelativePos": 0.3,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

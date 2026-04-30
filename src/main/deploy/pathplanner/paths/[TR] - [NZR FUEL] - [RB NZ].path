@@ -99,7 +99,7 @@
     },
     {
       "waypointRelativePos": 2.154696132596667,
-      "rotationDegrees": 173.91519945859355
+      "rotationDegrees": 173.91519945859358
     }
   ],
   "constraintZones": [
@@ -121,7 +121,7 @@
   "eventMarkers": [
     {
       "name": "baydooropen",
-      "waypointRelativePos": 0.54,
+      "waypointRelativePos": 0.3,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

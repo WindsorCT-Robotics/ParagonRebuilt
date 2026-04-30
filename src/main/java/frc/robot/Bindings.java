@@ -20,6 +20,7 @@ import frc.robot.subsystems.Spindexer;
 public class Bindings {
         // Controller Triggers
         public final SendableTrigger t_autoScore;
+        public final SendableTrigger t_alternateAutoScore;
         public final SendableTrigger t_manualScore;
         public final SendableTrigger t_partialManualScore;
         public final SendableTrigger t_towerScore;
@@ -48,6 +49,8 @@ public class Bindings {
         // Command Triggers
         public final SendableTrigger cmd_autoScore_launchFuel;
         public final SendableTrigger cmd_autoScore_indexFuel;
+        public final SendableTrigger cmd_alternateAutoScore_launchFuel;
+        public final SendableTrigger cmd_alternateAutoScore_indexFuel;
         public final SendableTrigger cmd_snowBlow_launchFuel;
         public final SendableTrigger cmd_snowBlow_indexFuel;
         public final SendableTrigger cmd_partialManualScore_launchFuel;
@@ -79,6 +82,7 @@ public class Bindings {
 
                 // Controller Triggers
                 t_autoScore = new SendableTrigger(driver.rightBumper(), "autoScore");
+                t_alternateAutoScore = new SendableTrigger(driver.y().and(t_autoScore.negate()), "alternateAutoScore");
                 t_manualScore = new SendableTrigger(operator.b(), "manualScore");
                 t_partialManualScore = new SendableTrigger(operator.povLeft(), "partialManualScore");
                 t_autoSnowBlow = new SendableTrigger(driver.rightTrigger(Percent.of(0.2).in(Value)),
@@ -135,6 +139,21 @@ public class Bindings {
                                                 .and(t_unjam.negate())
                                                 .and(t_bayDoorAgitation.negate()),
                                 "autoScore_indexFuel");
+
+                cmd_alternateAutoScore_launchFuel = new SendableTrigger(
+                                t_alternateAutoScore
+                                                .and(t_onAllianceSide),
+                                "alternateAutoScore_launchFuel");
+
+                cmd_alternateAutoScore_indexFuel = new SendableTrigger(
+                                t_alternateAutoScore
+                                                .and(t_hubLaunchValid)
+                                                .and(t_nearTargetVelocity)
+                                                .and(t_onAllianceSide)
+                                                .and(t_unjam.negate())
+                                                .and(t_bayDoorAgitation.negate()),
+                                "alternateAutoScore_indexFuel");
+
                 cmd_snowBlow_launchFuel = new SendableTrigger(
                                 t_autoSnowBlow
                                                 .and(t_onAllianceSide.negate()),

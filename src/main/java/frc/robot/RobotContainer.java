@@ -308,6 +308,7 @@ public class RobotContainer implements Sendable {
                 bindings.cmd_prepareFuel.whileTrue(spindexer.prepareFuel().withName("Spindexer Prepare Fuel"));
 
                 bindAutoScore();
+                bindAlternateAutoScore();
                 bindSnowBlow();
                 bindPartialManualScore();
                 bindTowerScore();
@@ -357,6 +358,38 @@ public class RobotContainer implements Sendable {
 
                 bindings.cmd_autoScore_launchFuel
                                 .whileTrue(bayDoor.agitateFuel()
+                                                .withName("Agitate Bay Door Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(intake.agitateFuel()
+                                                .withName("Agitate Intake Fuel To Hub"));
+
+                bindings.cmd_autoScore_indexFuel
+                                .whileTrue(spindexer.indexFuel()
+                                                .withName("Index Fuel To Hub"));
+
+                bindings.t_autoScore
+                                .whileTrue(
+                                                drive.aimToWithFF(
+                                                                moveX,
+                                                                moveY,
+                                                                () -> angleToHub(),
+                                                                () -> angleToHubWithFF(),
+                                                                MAX_SPEED_LAUNCH)
+                                                                .withName("Auto Aim To Hub"));
+        }
+
+        private void bindAlternateAutoScore() {
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
+                                                .withName("Launch Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
+                                                .withName("Kick Fuel To Hub"));
+
+                bindings.cmd_autoScore_launchFuel
+                                .whileTrue(bayDoor.agitateFuel2()
                                                 .withName("Agitate Bay Door Fuel To Hub"));
 
                 bindings.cmd_autoScore_launchFuel

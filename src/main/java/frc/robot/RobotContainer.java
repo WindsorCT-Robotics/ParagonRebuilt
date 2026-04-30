@@ -380,27 +380,27 @@ public class RobotContainer implements Sendable {
         }
 
         private void bindAlternateAutoScore() {
-                bindings.cmd_autoScore_launchFuel
+                bindings.cmd_alternateAutoScore_launchFuel
                                 .whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
                                                 .withName("Launch Fuel To Hub"));
 
-                bindings.cmd_autoScore_launchFuel
+                bindings.cmd_alternateAutoScore_launchFuel
                                 .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
                                                 .withName("Kick Fuel To Hub"));
 
-                bindings.cmd_autoScore_launchFuel
+                bindings.cmd_alternateAutoScore_launchFuel
                                 .whileTrue(bayDoor.agitateFuel2()
                                                 .withName("Agitate Bay Door Fuel To Hub"));
 
-                bindings.cmd_autoScore_launchFuel
+                bindings.cmd_alternateAutoScore_launchFuel
                                 .whileTrue(intake.agitateFuel()
                                                 .withName("Agitate Intake Fuel To Hub"));
 
-                bindings.cmd_autoScore_indexFuel
+                bindings.cmd_alternateAutoScore_indexFuel
                                 .whileTrue(spindexer.indexFuel()
                                                 .withName("Index Fuel To Hub"));
 
-                bindings.t_autoScore
+                bindings.t_alternateAutoScore
                                 .whileTrue(
                                                 drive.aimToWithFF(
                                                                 moveX,

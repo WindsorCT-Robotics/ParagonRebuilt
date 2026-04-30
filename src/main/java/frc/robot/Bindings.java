@@ -114,7 +114,7 @@ public class Bindings {
                                 "snowBlowValid");
 
                 t_attemptToScore = new SendableTrigger(
-                                t_autoScore.or(t_partialManualScore).or(t_manualScore).or(t_towerScore),
+                                t_autoScore.or(t_partialManualScore).or(t_manualScore).or(t_towerScore).or(t_alternateAutoScore),
                                 "attemptToScore");
                 t_onAllianceSide = new SendableTrigger(drive.onAllianceSide.and(() -> !DriverStation.isAutonomous()),
                                 "onAllianceSide");

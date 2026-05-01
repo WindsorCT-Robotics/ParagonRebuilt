@@ -39,7 +39,7 @@ public class Kicker extends SubsystemBase {
                             .withKV(0.01)));
 
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
-    private AngularVelocity kickVelocity = RPM.of(2000);
+    private AngularVelocity kickVelocity = RPM.of(2375);
 
     public Kicker(String name) {
         super("Subsystems/" + name);

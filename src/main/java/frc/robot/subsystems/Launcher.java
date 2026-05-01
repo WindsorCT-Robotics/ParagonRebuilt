@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Watts;
 
@@ -66,7 +65,7 @@ public class Launcher extends SubsystemBase {
     private static final AngularVelocity PREP_ANGULAR_VELOCITY = RPM.of(1500);
     private static final AngularVelocity NEAR_TARGET_VELOCITY_TOLERANCE = RPM.of(2000);
 
-    private AngularVelocity smartDashboardLaunchVelocity = RPM.of(2000);
+    private AngularVelocity smartDashboardLaunchVelocity = RPM.of(2375);
     private AngularVelocity launcherOffset = RPM.of(0);
 
     public final Trigger nearTargetVelocity;

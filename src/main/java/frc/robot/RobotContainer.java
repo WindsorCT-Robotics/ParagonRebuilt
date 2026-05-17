@@ -7,8 +7,10 @@ import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -93,6 +95,8 @@ public class RobotContainer implements Sendable {
                         throw new IllegalStateException("PathPlanner Configuration failed to load.", e);
                 }
 
+                drive.seedFieldCentric();
+
                 intake = new Intake(Intake.class.getSimpleName());
                 bayDoor = new BayDoor(BayDoor.class.getSimpleName());
                 spindexer = new Spindexer(Spindexer.class.getSimpleName());
@@ -101,29 +105,47 @@ public class RobotContainer implements Sendable {
 
                 relativeReference = RelativeReference.FIELD_CENTRIC;
 
+                ArrayList<LUTEntry> lutEntries = new ArrayList<>();
+                lutEntries.add(new LUTEntry(Meters.of(1.5), RPM.of(1900), Seconds.of(1)));
+                lutEntries.add(new LUTEntry(Meters.of(2), RPM.of(2150), Seconds.of(1.05)));
+                lutEntries.add(new LUTEntry(Meters.of(2.5), RPM.of(2225), Seconds.of(1.1)));
+                lutEntries.add(new LUTEntry(Meters.of(3), RPM.of(2375), Seconds.of(1.15)));
+                lutEntries.add(new LUTEntry(Meters.of(3.5), RPM.of(2475), Seconds.of(1.2)));
+                lutEntries.add(new LUTEntry(Meters.of(4), RPM.of(2625), Seconds.of(1.25)));
+                lutEntries.add(new LUTEntry(Meters.of(4.5), RPM.of(2800), Seconds.of(1.3)));
+                lutEntries.add(new LUTEntry(Meters.of(5), RPM.of(2775), Seconds.of(1.35)));
+                lutEntries.add(new LUTEntry(Meters.of(5.5), RPM.of(3075), Seconds.of(1.4)));
+
+
+                lutEntries.add(new LUTEntry(Meters.of(6), RPM.of(3125), Seconds.of(1.45)));
+                lutEntries.add(new LUTEntry(Meters.of(6.5), RPM.of(3250), Seconds.of(1.5)));
+                lutEntries.add(new LUTEntry(Meters.of(7), RPM.of(3350), Seconds.of(1.55)));
+                lutEntries.add(new LUTEntry(Meters.of(7.5), RPM.of(3650), Seconds.of(1.6)));
+                lutEntries.add(new LUTEntry(Meters.of(8), RPM.of(3850), Seconds.of(1.65)));
+                lutEntries.add(new LUTEntry(Meters.of(8.5), RPM.of(3950), Seconds.of(1.7)));
+                lutEntries.add(new LUTEntry(Meters.of(9), RPM.of(4050), Seconds.of(1.75)));
+                lutEntries.add(new LUTEntry(Meters.of(9.5), RPM.of(4350), Seconds.of(1.8)));
+                lutEntries.add(new LUTEntry(Meters.of(10), RPM.of(4900), Seconds.of(1.85)));
+                // lutEntries.add(new LUTEntry(Meters.of(10.5), RPM.of(5300), Seconds.of(1.9)));
+                // lutEntries.add(new LUTEntry(Meters.of(11), RPM.of(5600), Seconds.of(1.95)));
+
                 hubCalculator = new ShotCalculator();
-                hubCalculator.loadLUTEntry(1.5, 1900, 1);
-                hubCalculator.loadLUTEntry(2.0, 2000, 1.05);
-                hubCalculator.loadLUTEntry(2.5, 2125, 1.1);
-                hubCalculator.loadLUTEntry(3, 2235, 1.15);
-                hubCalculator.loadLUTEntry(3.5, 2350, 1.2);
-                hubCalculator.loadLUTEntry(4, 2475, 1.25);
-                hubCalculator.loadLUTEntry(4.5, 2635, 1.3);
-                hubCalculator.loadLUTEntry(5, 2775, 1.35);
-                hubCalculator.loadLUTEntry(5.5, 3050, 1.4);
 
                 final ShotCalculator.Config config = new Config();
                 config.headingMaxErrorRad = Degrees.of(30).in(Radians);
                 snowBlowCalculator = new ShotCalculator(config);
-                snowBlowCalculator.loadLUTEntry(1.5, 1900, 1);
-                snowBlowCalculator.loadLUTEntry(2.0, 2000, 1.05);
-                snowBlowCalculator.loadLUTEntry(2.5, 2125, 1.1);
-                snowBlowCalculator.loadLUTEntry(3, 2235, 1.15);
-                snowBlowCalculator.loadLUTEntry(3.5, 2350, 1.2);
-                snowBlowCalculator.loadLUTEntry(4, 2475, 1.25);
-                snowBlowCalculator.loadLUTEntry(4.5, 2635, 1.3);
-                snowBlowCalculator.loadLUTEntry(5, 2775, 1.35);
-                snowBlowCalculator.loadLUTEntry(5.5, 3050, 1.4);
+
+                for (LUTEntry entry : lutEntries) {
+                        hubCalculator.loadLUTEntry(
+                                entry.distance().in(Meters), 
+                                entry.angularVelocity().in(RPM), 
+                                entry.timeOfFlight().in(Seconds));
+                        snowBlowCalculator.loadLUTEntry(
+                                entry.distance().in(Meters), 
+                                entry.angularVelocity().in(RPM), 
+                                entry.timeOfFlight().in(Seconds));
+                }
+
 
                 bindings = new Bindings(
                                 drive,
@@ -139,9 +161,7 @@ public class RobotContainer implements Sendable {
 
                 initPathPlannerCommands();
                 autoChooser = AutoBuilder.buildAutoChooser();
-
                 initSmartdashBoard();
-
                 bindCommands();
         }
 
@@ -288,6 +308,7 @@ public class RobotContainer implements Sendable {
                 bindings.cmd_prepareFuel.whileTrue(spindexer.prepareFuel().withName("Spindexer Prepare Fuel"));
 
                 bindAutoScore();
+                bindAlternateAutoScore();
                 bindSnowBlow();
                 bindPartialManualScore();
                 bindTowerScore();
@@ -323,7 +344,7 @@ public class RobotContainer implements Sendable {
 
                 bindings.cmd_bayDoor_agitation.whileTrue(bayDoor.removeStuckFuel());
 
-                bindings.t_resetGyro.onTrue(drive.resetGyroCommand());
+                bindings.t_resetOdometry.onTrue(drive.resetOdometry());
         }
 
         private void bindAutoScore() {
@@ -335,7 +356,7 @@ public class RobotContainer implements Sendable {
                                 .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
                                                 .withName("Kick Fuel To Hub"));
 
-                bindings.cmd_autoScore_indexFuel
+                bindings.cmd_autoScore_launchFuel
                                 .whileTrue(bayDoor.agitateFuel()
                                                 .withName("Agitate Bay Door Fuel To Hub"));
 
@@ -348,6 +369,38 @@ public class RobotContainer implements Sendable {
                                                 .withName("Index Fuel To Hub"));
 
                 bindings.t_autoScore
+                                .whileTrue(
+                                                drive.aimToWithFF(
+                                                                moveX,
+                                                                moveY,
+                                                                () -> angleToHub(),
+                                                                () -> angleToHubWithFF(),
+                                                                MAX_SPEED_LAUNCH)
+                                                                .withName("Auto Aim To Hub"));
+        }
+
+        private void bindAlternateAutoScore() {
+                bindings.cmd_alternateAutoScore_launchFuel
+                                .whileTrue(launcher.launchFuel(() -> launchVelocityToHub())
+                                                .withName("Launch Fuel To Hub"));
+
+                bindings.cmd_alternateAutoScore_launchFuel
+                                .whileTrue(kicker.kickFuel(() -> launchVelocityToHub())
+                                                .withName("Kick Fuel To Hub"));
+
+                bindings.cmd_alternateAutoScore_launchFuel
+                                .whileTrue(bayDoor.agitateFuel2()
+                                                .withName("Agitate Bay Door Fuel To Hub"));
+
+                bindings.cmd_alternateAutoScore_launchFuel
+                                .whileTrue(intake.agitateFuel()
+                                                .withName("Agitate Intake Fuel To Hub"));
+
+                bindings.cmd_alternateAutoScore_indexFuel
+                                .whileTrue(spindexer.indexFuel()
+                                                .withName("Index Fuel To Hub"));
+
+                bindings.t_alternateAutoScore
                                 .whileTrue(
                                                 drive.aimToWithFF(
                                                                 moveX,

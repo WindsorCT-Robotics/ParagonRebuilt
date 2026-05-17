@@ -100,4 +100,8 @@ public class CanCoderBase implements IAbsoluteEncoder, IConfiguration<CANcoderCo
     public CANcoder getEncoder() {
         return canCoder;
     }
+
+    public void setPositionToAbsolutePosition() {
+        canCoder.setPosition(getAbsolutePosition());
+    }
 }

@@ -11,5 +11,6 @@ public class BayDoorAbsoluteEncoder extends CanCoderBase {
             CanId canId,
             CANcoderConfiguration configuration) {
         super(name, canId, configuration);
+        setPositionToAbsolutePosition();
     }
 }

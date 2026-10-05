@@ -139,6 +139,9 @@ $RECYCLE.BIN/
 .gradle
 /build/
 
+# Machine-local JDK / daemon settings; each developer keeps their own
+gradle.properties
+
 # Ignore Gradle GUI config
 gradle-app.setting
 
@@ -185,3 +188,5 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+src/main/java/frc/robot/BuildConstants.java

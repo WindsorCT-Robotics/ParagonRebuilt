@@ -30,4 +30,5 @@ public interface BaydoorIO {
     public default void setDutyCycle(Dimensionless percent) {}
     public default void setPosition(Angle angle) {}
     public default void stop() {}
+    public default void coast() {}
 }

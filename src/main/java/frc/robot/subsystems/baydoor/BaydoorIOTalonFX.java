@@ -2,6 +2,7 @@ package frc.robot.subsystems.baydoor;
 
 import static edu.wpi.first.units.Units.Value;
 
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -11,14 +12,16 @@ import edu.wpi.first.units.measure.Dimensionless;
 import frc.robot.CanID;
 
 public class BaydoorIOTalonFX implements BaydoorIO {
-    public TalonFX leftMotor;
-    public TalonFX rightMotor;
+    private final TalonFX leftMotor;
+    private final TalonFX rightMotor;
 
-    public PositionDutyCycle leftTargetPosition = new PositionDutyCycle(0);
-    public PositionDutyCycle rightTargetPosition = new PositionDutyCycle(0);
+    private final PositionDutyCycle leftTargetPosition = new PositionDutyCycle(0);
+    private final PositionDutyCycle rightTargetPosition = new PositionDutyCycle(0);
 
-    public DutyCycleOut leftTargetDutyCycle = new DutyCycleOut(0);
-    public DutyCycleOut rightTargetDutyCycle = new DutyCycleOut(0);
+    private final DutyCycleOut leftTargetDutyCycle = new DutyCycleOut(0);
+    private final DutyCycleOut rightTargetDutyCycle = new DutyCycleOut(0);
+
+    private final CoastOut coastRequest = new CoastOut();
 
     public BaydoorIOTalonFX(CanID leftCanID, CanID rightCanID) {
         leftMotor = new TalonFX(leftCanID.ID());
@@ -41,6 +44,12 @@ public class BaydoorIOTalonFX implements BaydoorIO {
     public void stop() {
         leftMotor.stopMotor();
         rightMotor.stopMotor();
+    }
+
+    @Override
+    public void coast() {
+        leftMotor.setControl(coastRequest);
+        rightMotor.setControl(coastRequest);
     }
 
     @Override

@@ -41,4 +41,8 @@ public class Baydoor extends SubsystemBase {
     public void setDutyCycle(Dimensionless percent) {
         io.setDutyCycle(percent);
     }
+
+    public void stop() {
+        io.stop();
+    }
 }

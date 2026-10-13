@@ -1,6 +1,6 @@
 # Paragon Rebuilt: 2026 Robot Code
 
-This repository contains the robot code for Paragon's currently unnamed robot for the Rebuilt game.
+This repository contains the robot code for Paragon's 2026 robot Anachron for the Rebuilt game.
 
 ## Repository Layout
 
